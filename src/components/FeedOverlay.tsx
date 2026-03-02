@@ -2,6 +2,8 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { archiveProjects } from '../content/archiveProjects'
 import type { ArchiveProject } from '../content/archiveProjects'
+import { useNavbarInvert } from '../contexts/NavbarInvertContext'
+import { getImageAverageLuminance, isImageBright } from '../utils/imageLuminance'
 import styles from './FeedOverlay.module.css'
 
 interface FeedOverlayProps {
@@ -18,10 +20,12 @@ function FeedItem({
   project,
   isEntry,
   fromGallery,
+  onEntryImageChange,
 }: {
   project: ArchiveProject
   isEntry: boolean
   fromGallery: boolean
+  onEntryImageChange?: (url: string) => void
 }) {
   const [carouselIndex, setCarouselIndex] = useState(0)
 
@@ -37,6 +41,13 @@ function FeedItem({
     const t2 = setTimeout(() => setStep(3), 900)
     return () => { clearTimeout(t1); clearTimeout(t2) }
   }, [isEntry])
+
+  // Report current image URL for entry item (logo invert based on brightness)
+  useEffect(() => {
+    if (isEntry && onEntryImageChange && project.images[carouselIndex]) {
+      onEntryImageChange(project.images[carouselIndex])
+    }
+  }, [isEntry, onEntryImageChange, project.images, carouselIndex])
 
   const handlePrev = useCallback(() => {
     setCarouselIndex((i) => (i - 1 + project.images.length) % project.images.length)
@@ -146,6 +157,23 @@ function FeedItem({
 export function FeedOverlay({ entryProjectId, fromGallery, onClose }: FeedOverlayProps) {
   const panelRef = useRef<HTMLDivElement>(null)
   const feedRef = useRef<HTMLDivElement>(null)
+  const { setInvertLogo } = useNavbarInvert()
+  const [currentEntryImageUrl, setCurrentEntryImageUrl] = useState<string | null>(null)
+
+  // Invert logo when the current entry (first) Feed image is bright (Option C)
+  useEffect(() => {
+    if (!currentEntryImageUrl) {
+      setInvertLogo(false)
+      return
+    }
+    let cancelled = false
+    getImageAverageLuminance(currentEntryImageUrl).then((avg) => {
+      if (!cancelled) setInvertLogo(isImageBright(avg))
+    }).catch(() => {
+      if (!cancelled) setInvertLogo(false)
+    })
+    return () => { cancelled = true; setInvertLogo(false) }
+  }, [currentEntryImageUrl, setInvertLogo])
 
   // Build ordered project list starting from entry project
   const orderedProjects: ArchiveProject[] = (() => {
@@ -209,6 +237,7 @@ export function FeedOverlay({ entryProjectId, fromGallery, onClose }: FeedOverla
               project={project}
               isEntry={i === 0}
               fromGallery={fromGallery}
+              onEntryImageChange={i === 0 ? setCurrentEntryImageUrl : undefined}
             />
           ))}
         </div>

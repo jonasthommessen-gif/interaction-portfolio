@@ -17,7 +17,10 @@ const RARE_IDLE_INDEX_INPUT = 'RareidleIndex'
  * Note: This component is rendered *inside* a <NavLink> (see Navbar), so it
  * must NOT render an interactive element like <button>.
  */
-export function RiveLogoButton({ invert = false }: { invert?: boolean }) {
+export function RiveLogoButton({
+  invert = false,
+  contracted = false,
+}: { invert?: boolean; contracted?: boolean }) {
   const { rive, RiveComponent } = useRive({
     src: RIVE_SRC,
     stateMachines: STATE_MACHINE,
@@ -105,7 +108,7 @@ export function RiveLogoButton({ invert = false }: { invert?: boolean }) {
 
   return (
     <span
-      className={`${styles.logo} ${invert ? styles.logoInverted : ''}`}
+      className={`${styles.logo} ${contracted ? styles.logoContracted : ''} ${invert ? styles.logoInverted : ''}`}
       aria-hidden="true"
     >
       <RiveComponent className={styles.canvas} />

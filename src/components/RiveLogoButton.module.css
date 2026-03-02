@@ -26,6 +26,16 @@
   pointer-events: none;
 }
 
+/* Contracted mobile: full animation visible, no CSS scale (avoids clipping + blur) */
+.logoContracted {
+  width: 98px;
+  height: 98px;
+}
+
+.logoContracted .canvas {
+  transform: none;
+}
+
 /* Inverted for visibility on bright backgrounds (e.g. Archive Feed) */
 .logoInverted {
   filter: invert(1);

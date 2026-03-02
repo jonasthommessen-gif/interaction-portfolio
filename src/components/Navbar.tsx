@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useLocation } from 'react-router-dom'
 import styles from './Navbar.module.css'
 import { NavPill } from './NavPill'
@@ -13,6 +13,7 @@ export function Navbar() {
   const { invertLogo } = useNavbarInvert()
   const [isMobileNavExpanded, setIsMobileNavExpanded] = useState(false)
   const location = useLocation()
+  const navRef = useRef<HTMLElement>(null)
 
   useEffect(() => {
     if (isMobile) return
@@ -23,6 +24,26 @@ export function Navbar() {
     setIsMobileNavExpanded(false)
   }, [location.pathname])
 
+  // Tap outside expanded nav to contract (mobile)
+  useEffect(() => {
+    if (!isMobile || !isMobileNavExpanded) return
+    const handlePointer = (e: MouseEvent | TouchEvent) => {
+      const target = e.target as Node
+      if (navRef.current && !navRef.current.contains(target)) {
+        setIsMobileNavExpanded(false)
+      }
+    }
+    const rafId = requestAnimationFrame(() => {
+      document.addEventListener('mousedown', handlePointer)
+      document.addEventListener('touchstart', handlePointer, { passive: true })
+    })
+    return () => {
+      cancelAnimationFrame(rafId)
+      document.removeEventListener('mousedown', handlePointer)
+      document.removeEventListener('touchstart', handlePointer)
+    }
+  }, [isMobile, isMobileNavExpanded])
+
   const showCollapsed = isMobile && !isMobileNavExpanded
 
   return (
@@ -31,7 +52,7 @@ export function Navbar() {
       data-expanded={isMobile ? isMobileNavExpanded : undefined}
     >
       <div className={`container ${styles.inner}`}>
-        <nav className={styles.nav} aria-label="Primary" data-expanded={isMobile ? isMobileNavExpanded : undefined}>
+        <nav ref={navRef} className={styles.nav} aria-label="Primary" data-expanded={isMobile ? isMobileNavExpanded : undefined}>
           <div className={styles.navInner}>
             {showCollapsed ? (
               <button
@@ -41,7 +62,7 @@ export function Navbar() {
                 aria-label="Open menu"
               >
                 <span className={styles.logoOnlyIcon}>
-                  <RiveLogoButton invert={showCollapsed && invertLogo} />
+                  <RiveLogoButton contracted invert={showCollapsed && invertLogo} />
                 </span>
               </button>
             ) : (

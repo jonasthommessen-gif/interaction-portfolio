@@ -92,11 +92,9 @@ export function ArchivePage() {
 
   const isFeedOpen = feedEntryId !== null
 
-  // Invert navbar logo on mobile when Feed overlay is open (bright images behind logo)
+  // Reset logo invert when leaving Archive or closing Feed (invert is driven by FeedOverlay when Feed is open)
   useEffect(() => {
-    if (isMobile && isFeedOpen) {
-      setInvertLogo(true)
-    } else {
+    if (!isMobile || !isFeedOpen) {
       setInvertLogo(false)
     }
     return () => setInvertLogo(false)
