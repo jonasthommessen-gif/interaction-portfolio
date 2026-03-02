@@ -87,6 +87,8 @@ export interface SatelliteOverlayProps {
   refreshHours?: number
   tleUrl?: string
   onFeaturedSat?: (info: OverlayInfo | null) => void
+  /** When true, do not draw trails or dots (e.g. for mobile) */
+  hideTracks?: boolean
 }
 
 export interface FeaturedSatInfo {
@@ -190,10 +192,13 @@ export function SatelliteOverlay({
   refreshHours = 6,
   tleUrl,
   onFeaturedSat,
+  hideTracks = false,
 }: SatelliteOverlayProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const registryRef = useRef<Map<string, SatTrailData>>(new Map())
   const rafRef = useRef<number>(0)
+  const hideTracksRef = useRef(hideTracks)
+  hideTracksRef.current = hideTracks
 
   const { sats } = useTLEData({ tleUrl, refreshHours })
 
@@ -280,13 +285,18 @@ export function SatelliteOverlay({
     return () => clearInterval(interval)
   }, [sats, maxSats, trailMinutes, stepSeconds])
 
-  // ── Canvas resize ─────────────────────────────────────────────────────────
+  // ── Canvas resize (2x resolution for smoother trail rendering) ─────────────
   useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas) return
     const resize = () => {
-      canvas.width = window.innerWidth
-      canvas.height = window.innerHeight
+      const dpr = Math.min(2, window.devicePixelRatio || 1)
+      const W = window.innerWidth
+      const H = window.innerHeight
+      canvas.width = Math.floor(W * dpr)
+      canvas.height = Math.floor(H * dpr)
+      canvas.style.width = `${W}px`
+      canvas.style.height = `${H}px`
     }
     resize()
     window.addEventListener('resize', resize)
@@ -315,6 +325,8 @@ export function SatelliteOverlay({
 
       // Draw grid first (behind satellites)
       drawGrid(ctx, bboxRef.current, W, H)
+
+      if (hideTracksRef.current) return
 
       const registry = registryRef.current
       if (registry.size === 0) return
@@ -352,14 +364,15 @@ export function SatelliteOverlay({
 
         // Draw trail — only up to headIdx (skip NaN exit-tail)
         const drawCount = headIdx + 1
+        ctx.lineCap = 'round'
+        ctx.lineJoin = 'round'
         for (let i = 0; i < drawCount - 1; i++) {
           const p0 = trail[i]!
           const p1 = trail[i + 1]!
           if (isNaN(p0.x) || isNaN(p0.y) || isNaN(p1.x) || isNaN(p1.y)) continue
 
           const t = (i + 1) / (drawCount - 1)
-          const alpha = t * TRAIL_MAX_ALPHA
-
+          const alpha = TRAIL_MAX_ALPHA * t * t
           ctx.beginPath()
           ctx.moveTo(p0.x, p0.y)
           ctx.lineTo(p1.x, p1.y)

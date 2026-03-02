@@ -291,7 +291,7 @@ export function GrainBackground() {
       u_resolution: { value: new THREE.Vector2(w, h) },
       u_steps:      { value: tier.steps },
       u_warp:       { value: tier.warp },
-      u_cameraZ:    { value: isMobile() ? 2.0 : 2.5 },
+      u_cameraZ:    { value: isMobile() ? 1.75 : 2.5 },
     }
 
     const material = new THREE.ShaderMaterial({
@@ -313,7 +313,7 @@ export function GrainBackground() {
       renderer.setSize(nw, nh, false)
       composer.setSize(nw, nh)
       uniforms.u_resolution.value.set(nw, nh)
-      uniforms.u_cameraZ.value = isMobile() ? 2.0 : 2.5
+      uniforms.u_cameraZ.value = isMobile() ? 1.75 : 2.5
     }
     window.addEventListener('resize', applySize)
 

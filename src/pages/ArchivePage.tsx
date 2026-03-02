@@ -9,12 +9,8 @@ import styles from './ArchivePage.module.css'
 
 const MOBILE_BREAKPOINT = '(max-width: 820px)'
 
-function getInitialMobileFeedState(): { viewMode: 'gallery' | 'feed'; feedEntryId: string | null } {
-  if (typeof window === 'undefined' || window.innerWidth > 820) {
-    return { viewMode: 'gallery', feedEntryId: null }
-  }
-  const lastProject = archiveProjects[archiveProjects.length - 1]
-  return { viewMode: 'feed', feedEntryId: lastProject.id }
+function getInitialArchiveState(): { viewMode: 'gallery' | 'feed'; feedEntryId: string | null } {
+  return { viewMode: 'gallery', feedEntryId: null }
 }
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -82,13 +78,13 @@ const CARD_LAYOUTS = buildLayouts()
 
 export function ArchivePage() {
   const isMobile = useMediaQuery(MOBILE_BREAKPOINT)
-  const initialMobile = useMemo(getInitialMobileFeedState, [])
+  const initial = useMemo(getInitialArchiveState, [])
 
   const [hoveredTitle, setHoveredTitle] = useState<string | null>(null)
-  const [viewMode, setViewMode] = useState<'gallery' | 'feed'>(initialMobile.viewMode)
+  const [viewMode, setViewMode] = useState<'gallery' | 'feed'>(initial.viewMode)
 
   // Feed state: null = gallery mode, string = feed open at that project id
-  const [feedEntryId, setFeedEntryId] = useState<string | null>(initialMobile.feedEntryId)
+  const [feedEntryId, setFeedEntryId] = useState<string | null>(initial.feedEntryId)
   // Whether feed was entered from a gallery card (true) or Feed button (false)
   const [feedFromGallery, setFeedFromGallery] = useState(false)
 
@@ -268,26 +264,10 @@ export function ArchivePage() {
     setViewMode('feed')
   }, [])
 
-  const openFeedFromButton = useCallback(() => {
-    // Most recently added = last in array (arc-23)
-    const lastProject = PROJECTS[PROJECTS.length - 1]
-    setFeedEntryId(lastProject.id)
-    setFeedFromGallery(false)
-    setViewMode('feed')
-  }, [])
-
   const closeFeed = useCallback(() => {
     setFeedEntryId(null)
     setViewMode('gallery')
   }, [])
-
-  const handleViewToggle = useCallback((mode: 'gallery' | 'feed') => {
-    if (mode === 'feed') {
-      openFeedFromButton()
-    } else {
-      closeFeed()
-    }
-  }, [openFeedFromButton, closeFeed])
 
   const sortedIndices = useMemo(() => {
     return Array.from({ length: TOTAL }, (_, i) => i).sort(
@@ -302,22 +282,6 @@ export function ArchivePage() {
       className={styles.page}
       onMouseMove={handleMouseMove}
     >
-      {/* ── View mode toggle ──────────────────────────────────────────────── */}
-      <div className={styles.viewToggle}>
-        <button
-          className={`${styles.toggleBtn} ${viewMode === 'gallery' ? styles.toggleBtnActive : ''}`}
-          onClick={() => handleViewToggle('gallery')}
-        >
-          Gallery
-        </button>
-        <button
-          className={`${styles.toggleBtn} ${viewMode === 'feed' ? styles.toggleBtnActive : ''}`}
-          onClick={() => handleViewToggle('feed')}
-        >
-          Feed
-        </button>
-      </div>
-
       {/* ── Gallery: mobile = 3-column grid, desktop = horizontal scroll ─────── */}
       {isMobile && viewMode === 'gallery' ? (
         <div className={styles.mobileGridWrap}>

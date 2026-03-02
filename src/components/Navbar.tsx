@@ -24,7 +24,10 @@ export function Navbar() {
   const showCollapsed = isMobile && !isMobileNavExpanded
 
   return (
-    <header className={styles.header}>
+    <header
+      className={styles.header}
+      data-expanded={isMobile ? isMobileNavExpanded : undefined}
+    >
       <div className={`container ${styles.inner}`}>
         <nav className={styles.nav} aria-label="Primary" data-expanded={isMobile ? isMobileNavExpanded : undefined}>
           <div className={styles.navInner}>
@@ -41,12 +44,32 @@ export function Navbar() {
               </button>
             ) : (
               <>
-                <NavPill to="/" ariaLabel="Home" end>
+                <NavPill
+                  to="/"
+                  ariaLabel="Home"
+                  end
+                  onSamePageTap={isMobile ? () => setIsMobileNavExpanded(false) : undefined}
+                >
                   <RiveLogoButton />
                 </NavPill>
-                <NavPill to="/projects">Projects</NavPill>
-                <NavPill to="/archive">Archive</NavPill>
-                <NavPill to="/about">About</NavPill>
+                <NavPill
+                  to="/projects"
+                  onSamePageTap={isMobile ? () => setIsMobileNavExpanded(false) : undefined}
+                >
+                  Projects
+                </NavPill>
+                <NavPill
+                  to="/archive"
+                  onSamePageTap={isMobile ? () => setIsMobileNavExpanded(false) : undefined}
+                >
+                  Archive
+                </NavPill>
+                <NavPill
+                  to="/about"
+                  onSamePageTap={isMobile ? () => setIsMobileNavExpanded(false) : undefined}
+                >
+                  About
+                </NavPill>
               </>
             )}
           </div>

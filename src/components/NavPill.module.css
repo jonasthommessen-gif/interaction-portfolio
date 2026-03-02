@@ -233,9 +233,20 @@
   }
 }
 
+/* Mobile: disable all ripple effects */
 @media (max-width: 820px) {
-  .label {
-    --ripple-diameter: 160px;
+  .label::before,
+  .label::after,
+  .wave {
+    display: none !important;
+    animation: none !important;
+    opacity: 0 !important;
+  }
+
+  .pill:hover .label::before,
+  .pill:hover .label::after,
+  .pill:hover .wave {
+    animation: none !important;
   }
 }
 

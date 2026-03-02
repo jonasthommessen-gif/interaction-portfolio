@@ -238,11 +238,55 @@
   font-weight: 500;
 }
 
+/* ─── Back to Gallery button (fixed bottom-right) ────────────────────────────── */
+
+.backToGallery {
+  position: fixed;
+  bottom: max(20px, env(safe-area-inset-bottom));
+  right: 20px;
+  z-index: 50;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 52px;
+  padding: 0;
+  border: none;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.96);
+  color: #0b0c10;
+  cursor: pointer;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2);
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 180ms var(--ease-out), background 180ms var(--ease-out);
+}
+
+.backToGallery:hover {
+  background: #fff;
+  transform: scale(1.05);
+}
+
+.backToGallery:active {
+  transform: scale(1.02);
+}
+
+.backToGallery:focus-visible {
+  outline: 2px solid rgba(11, 12, 16, 0.5);
+  outline-offset: 4px;
+}
+
+.backToGalleryArrow {
+  font-size: 22px;
+  line-height: 1;
+  font-weight: 600;
+}
+
 /* ─── Responsive ────────────────────────────────────────────────────────────── */
 
 @media (max-width: 600px) {
   .panel {
     width: 100vw;
-    border-radius: 20px 20px 0 0;
+    border-radius: 0;
   }
 }

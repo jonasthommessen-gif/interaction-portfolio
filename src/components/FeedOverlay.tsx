@@ -213,6 +213,16 @@ export function FeedOverlay({ entryProjectId, fromGallery, onClose }: FeedOverla
           ))}
         </div>
       </motion.div>
+
+      {/* Back to Gallery — fixed bottom-right */}
+      <button
+        type="button"
+        className={styles.backToGallery}
+        onClick={onClose}
+        aria-label="Back to Gallery"
+      >
+        <span className={styles.backToGalleryArrow} aria-hidden>←</span>
+      </button>
     </motion.div>
   )
 }
