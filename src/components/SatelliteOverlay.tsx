@@ -205,6 +205,10 @@ export function SatelliteOverlay({
   const onFeaturedSatRef = useRef(onFeaturedSat)
   onFeaturedSatRef.current = onFeaturedSat
 
+  const [pickedSatName, setPickedSatName] = useState<string | null>(null)
+  const pickedSatNameRef = useRef<string | null>(null)
+  pickedSatNameRef.current = pickedSatName
+
   const [tooltip, setTooltip] = useState<TooltipState>({
     visible: false, x: 0, y: 0, name: '', category: '', description: null, nearRight: false,
   })
@@ -400,7 +404,12 @@ export function SatelliteOverlay({
 
       const objectCount = registry.size
 
-      // Priority: Space Station > Weather > Earth Obs > Science > others
+      // User-picked satellite overrides priority-based selection when still in frame
+      const picked = pickedSatNameRef.current && registry.has(pickedSatNameRef.current)
+        ? satsRef.current.find(s => s.name === pickedSatNameRef.current)
+        : null
+
+      // Priority: Space Station > Weather > Earth Obs > Science > others (used when no pick)
       const priority = ['Space Station', 'Weather', 'Earth Obs', 'Science', 'Satellite']
       let best: { sat: ParsedSatWithMeta; priority: number } | null = null
 
@@ -414,13 +423,12 @@ export function SatelliteOverlay({
         }
       }
 
-      // If a satellite is in the registry it's in frame — use its current position
-      // directly without re-checking isInBBox (avoids false "no objects" at edges)
+      const chosen = picked ?? best?.sat ?? null
       let featured: FeaturedSatInfo | null = null
-      if (best) {
-        const ll = propagateToLatLon(best.sat.satrec, new Date(nowMs))
+      if (chosen) {
+        const ll = propagateToLatLon(chosen.satrec, new Date(nowMs))
         if (ll) {
-          const ll2 = propagateToLatLon(best.sat.satrec, new Date(nowMs + 1000))
+          const ll2 = propagateToLatLon(chosen.satrec, new Date(nowMs + 1000))
           let velKms = 7.5
           if (ll2) {
             const R = 6371 + ll.altKm
@@ -431,8 +439,8 @@ export function SatelliteOverlay({
             velKms = Math.round(dist * 10) / 10
           }
           featured = {
-            name: best.sat.name,
-            category: best.sat.category,
+            name: chosen.name,
+            category: chosen.category,
             lat: Math.round(ll.lat * 10) / 10,
             lon: Math.round(ll.lon * 10) / 10,
             altKm: Math.round(ll.altKm),
@@ -476,6 +484,36 @@ export function SatelliteOverlay({
     const id = setInterval(update, 1000)
     return () => clearInterval(id)
   }, [sats])
+
+  // ── Click/tap on dot to feature that satellite ─────────────────────────────
+  useEffect(() => {
+    const canvas = canvasRef.current
+    if (!canvas) return
+
+    const handlePointerDown = (e: PointerEvent) => {
+      const registry = registryRef.current
+      const rect = canvas.getBoundingClientRect()
+      const scaleX = canvas.width / rect.width
+      const scaleY = canvas.height / rect.height
+      const canvasX = (e.clientX - rect.left) * scaleX
+      const canvasY = (e.clientY - rect.top) * scaleY
+      const hitRadiusCanvas = HIT_RADIUS * Math.max(scaleX, scaleY)
+
+      let closest: { dist: number; name: string } | null = null
+      for (const data of registry.values()) {
+        const dx = data.smoothX - canvasX
+        const dy = data.smoothY - canvasY
+        const dist = Math.sqrt(dx * dx + dy * dy)
+        if (dist < hitRadiusCanvas && (!closest || dist < closest.dist)) {
+          closest = { dist, name: data.name }
+        }
+      }
+      setPickedSatName(closest ? closest.name : null)
+    }
+
+    canvas.addEventListener('pointerdown', handlePointerDown)
+    return () => canvas.removeEventListener('pointerdown', handlePointerDown)
+  }, [])
 
   // ── Mouse hover detection ─────────────────────────────────────────────────
   useEffect(() => {
