@@ -49,10 +49,12 @@
   .logoInPill {
     width: 64px;
     height: 64px;
+    overflow: visible;
   }
 
+  /* Double logo size; centered so it overflows the pill without moving the nav bar */
   .logoInPill .logoInner {
-    transform: translate(-50%, -50%) scale(0.653061224);
+    transform: translate(-50%, -50%) scale(1.306122449);
   }
 }
 
