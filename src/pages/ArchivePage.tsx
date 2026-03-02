@@ -292,6 +292,33 @@ export function ArchivePage() {
       className={styles.page}
       onMouseMove={handleMouseMove}
     >
+      {/* ── Gallery / Feed pills (desktop only) ───────────────────────────────── */}
+      {!isMobile && (
+        <div className={styles.viewToggle}>
+          <button
+            type="button"
+            className={viewMode === 'gallery' ? styles.toggleBtnActive : styles.toggleBtn}
+            onClick={() => {
+              closeFeed()
+              setViewMode('gallery')
+            }}
+          >
+            Gallery
+          </button>
+          <button
+            type="button"
+            className={viewMode === 'feed' ? styles.toggleBtnActive : styles.toggleBtn}
+            onClick={() => {
+              setViewMode('feed')
+              setFeedEntryId(PROJECTS[0].id)
+              setFeedFromGallery(false)
+            }}
+          >
+            Feed
+          </button>
+        </div>
+      )}
+
       {/* ── Gallery: mobile = 3-column grid, desktop = horizontal scroll ─────── */}
       {isMobile && viewMode === 'gallery' ? (
         <div className={styles.mobileGridWrap}>

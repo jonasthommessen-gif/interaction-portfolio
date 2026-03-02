@@ -312,6 +312,13 @@
   font-weight: 600;
 }
 
+/* Desktop: return arrow is mobile-only; use Gallery pill to leave feed */
+@media (min-width: 821px) {
+  .backToGallery {
+    display: none;
+  }
+}
+
 /* ─── Responsive ────────────────────────────────────────────────────────────── */
 
 @media (max-width: 600px) {
