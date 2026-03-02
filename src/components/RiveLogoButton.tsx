@@ -17,7 +17,7 @@ const RARE_IDLE_INDEX_INPUT = 'RareidleIndex'
  * Note: This component is rendered *inside* a <NavLink> (see Navbar), so it
  * must NOT render an interactive element like <button>.
  */
-export function RiveLogoButton() {
+export function RiveLogoButton({ invert = false }: { invert?: boolean }) {
   const { rive, RiveComponent } = useRive({
     src: RIVE_SRC,
     stateMachines: STATE_MACHINE,
@@ -104,7 +104,10 @@ export function RiveLogoButton() {
   useIdleTimer({ timeoutMs: 6_000, onIdle: fireRareIdle, enabled: isReady })
 
   return (
-    <span className={styles.logo} aria-hidden="true">
+    <span
+      className={`${styles.logo} ${invert ? styles.logoInverted : ''}`}
+      aria-hidden="true"
+    >
       <RiveComponent className={styles.canvas} />
     </span>
   )

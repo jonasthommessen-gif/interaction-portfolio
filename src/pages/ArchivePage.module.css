@@ -161,6 +161,11 @@
     bottom: 14px;
     padding: 0 16px;
   }
+
+  /* No hover-based title reveal on mobile; hide the project name slot in grid view */
+  .statusRight {
+    display: none;
+  }
 }
 
 /* ─── Mobile: 3-column gallery grid ────────────────────────────────────── */

@@ -25,3 +25,9 @@
   /* Let the NavLink receive pointer events for navigation */
   pointer-events: none;
 }
+
+/* Inverted for visibility on bright backgrounds (e.g. Archive Feed) */
+.logoInverted {
+  filter: invert(1);
+  transition: filter 250ms ease;
+}

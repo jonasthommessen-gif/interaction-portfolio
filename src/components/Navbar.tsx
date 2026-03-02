@@ -4,11 +4,13 @@ import styles from './Navbar.module.css'
 import { NavPill } from './NavPill'
 import { RiveLogoButton } from './RiveLogoButton'
 import { useMediaQuery } from '../hooks/useMediaQuery'
+import { useNavbarInvert } from '../contexts/NavbarInvertContext'
 
 const MOBILE_BREAKPOINT = '(max-width: 820px)'
 
 export function Navbar() {
   const isMobile = useMediaQuery(MOBILE_BREAKPOINT)
+  const { invertLogo } = useNavbarInvert()
   const [isMobileNavExpanded, setIsMobileNavExpanded] = useState(false)
   const location = useLocation()
 
@@ -39,7 +41,7 @@ export function Navbar() {
                 aria-label="Open menu"
               >
                 <span className={styles.logoOnlyIcon}>
-                  <RiveLogoButton />
+                  <RiveLogoButton invert={showCollapsed && invertLogo} />
                 </span>
               </button>
             ) : (

@@ -4,6 +4,7 @@ import { archiveProjects } from '../content/archiveProjects'
 import { ArchiveCard } from '../components/ArchiveCard'
 import type { DepthLayer } from '../components/ArchiveCard'
 import { FeedOverlay } from '../components/FeedOverlay'
+import { useNavbarInvert } from '../contexts/NavbarInvertContext'
 import { useMediaQuery } from '../hooks/useMediaQuery'
 import styles from './ArchivePage.module.css'
 
@@ -78,6 +79,7 @@ const CARD_LAYOUTS = buildLayouts()
 
 export function ArchivePage() {
   const isMobile = useMediaQuery(MOBILE_BREAKPOINT)
+  const { setInvertLogo } = useNavbarInvert()
   const initial = useMemo(getInitialArchiveState, [])
 
   const [hoveredTitle, setHoveredTitle] = useState<string | null>(null)
@@ -89,6 +91,16 @@ export function ArchivePage() {
   const [feedFromGallery, setFeedFromGallery] = useState(false)
 
   const isFeedOpen = feedEntryId !== null
+
+  // Invert navbar logo on mobile when Feed overlay is open (bright images behind logo)
+  useEffect(() => {
+    if (isMobile && isFeedOpen) {
+      setInvertLogo(true)
+    } else {
+      setInvertLogo(false)
+    }
+    return () => setInvertLogo(false)
+  }, [isMobile, isFeedOpen, setInvertLogo])
 
   // ── Momentum scroll ──────────────────────────────────────────────────────
   const offsetMV = useMotionValue(0)
@@ -293,7 +305,7 @@ export function ArchivePage() {
                   depth={1}
                   isFocused={false}
                   anyFocused={isFeedOpen}
-                  onHover={setHoveredTitle}
+                  onHover={() => {}}
                   onClick={() => openFeedFromCard(project.id)}
                   layoutId={`archive-card-${project.id}`}
                 />

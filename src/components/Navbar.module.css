@@ -132,6 +132,24 @@
     padding-left: var(--nav-offset, 16px);
   }
 
+  /* Allow full logo animation to render (no clip by nav capsule) */
+  .header[data-expanded='false'] .navInner {
+    overflow: visible;
+  }
+
+  /* Contracted logo: 33% larger on mobile, preserve stroke/proportions via scale */
+  .header[data-expanded='false'] .logoOnlyBtn {
+    width: 82px;
+    height: 82px;
+  }
+
+  .header[data-expanded='false'] .logoOnlyIcon {
+    width: 62px;
+    height: 62px;
+    transform: scale(1.33);
+    transform-origin: center;
+  }
+
   .header[data-expanded='false'] .nav {
     background: transparent;
     border: none;

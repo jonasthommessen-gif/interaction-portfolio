@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Outlet } from 'react-router-dom'
+import { NavbarInvertProvider } from './contexts/NavbarInvertContext'
 import { Navbar } from './components/Navbar'
 import { LoadingScreen } from './components/LoadingScreen'
 import { useTLEData } from './hooks/useTLEData'
@@ -44,10 +45,10 @@ export function AppLayout() {
   const appReady = docReady && (!tleLoading || tleTimedOut) && minTimeElapsed
 
   return (
-    <>
+    <NavbarInvertProvider>
       <LoadingScreen ready={appReady} />
       <Navbar />
       <Outlet />
-    </>
+    </NavbarInvertProvider>
   )
 }
