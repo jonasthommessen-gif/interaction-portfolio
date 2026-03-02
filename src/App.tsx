@@ -2,7 +2,6 @@ import { BrowserRouter, Route, Routes } from 'react-router-dom'
 import { AppLayout } from './AppLayout'
 import { AboutPage } from './pages/AboutPage'
 import { ArchivePage } from './pages/ArchivePage'
-import { ContactPage } from './pages/ContactPage'
 import { HomePage } from './pages/HomePage'
 import { NotFoundPage } from './pages/NotFoundPage'
 import { ProjectDetailPage } from './pages/ProjectDetailPage'
@@ -18,7 +17,6 @@ export default function App() {
           <Route path="/projects/:slug" element={<ProjectDetailPage />} />
           <Route path="/archive" element={<ArchivePage />} />
           <Route path="/about" element={<AboutPage />} />
-          <Route path="/contact" element={<ContactPage />} />
 
           <Route path="*" element={<NotFoundPage />} />
         </Route>

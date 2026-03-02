@@ -151,3 +151,37 @@
   letter-spacing: 0.12em;
   font-size: 9px;
 }
+
+/* ── MOBILE (simplified: region, lat/lon, objects tracked) ── */
+.bar[data-mobile] {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 6px;
+  bottom: 14px;
+  left: 16px;
+  right: 16px;
+  font-size: 9px;
+}
+
+.mobileRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.bar[data-mobile] .mobileRow .regionName {
+  font-size: 9px;
+}
+
+.bar[data-mobile] .mobileRow .regionCoords {
+  font-size: 8px;
+}
+
+.bar[data-mobile] .mobileRow .value {
+  font-size: 9px;
+}
+
+.bar[data-mobile] .mobileRow .trackingCount {
+  font-size: 9px;
+}

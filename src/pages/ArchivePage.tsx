@@ -4,7 +4,18 @@ import { archiveProjects } from '../content/archiveProjects'
 import { ArchiveCard } from '../components/ArchiveCard'
 import type { DepthLayer } from '../components/ArchiveCard'
 import { FeedOverlay } from '../components/FeedOverlay'
+import { useMediaQuery } from '../hooks/useMediaQuery'
 import styles from './ArchivePage.module.css'
+
+const MOBILE_BREAKPOINT = '(max-width: 820px)'
+
+function getInitialMobileFeedState(): { viewMode: 'gallery' | 'feed'; feedEntryId: string | null } {
+  if (typeof window === 'undefined' || window.innerWidth > 820) {
+    return { viewMode: 'gallery', feedEntryId: null }
+  }
+  const lastProject = archiveProjects[archiveProjects.length - 1]
+  return { viewMode: 'feed', feedEntryId: lastProject.id }
+}
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -70,11 +81,14 @@ const CARD_LAYOUTS = buildLayouts()
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export function ArchivePage() {
+  const isMobile = useMediaQuery(MOBILE_BREAKPOINT)
+  const initialMobile = useMemo(getInitialMobileFeedState, [])
+
   const [hoveredTitle, setHoveredTitle] = useState<string | null>(null)
-  const [viewMode, setViewMode] = useState<'gallery' | 'feed'>('gallery')
+  const [viewMode, setViewMode] = useState<'gallery' | 'feed'>(initialMobile.viewMode)
 
   // Feed state: null = gallery mode, string = feed open at that project id
-  const [feedEntryId, setFeedEntryId] = useState<string | null>(null)
+  const [feedEntryId, setFeedEntryId] = useState<string | null>(initialMobile.feedEntryId)
   // Whether feed was entered from a gallery card (true) or Feed button (false)
   const [feedFromGallery, setFeedFromGallery] = useState(false)
 
@@ -304,23 +318,44 @@ export function ArchivePage() {
         </button>
       </div>
 
-      {/* ── Gallery scene ─────────────────────────────────────────────────── */}
-      <div
-        ref={containerRef}
-        className={styles.scene}
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
-      >
-        <ScrollCanvas
-          offsetMV={offsetMV}
-          sortedIndices={sortedIndices}
-          isFeedOpen={isFeedOpen}
-          onHover={setHoveredTitle}
-          onCardClick={openFeedFromCard}
-          viewportWidth={viewportWidth}
-        />
-      </div>
+      {/* ── Gallery: mobile = 3-column grid, desktop = horizontal scroll ─────── */}
+      {isMobile && viewMode === 'gallery' ? (
+        <div className={styles.mobileGridWrap}>
+          <div className={styles.mobileGrid}>
+            {PROJECTS.map((project) => (
+              <div key={project.id} className={styles.mobileGridCell}>
+                <ArchiveCard
+                  project={project}
+                  depth={1}
+                  isFocused={false}
+                  anyFocused={isFeedOpen}
+                  onHover={setHoveredTitle}
+                  onClick={() => openFeedFromCard(project.id)}
+                  layoutId={`archive-card-${project.id}`}
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : null}
+      {!isMobile ? (
+        <div
+          ref={containerRef}
+          className={styles.scene}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+        >
+          <ScrollCanvas
+            offsetMV={offsetMV}
+            sortedIndices={sortedIndices}
+            isFeedOpen={isFeedOpen}
+            onHover={setHoveredTitle}
+            onCardClick={openFeedFromCard}
+            viewportWidth={viewportWidth}
+          />
+        </div>
+      ) : null}
 
       {/* ── Status bar ────────────────────────────────────────────────────── */}
       <div className={styles.statusBar}>

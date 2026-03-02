@@ -48,6 +48,20 @@ export function ProjectDetailPage() {
       .join(' ')
   }, [project, slug])
 
+  const sectionLinks = (
+    <>
+      {SECTIONS.map((section) => (
+        <a
+          key={section.id}
+          className={styles.sectionLink}
+          href={`#${section.id}`}
+        >
+          {section.label}
+        </a>
+      ))}
+    </>
+  )
+
   return (
     <main className={`page ${styles.page}`}>
       <div className={`container ${styles.grid}`}>
@@ -71,15 +85,7 @@ export function ProjectDetailPage() {
             </div>
 
             <nav className={styles.sectionNav} aria-label="Sections">
-              {SECTIONS.map((section) => (
-                <a
-                  key={section.id}
-                  className={styles.sectionLink}
-                  href={`#${section.id}`}
-                >
-                  {section.label}
-                </a>
-              ))}
+              {sectionLinks}
             </nav>
           </div>
         </aside>
@@ -96,6 +102,10 @@ export function ProjectDetailPage() {
           ))}
         </div>
       </div>
+
+      <nav className={styles.sectionNavBottom} aria-label="Sections">
+        {sectionLinks}
+      </nav>
     </main>
   )
 }

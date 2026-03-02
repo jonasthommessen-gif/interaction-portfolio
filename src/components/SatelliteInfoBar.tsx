@@ -12,6 +12,7 @@
 
 import { useEffect, useState } from 'react'
 import type { OverlayInfo } from './SatelliteOverlay'
+import { useMediaQuery } from '../hooks/useMediaQuery'
 import styles from './SatelliteInfoBar.module.css'
 
 interface SatelliteInfoBarProps {
@@ -48,6 +49,25 @@ function useOsloClock(): string {
 
 export function SatelliteInfoBar({ info }: SatelliteInfoBarProps) {
   const osloTime = useOsloClock()
+  const isMobile = useMediaQuery('(max-width: 820px)')
+
+  if (isMobile) {
+    const latLon = info?.featured
+      ? `${formatLat(info.featured.lat)} ${formatLon(info.featured.lon)}`
+      : '—'
+    return (
+      <div className={styles.bar} aria-hidden="true" data-mobile>
+        <div className={styles.mobileRow}>
+          <span className={styles.regionName}>SCANDINAVIA / N.EUROPE</span>
+          <span className={styles.regionCoords}>50°N – 80°N · 15°W – 45°E</span>
+        </div>
+        <div className={styles.mobileRow}>
+          <span className={styles.value}>{latLon}</span>
+          <span className={styles.trackingCount}>{info?.objectCount ?? 0} OBJECTS</span>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className={styles.bar} aria-hidden="true">

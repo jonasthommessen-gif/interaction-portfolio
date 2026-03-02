@@ -37,6 +37,12 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
+@media (max-width: 820px) {
+  :root {
+    --nav-height: 56px;
+  }
+}
+
 * {
   box-sizing: border-box;
 }

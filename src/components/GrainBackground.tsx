@@ -43,6 +43,7 @@ uniform float u_time;
 uniform vec2  u_resolution;
 uniform int   u_steps;
 uniform bool  u_warp;
+uniform float u_cameraZ;
 
 varying vec2 vUv;
 
@@ -173,7 +174,7 @@ void main(){
   vec2 sc = (vUv * 2.0 - 1.0);
   sc.x *= aspect;
 
-  vec3 ro = vec3(0.0, 0.0, 2.5);
+  vec3 ro = vec3(0.0, 0.0, u_cameraZ);
   vec3 rd = normalize(vec3(sc.x, sc.y, -1.5));
   // Very slight camera drift — makes it feel alive
   rd = rotY(rd, 0.05*sin(t*0.06));
@@ -284,11 +285,13 @@ export function GrainBackground() {
     const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1)
     const scene  = new THREE.Scene()
 
+    const isMobile = () => window.innerWidth <= 820
     const uniforms = {
       u_time:       { value: 0.0 },
       u_resolution: { value: new THREE.Vector2(w, h) },
       u_steps:      { value: tier.steps },
       u_warp:       { value: tier.warp },
+      u_cameraZ:    { value: isMobile() ? 2.0 : 2.5 },
     }
 
     const material = new THREE.ShaderMaterial({
@@ -310,6 +313,7 @@ export function GrainBackground() {
       renderer.setSize(nw, nh, false)
       composer.setSize(nw, nh)
       uniforms.u_resolution.value.set(nw, nh)
+      uniforms.u_cameraZ.value = isMobile() ? 2.0 : 2.5
     }
     window.addEventListener('resize', applySize)
 
