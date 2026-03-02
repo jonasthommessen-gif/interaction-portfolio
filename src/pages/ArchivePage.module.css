@@ -86,32 +86,64 @@
 .toggleBtn {
   background: none;
   border: none;
+  outline: none;
   cursor: pointer;
   padding: 6px 14px;
   border-radius: 999px;
 
-  font-size: 14px;
+  font-size: 16px;
   font-family: var(--font-sans, system-ui, sans-serif);
   font-weight: 500;
   letter-spacing: 0.01em;
-  color: rgba(255, 255, 255, 0.45);
+  color: #ffffff;
 
   transition: color 200ms, background 200ms;
 }
 
 .toggleBtn:hover {
-  color: rgba(255, 255, 255, 0.75);
+  color: rgba(255, 255, 255, 0.85);
 }
 
-/* Active state: white pill */
+.toggleBtn:focus,
+.toggleBtn:focus-visible {
+  outline: none;
+}
+
+/* Active state: white pill, black text, no stroke */
 .toggleBtnActive {
-  background: rgba(255, 255, 255, 0.92);
-  color: rgba(10, 10, 12, 0.92);
+  -webkit-appearance: none;
+  appearance: none;
+  border: none;
+  border-width: 0;
+  border-style: none;
+  border-color: rgba(0, 0, 0, 0);
+  border-image: none;
+  border-radius: var(--pill-radius, 999px);
+  outline: none;
+  box-shadow: none;
+  background: #ffffff;
+  color: #000000;
+  padding: 6px 14px;
+  cursor: pointer;
+  font-size: 16px;
+  font-family: var(--font-sans, system-ui, sans-serif);
+  font-weight: 500;
+  letter-spacing: 0.01em;
 }
 
 .toggleBtnActive:hover {
-  color: rgba(10, 10, 12, 0.92);
-  background: rgba(255, 255, 255, 1);
+  border: none;
+  outline: none;
+  box-shadow: none;
+  background: #ffffff;
+  color: #000000;
+}
+
+.toggleBtnActive:focus,
+.toggleBtnActive:focus-visible {
+  border: none;
+  outline: none;
+  box-shadow: none;
 }
 
 /* ─── Status bar ─────────────────────────────────────────────────────────────── */
