@@ -20,6 +20,7 @@ import {
   propagateToLatLon,
   isInBBox,
   computeTrail,
+  smoothTrailWithSpline,
 } from '../lib/satelliteMath'
 import type { BBox, TrailPoint } from '../lib/satelliteMath'
 import { SCANDINAVIA_BBOX } from '../lib/satelliteMath'
@@ -30,11 +31,16 @@ import styles from './SatelliteOverlay.module.css'
 const ENTRY_PAD = 8
 const TARGET_FPS = 30
 const TRAIL_RECOMPUTE_MS = 500
-const DOT_RADIUS = 2
+const DOT_RADIUS = 4
 const TRAIL_MAX_ALPHA = 0.72
-const TRAIL_LINE_WIDTH = 0.85
+const TRAIL_LINE_WIDTH = 1.7
 const HIT_RADIUS = 14
-const LERP_FACTOR = 0.12
+const LERP_FACTOR = 0.28
+
+const TRAIL_SMOOTHING_CONFIG = {
+  splineTension: 0.5,
+  samplesPerSegment: 8,
+} as const
 
 // Grid config
 const GRID_LAT_STEP = 10   // degrees between horizontal lines
@@ -118,6 +124,74 @@ interface TooltipState {
   category: string
   description: string | null
   nearRight: boolean
+}
+
+function getCanvasTransform(canvas: HTMLCanvasElement) {
+  const rect = canvas.getBoundingClientRect()
+  const scaleX = canvas.width / rect.width
+  const scaleY = canvas.height / rect.height
+  return { rect, scaleX, scaleY }
+}
+
+function clientToCanvas(
+  canvas: HTMLCanvasElement,
+  clientX: number,
+  clientY: number,
+): { x: number; y: number } {
+  const { rect, scaleX, scaleY } = getCanvasTransform(canvas)
+  return {
+    x: (clientX - rect.left) * scaleX,
+    y: (clientY - rect.top) * scaleY,
+  }
+}
+
+function canvasToClient(
+  canvas: HTMLCanvasElement,
+  canvasX: number,
+  canvasY: number,
+): { x: number; y: number } {
+  const { rect, scaleX, scaleY } = getCanvasTransform(canvas)
+  return {
+    x: rect.left + canvasX / scaleX,
+    y: rect.top + canvasY / scaleY,
+  }
+}
+
+function computeDirectionFromTrail(trail: TrailPoint[], headIdx: number): { vx: number; vy: number } | null {
+  // Walk backwards from the head to find a valid previous point for direction.
+  for (let k = 1; k <= 5; k++) {
+    const idx = headIdx - k
+    if (idx < 0) break
+    const tail = trail[idx]!
+    const head = trail[headIdx]!
+    if (isNaN(tail.x) || isNaN(tail.y) || isNaN(head.x) || isNaN(head.y)) continue
+    const vx = head.x - tail.x
+    const vy = head.y - tail.y
+    const len = Math.hypot(vx, vy)
+    if (len === 0) continue
+    return { vx: vx / len, vy: vy / len }
+  }
+  return null
+}
+
+function drawGlyphImage(
+  ctx: CanvasRenderingContext2D,
+  img: HTMLImageElement,
+  x: number,
+  y: number,
+  rotationRad: number,
+  centerXInImage: number,
+  centerYInImage: number,
+) {
+  const scale = DOT_RADIUS / 2 // SVG dot radius is 2; keep canvas dot at radius 4
+  ctx.save()
+  ctx.translate(x, y)
+  if (rotationRad !== 0) {
+    ctx.rotate(rotationRad)
+  }
+  ctx.scale(scale, scale)
+  ctx.drawImage(img, -centerXInImage, -centerYInImage)
+  ctx.restore()
 }
 
 // ─── Grid drawing ─────────────────────────────────────────────────────────────
@@ -209,6 +283,10 @@ export function SatelliteOverlay({
   const pickedSatNameRef = useRef<string | null>(null)
   pickedSatNameRef.current = pickedSatName
 
+  const hoveredSatNameRef = useRef<string | null>(null)
+  const baseGlyphRef = useRef<HTMLImageElement | null>(null)
+  const issGlyphRef = useRef<HTMLImageElement | null>(null)
+
   const [tooltip, setTooltip] = useState<TooltipState>({
     visible: false, x: 0, y: 0, name: '', category: '', description: null, nearRight: false,
   })
@@ -223,6 +301,7 @@ export function SatelliteOverlay({
       const H = canvas.height
       const nowMs = Date.now()
       const currentBbox = bboxRef.current
+      const prevRegistry = registryRef.current
 
       const entryBbox: BBox = {
         latMin: currentBbox.latMin - ENTRY_PAD,
@@ -231,23 +310,28 @@ export function SatelliteOverlay({
         lonMax: currentBbox.lonMax + ENTRY_PAD,
       }
 
-      const registry = registryRef.current
+      const nextRegistry = new Map<string, SatTrailData>()
 
       // Add new entrants
       for (const sat of satsRef.current) {
-        if (registry.size >= maxSats) break
-        if (registry.has(sat.name)) continue
+        if (nextRegistry.size >= maxSats) break
+        if (prevRegistry.has(sat.name)) continue
 
         const ll = propagateToLatLon(sat.satrec, new Date(nowMs))
         if (!ll) continue
         if (!isInBBox(ll, entryBbox)) continue
 
-        const trail = computeTrail(sat.satrec, nowMs, trailMinutes, stepSeconds, currentBbox, W, H)
+        const rawTrail = computeTrail(sat.satrec, nowMs, trailMinutes, stepSeconds, currentBbox, W, H)
+        const trail = smoothTrailWithSpline(
+          rawTrail,
+          TRAIL_SMOOTHING_CONFIG.samplesPerSegment,
+          TRAIL_SMOOTHING_CONFIG.splineTension,
+        )
         let head: TrailPoint | undefined
         for (let i = trail.length - 1; i >= 0; i--) {
           if (!isNaN(trail[i]!.x) && !isNaN(trail[i]!.y)) { head = trail[i]; break }
         }
-        registry.set(sat.name, {
+        nextRegistry.set(sat.name, {
           name: sat.name,
           category: sat.category,
           trail,
@@ -257,17 +341,22 @@ export function SatelliteOverlay({
       }
 
       // Update existing + evict fully-exited
-      for (const [name, existing] of registry) {
+      for (const [name, existing] of prevRegistry) {
         const sat = satsRef.current.find(s => s.name === name)
-        if (!sat) { registry.delete(name); continue }
+        if (!sat) continue
 
-        const trail = computeTrail(sat.satrec, nowMs, trailMinutes, stepSeconds, currentBbox, W, H)
+        const rawTrail = computeTrail(sat.satrec, nowMs, trailMinutes, stepSeconds, currentBbox, W, H)
+        const trail = smoothTrailWithSpline(
+          rawTrail,
+          TRAIL_SMOOTHING_CONFIG.samplesPerSegment,
+          TRAIL_SMOOTHING_CONFIG.splineTension,
+        )
         const hasValidPoint = trail.some(p => !isNaN(p.x) && !isNaN(p.y))
 
         if (!hasValidPoint) {
-          registry.delete(name)
+          continue
         } else {
-          registry.set(name, {
+          nextRegistry.set(name, {
             name,
             category: sat.category,
             trail,
@@ -276,6 +365,8 @@ export function SatelliteOverlay({
           })
         }
       }
+
+      registryRef.current = nextRegistry
     }
 
     recompute()
@@ -283,12 +374,23 @@ export function SatelliteOverlay({
     return () => clearInterval(interval)
   }, [sats, maxSats, trailMinutes, stepSeconds])
 
+  // ── Load hover glyph SVGs ─────────────────────────────────────────────────
+  useEffect(() => {
+    const baseImg = new Image()
+    baseImg.src = '/Other/Base.satelite.svg'
+    baseGlyphRef.current = baseImg
+
+    const issImg = new Image()
+    issImg.src = '/Other/ISS.SVG.svg'
+    issGlyphRef.current = issImg
+  }, [])
+
   // ── Canvas resize (2x resolution for smoother trail rendering) ─────────────
   useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas) return
     const resize = () => {
-      const dpr = Math.min(2, window.devicePixelRatio || 1)
+      const dpr = window.devicePixelRatio || 1
       const W = window.innerWidth
       const H = window.innerHeight
       canvas.width = Math.floor(W * dpr)
@@ -329,6 +431,10 @@ export function SatelliteOverlay({
       const registry = registryRef.current
       if (registry.size === 0) return
 
+      const hoveredName = hoveredSatNameRef.current
+      const baseGlyphImg = baseGlyphRef.current
+      const issGlyphImg = issGlyphRef.current
+
       for (const data of registry.values()) {
         const { trail } = data
         if (trail.length < 2) continue
@@ -364,27 +470,76 @@ export function SatelliteOverlay({
         const drawCount = headIdx + 1
         ctx.lineCap = 'round'
         ctx.lineJoin = 'round'
-        for (let i = 0; i < drawCount - 1; i++) {
-          const p0 = trail[i]!
-          const p1 = trail[i + 1]!
-          if (isNaN(p0.x) || isNaN(p0.y) || isNaN(p1.x) || isNaN(p1.y)) continue
+        ctx.lineWidth = TRAIL_LINE_WIDTH
 
-          const t = (i + 1) / (drawCount - 1)
-          const alpha = TRAIL_MAX_ALPHA * t * t
+        let i = 0
+        while (i < drawCount - 1) {
+          // Skip over any NaN sentinels
+          while (i < drawCount && (isNaN(trail[i]!.x) || isNaN(trail[i]!.y))) {
+            i++
+          }
+          if (i >= drawCount - 1) break
+
+          const segStart = i
+          let segEnd = segStart + 1
+          while (
+            segEnd < drawCount &&
+            !isNaN(trail[segEnd]!.x) &&
+            !isNaN(trail[segEnd]!.y)
+          ) {
+            segEnd++
+          }
+          const lastIdx = segEnd - 1
+          if (lastIdx <= segStart) {
+            i = segEnd
+            continue
+          }
+
+          const tail = trail[segStart]!
+          const head = trail[lastIdx]!
+
+          const tTail = segStart / (drawCount - 1)
+          const tHead = lastIdx / (drawCount - 1)
+          const alphaTail = TRAIL_MAX_ALPHA * tTail * tTail
+          const alphaHead = TRAIL_MAX_ALPHA * tHead * tHead
+
+          const gradient = ctx.createLinearGradient(tail.x, tail.y, head.x, head.y)
+          gradient.addColorStop(0, `rgba(255,255,255,${alphaTail.toFixed(3)})`)
+          gradient.addColorStop(1, `rgba(255,255,255,${alphaHead.toFixed(3)})`)
+
           ctx.beginPath()
-          ctx.moveTo(p0.x, p0.y)
-          ctx.lineTo(p1.x, p1.y)
-          ctx.strokeStyle = `rgba(255,255,255,${alpha.toFixed(3)})`
-          ctx.lineWidth = TRAIL_LINE_WIDTH
+          ctx.moveTo(tail.x, tail.y)
+          for (let j = segStart + 1; j <= lastIdx; j++) {
+            const p = trail[j]!
+            ctx.lineTo(p.x, p.y)
+          }
+          ctx.strokeStyle = gradient
           ctx.stroke()
+
+          i = segEnd
         }
 
         // Only draw the dot when the satellite is currently inside the bbox
         if (satCurrentlyInBBox) {
+          const isHovered = hoveredName && hoveredName === data.name
+          const drawX = Math.round(data.smoothX)
+          const drawY = Math.round(data.smoothY)
+
           ctx.beginPath()
-          ctx.arc(data.smoothX, data.smoothY, DOT_RADIUS, 0, Math.PI * 2)
+          ctx.arc(drawX, drawY, DOT_RADIUS, 0, Math.PI * 2)
           ctx.fillStyle = 'rgba(255,255,255,0.95)'
           ctx.fill()
+
+          if (isHovered) {
+            const isSpecial = data.name === ISS_EXACT_NAME || data.category === 'Space Station'
+            if (isSpecial && issGlyphImg && issGlyphImg.complete) {
+              const dir = computeDirectionFromTrail(trail, headIdx)
+              const angle = dir ? Math.atan2(dir.vy, dir.vx) + Math.PI / 2 : 0
+              drawGlyphImage(ctx, issGlyphImg, drawX, drawY, angle, 30, 17)
+            } else if (!isSpecial && baseGlyphImg && baseGlyphImg.complete) {
+              drawGlyphImage(ctx, baseGlyphImg, drawX, drawY, 0, 31, 17)
+            }
+          }
         }
       }
     }
@@ -492,23 +647,40 @@ export function SatelliteOverlay({
 
     const handlePointerDown = (e: PointerEvent) => {
       const registry = registryRef.current
-      const rect = canvas.getBoundingClientRect()
-      const scaleX = canvas.width / rect.width
-      const scaleY = canvas.height / rect.height
+      const { rect, scaleX, scaleY } = getCanvasTransform(canvas)
       const canvasX = (e.clientX - rect.left) * scaleX
       const canvasY = (e.clientY - rect.top) * scaleY
       const hitRadiusCanvas = HIT_RADIUS * Math.max(scaleX, scaleY)
 
-      let closest: { dist: number; name: string } | null = null
+      let closest: { dist: number; name: string; x: number; y: number } | null = null
       for (const data of registry.values()) {
         const dx = data.smoothX - canvasX
         const dy = data.smoothY - canvasY
         const dist = Math.sqrt(dx * dx + dy * dy)
         if (dist < hitRadiusCanvas && (!closest || dist < closest.dist)) {
-          closest = { dist, name: data.name }
+          closest = { dist, name: data.name, x: data.smoothX, y: data.smoothY }
         }
       }
-      setPickedSatName(closest ? closest.name : null)
+      if (closest) {
+        setPickedSatName(closest.name)
+        hoveredSatNameRef.current = closest.name
+        const clientPos = canvasToClient(canvas, closest.x, closest.y)
+        const nearBottom = clientPos.y > window.innerHeight - 70
+        const nearRight = clientPos.x > window.innerWidth - 180
+        setTooltip({
+          visible: true,
+          x: clientPos.x,
+          y: nearBottom ? clientPos.y - 32 : clientPos.y - 8,
+          name: closest.name,
+          category: registry.get(closest.name)?.category ?? '',
+          description: getSatDescription(closest.name),
+          nearRight,
+        })
+      } else {
+        setPickedSatName(null)
+        hoveredSatNameRef.current = null
+        setTooltip(prev => (prev.visible ? { ...prev, visible: false } : prev))
+      }
     }
 
     canvas.addEventListener('pointerdown', handlePointerDown)
@@ -517,38 +689,47 @@ export function SatelliteOverlay({
 
   // ── Mouse hover detection ─────────────────────────────────────────────────
   useEffect(() => {
+    const canvas = canvasRef.current
+    if (!canvas) return
+
     const onMouseMove = (e: MouseEvent) => {
       const registry = registryRef.current
-      const mx = e.clientX
-      const my = e.clientY
+      const { scaleX, scaleY } = getCanvasTransform(canvas)
+      const canvasPos = clientToCanvas(canvas, e.clientX, e.clientY)
+      const cx = canvasPos.x
+      const cy = canvasPos.y
 
       let closest: { dist: number; name: string; category: string; x: number; y: number } | null = null
 
       for (const data of registry.values()) {
-        const dx = data.smoothX - mx
-        const dy = data.smoothY - my
+        const dx = data.smoothX - cx
+        const dy = data.smoothY - cy
         const dist = Math.sqrt(dx * dx + dy * dy)
-        if (dist < HIT_RADIUS && (!closest || dist < closest.dist)) {
+        const hitRadiusCanvas = HIT_RADIUS * Math.max(scaleX, scaleY)
+        if (dist < hitRadiusCanvas && (!closest || dist < closest.dist)) {
           closest = { dist, name: data.name, category: data.category, x: data.smoothX, y: data.smoothY }
         }
       }
 
       if (closest) {
+        hoveredSatNameRef.current = closest.name
+        const clientPos = canvasToClient(canvas, closest.x, closest.y)
         // Flip tooltip above dot if near bottom edge (avoid overlapping info bar)
         // Flip tooltip left if near right edge (avoid clipping)
-        const nearBottom = closest.y > window.innerHeight - 70
-        const nearRight = closest.x > window.innerWidth - 180
+        const nearBottom = clientPos.y > window.innerHeight - 70
+        const nearRight = clientPos.x > window.innerWidth - 180
         setTooltip({
           visible: true,
           // x encodes the dot's screen x; CSS will anchor left or right based on nearRight
-          x: closest.x,
-          y: nearBottom ? closest.y - 32 : closest.y - 8,
+          x: clientPos.x,
+          y: nearBottom ? clientPos.y - 32 : clientPos.y - 8,
           name: closest.name,
           category: closest.category,
           description: getSatDescription(closest.name),
           nearRight,
         })
       } else {
+        hoveredSatNameRef.current = null
         setTooltip(prev => prev.visible ? { ...prev, visible: false } : prev)
       }
     }

@@ -63,7 +63,7 @@ export function SatelliteInfoBar({ info, isMobile: isMobileProp }: SatelliteInfo
         </div>
         <div className={styles.mobileRow}>
           <span className={styles.regionCoords}>58°N – 71°N · 5°W – 31°E</span>
-          <span className={styles.trackingCount}>{info?.objectCount ?? 0} OBJECTS</span>
+          <span className={styles.trackingCount}>{info?.objectCount ?? 0} SATELLITES</span>
         </div>
       </div>
     )
@@ -73,7 +73,12 @@ export function SatelliteInfoBar({ info, isMobile: isMobileProp }: SatelliteInfo
     <div className={styles.bar} aria-hidden="true">
       {/* LEFT — region context */}
       <div className={styles.left}>
-        <span className={styles.regionName}>SCANDINAVIA / N.EUROPE</span>
+        <span className={`${styles.regionName} ${styles.tooltipTarget}`}>
+          SCANDINAVIA / N.EUROPE
+          <span className={styles.inlineTooltip}>
+            This frame follows satellites from about Denmark&apos;s latitude up past northern Norway,&nbsp;but not all the way to the North Pole — roughly the skies above Scandinavia and nearby seas.
+          </span>
+        </span>
         <span className={styles.regionCoords}>50°N – 80°N&nbsp;&nbsp;·&nbsp;&nbsp;15°W – 45°E</span>
       </div>
 
@@ -81,17 +86,22 @@ export function SatelliteInfoBar({ info, isMobile: isMobileProp }: SatelliteInfo
       <div className={styles.center}>
         {info?.featured ? (
           <>
+            <span className={styles.category}>{info.featured.category.toUpperCase()}</span>
+            <span className={styles.sep}>·</span>
             <span className={styles.satName}>{info.featured.name}</span>
             <span className={styles.sep}>·</span>
             <span className={styles.value}>
               {formatLat(info.featured.lat)}&nbsp;&nbsp;{formatLon(info.featured.lon)}
             </span>
             <span className={styles.sep}>·</span>
-            <span className={styles.value}>{info.featured.altKm.toLocaleString()} km</span>
+            <span className={`${styles.value} ${styles.tooltipTarget}`}>
+              {info.featured.altKm.toLocaleString()} km
+              <span className={`${styles.inlineTooltip} ${styles.inlineTooltipNoWrap}`}>
+                Current altitude above mean sea level.
+              </span>
+            </span>
             <span className={styles.sep}>·</span>
             <span className={styles.value}>{info.featured.velKms} km/s</span>
-            <span className={styles.sep}>·</span>
-            <span className={styles.category}>{info.featured.category.toUpperCase()}</span>
           </>
         ) : (
           <span className={styles.noSat}>NO OBJECTS IN FRAME</span>
@@ -102,7 +112,7 @@ export function SatelliteInfoBar({ info, isMobile: isMobileProp }: SatelliteInfo
       <div className={styles.right}>
         <div className={styles.rightRow}>
           <span className={styles.trackingLabel}>TRACKING</span>
-          <span className={styles.trackingCount}>{info?.objectCount ?? 0} OBJECTS</span>
+          <span className={styles.trackingCount}>{info?.objectCount ?? 0} SATELLITES</span>
         </div>
         <div className={styles.rightRow}>
           <span className={styles.liveLabel}>LIVE</span>

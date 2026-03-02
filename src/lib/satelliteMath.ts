@@ -196,6 +196,99 @@ export interface TrailPoint {
  */
 export type TrailSegment = TrailPoint[]
 
+function catmullRomInterpolate(
+  p0: TrailPoint,
+  p1: TrailPoint,
+  p2: TrailPoint,
+  p3: TrailPoint,
+  t: number,
+  tension: number,
+): TrailPoint {
+  // Standard Catmull–Rom, with an optional tension factor to slightly relax the curve.
+  // When tension = 0, this is the classic Catmull–Rom spline. Higher tension flattens the curve.
+  const t2 = t * t
+  const t3 = t2 * t
+
+  const a0 = -tension * t3 + 2 * tension * t2 - tension * t
+  const a1 = (2 - tension) * t3 + (tension - 3) * t2 + 1
+  const a2 = (tension - 2) * t3 + (3 - 2 * tension) * t2 + tension * t
+  const a3 = tension * t3 - tension * t2
+
+  return {
+    x: a0 * p0.x + a1 * p1.x + a2 * p2.x + a3 * p3.x,
+    y: a0 * p0.y + a1 * p1.y + a2 * p2.y + a3 * p3.y,
+  }
+}
+
+/**
+ * Smooth a raw trail using Catmull–Rom splines.
+ *
+ * The input may contain NaN sentinels to denote breaks between segments.
+ * Those breaks are preserved in the output so the renderer can draw
+ * contiguous segments without connecting across gaps.
+ *
+ * @param rawTrail           Original trail points (oldest → newest)
+ * @param samplesPerSegment  How many samples to generate between each pair
+ *                           of points within a segment (e.g. 6–10 for smoothness)
+ * @param tension            Spline tension (0 = standard Catmull–Rom, ~0.5 = slightly tighter)
+ */
+export function smoothTrailWithSpline(
+  rawTrail: TrailPoint[],
+  samplesPerSegment: number,
+  tension = 0.5,
+): TrailPoint[] {
+  if (rawTrail.length === 0 || samplesPerSegment <= 1) return rawTrail
+
+  const result: TrailPoint[] = []
+
+  let segment: TrailPoint[] = []
+
+  const flushSegment = () => {
+    const n = segment.length
+    if (n === 0) return
+    if (n === 1) {
+      result.push(segment[0]!)
+      return
+    }
+    if (n === 2) {
+      result.push(segment[0]!, segment[1]!)
+      return
+    }
+
+    // For n >= 3, run Catmull–Rom across the contiguous segment.
+    for (let i = 0; i < n - 1; i++) {
+      const p0 = i === 0 ? segment[0]! : segment[i - 1]!
+      const p1 = segment[i]!
+      const p2 = segment[i + 1]!
+      const p3 = i + 2 < n ? segment[i + 2]! : segment[n - 1]!
+
+      for (let s = 0; s < samplesPerSegment; s++) {
+        const t = s / samplesPerSegment
+        const pt = catmullRomInterpolate(p0, p1, p2, p3, t, tension)
+        result.push(pt)
+      }
+    }
+
+    // Ensure we include the final point of the segment exactly.
+    result.push(segment[n - 1]!)
+  }
+
+  for (const p of rawTrail) {
+    if (isNaN(p.x) || isNaN(p.y)) {
+      // Break: flush current segment and propagate the sentinel.
+      flushSegment()
+      segment = []
+      result.push({ x: NaN, y: NaN })
+    } else {
+      segment.push(p)
+    }
+  }
+
+  flushSegment()
+
+  return result
+}
+
 export function computeTrail(
   satrec: SatRec,
   nowMs: number,

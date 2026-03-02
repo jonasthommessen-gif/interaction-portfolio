@@ -48,8 +48,9 @@
   --ripple-diameter: 180px;
   --ripple-x-factor: 1;
   --ripple-y-factor: 1;
-  --ripple-start: 0.86;
-  --ripple-end: 1;
+  /* Start at 40px from center; end at 60px */
+  --ripple-start: 0.4444;
+  --ripple-end: 0.6667;
 
   /* Stacking context so rings can sit behind text cleanly */
   z-index: 0;
@@ -74,7 +75,7 @@
   width: calc(var(--ripple-diameter) * var(--ripple-x-factor));
   height: calc(var(--ripple-diameter) * var(--ripple-y-factor));
   border-radius: 50%;
-  border: 1px solid rgba(255, 255, 255, 0.36);
+  border: 2px solid rgba(255, 255, 255, 0.52);
   opacity: 0;
   pointer-events: none;
   will-change: transform, opacity;
@@ -104,7 +105,7 @@
   width: calc(var(--ripple-diameter) * var(--ripple-x-factor));
   height: calc(var(--ripple-diameter) * var(--ripple-y-factor));
   border-radius: 50%;
-  border: 1px solid rgba(255, 255, 255, 0.36);
+  border: 2px solid rgba(255, 255, 255, 0.52);
   opacity: 0;
   pointer-events: none;
   will-change: transform, opacity;
