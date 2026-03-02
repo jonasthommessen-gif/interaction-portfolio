@@ -200,4 +200,8 @@
     font-size: 15px;
     letter-spacing: 0.12em;
   }
+
+  .nav[data-expanded='true'] .navInner .pill:first-child {
+    justify-content: center;
+  }
 }

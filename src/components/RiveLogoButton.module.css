@@ -28,14 +28,20 @@
   height: 98px;
 }
 
-/* In pill (expanded mobile + desktop): full 98px artboard scaled to fit 57px, no crop */
+/* In pill (expanded mobile + desktop): 98px artboard centered and scaled inside 57px, no overflow */
 .logoInPill {
+  position: relative;
   width: 57px;
   height: 57px;
 }
 
 .logoInPill .logoInner {
-  transform: scale(0.581632653);
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 98px;
+  height: 98px;
+  transform: translate(-50%, -50%) scale(0.581632653);
   transform-origin: center;
 }
 
