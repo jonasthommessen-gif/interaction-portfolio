@@ -11,11 +11,13 @@ type NavPillProps = {
   onSamePageTap?: () => void
   /** Override ripple start distance from center (px). Default uses CSS value (47px). */
   rippleStartPx?: number
+  /** Override ripple end distance from center (px). Default uses CSS value (60px). */
+  rippleEndPx?: number
 }
 
 const RIPPLE_RADIUS_PX = 90
 
-export function NavPill({ to, children, ariaLabel, end, onSamePageTap, rippleStartPx }: NavPillProps) {
+export function NavPill({ to, children, ariaLabel, end, onSamePageTap, rippleStartPx, rippleEndPx }: NavPillProps) {
   const match = useMatch({ path: to, end: end ?? (to === '/') })
   const isActive = !!match
   const isTextLabel = typeof children === 'string' || typeof children === 'number'
@@ -23,8 +25,11 @@ export function NavPill({ to, children, ariaLabel, end, onSamePageTap, rippleSta
     isTextLabel ? styles.labelText : styles.labelIcon
   }`
   const labelStyle =
-    rippleStartPx != null
-      ? ({ '--ripple-start': (rippleStartPx / RIPPLE_RADIUS_PX).toFixed(4) } as React.CSSProperties)
+    rippleStartPx != null || rippleEndPx != null
+      ? ({
+          ...(rippleStartPx != null && { '--ripple-start': (rippleStartPx / RIPPLE_RADIUS_PX).toFixed(4) }),
+          ...(rippleEndPx != null && { '--ripple-end': (rippleEndPx / RIPPLE_RADIUS_PX).toFixed(4) }),
+        } as React.CSSProperties)
       : undefined
 
   return (
