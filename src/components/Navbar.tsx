@@ -77,6 +77,7 @@ export function Navbar() {
                 </NavPill>
                 <NavPill
                   to="/projects"
+                  rippleStartPx={52}
                   onSamePageTap={isMobile ? () => setIsMobileNavExpanded(false) : undefined}
                 >
                   Projects
