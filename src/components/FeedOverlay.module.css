@@ -126,11 +126,11 @@
   display: flex;
   flex-direction: row;
   height: 100%;
-  width: max-content;
+  width: calc(var(--slide-count, 1) * 100%);
 }
 .carouselSlide {
-  flex: 0 0 auto;
-  min-width: 100%;
+  flex: 0 0 calc(100% / var(--slide-count, 1));
+  min-width: 0;
   height: 100%;
   scroll-snap-align: start;
   position: relative;

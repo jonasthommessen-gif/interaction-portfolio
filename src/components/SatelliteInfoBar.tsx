@@ -55,17 +55,14 @@ export function SatelliteInfoBar({ info, isMobile: isMobileProp }: SatelliteInfo
   const isMobile = isMobileProp ?? isMobileQuery
 
   if (isMobile) {
-    const latLon = info?.featured
-      ? `${formatLat(info.featured.lat)} ${formatLon(info.featured.lon)}`
-      : '—'
     return (
       <div className={styles.bar} aria-hidden="true" data-mobile>
         <div className={styles.mobileRow}>
           <span className={styles.regionName}>NORWAY</span>
-          <span className={styles.regionCoords}>58°N – 71°N · 5°W – 31°E</span>
+          <span className={styles.trackingLabel}>TRACKED</span>
         </div>
         <div className={styles.mobileRow}>
-          <span className={styles.value}>{latLon}</span>
+          <span className={styles.regionCoords}>58°N – 71°N · 5°W – 31°E</span>
           <span className={styles.trackingCount}>{info?.objectCount ?? 0} OBJECTS</span>
         </div>
       </div>

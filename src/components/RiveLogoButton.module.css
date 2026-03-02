@@ -1,7 +1,7 @@
 /* Always render at 98px for sharpness; scale down only when in pill */
 .logo {
   display: block;
-  border-radius: 999px;
+  border-radius: 0;
   background: transparent;
   overflow: visible;
   font-family: var(--font-serif);
@@ -28,15 +28,14 @@
   height: 98px;
 }
 
-/* In pill (expanded mobile + desktop): 57px visible, 98px canvas scaled down for sharpness */
+/* In pill (expanded mobile + desktop): full 98px artboard scaled to fit 57px, no crop */
 .logoInPill {
   width: 57px;
   height: 57px;
-  overflow: hidden;
 }
 
 .logoInPill .logoInner {
-  transform: scale(0.581);
+  transform: scale(0.581632653);
   transform-origin: center;
 }
 

@@ -17,7 +17,6 @@ export function HomePage() {
       <SatelliteOverlay
         bbox={isMobile ? NORWAY_BBOX : SCANDINAVIA_BBOX}
         onFeaturedSat={setOverlayInfo}
-        hideTracks={isMobile}
       />
       <SatelliteInfoBar info={overlayInfo} isMobile={isMobile} />
     </main>

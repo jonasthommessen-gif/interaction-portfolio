@@ -117,7 +117,10 @@ function FeedItem({
           className={`${styles.carouselWrapper} ${isMobile ? styles.carouselScroll : ''}`}
         >
           {isMobile ? (
-            <div className={styles.carouselScrollTrack}>
+            <div
+              className={styles.carouselScrollTrack}
+              style={{ '--slide-count': project.images.length } as React.CSSProperties}
+            >
               {project.images.map((src, i) => (
                 <div key={i} className={styles.carouselSlide}>
                   <img
