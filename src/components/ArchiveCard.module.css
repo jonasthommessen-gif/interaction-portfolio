@@ -1,0 +1,39 @@
+/* ArchiveCard — clean, no blur, no 3D transforms */
+
+.card {
+  position: absolute;
+  inset: 0;
+  cursor: pointer;
+  border-radius: 6px;
+  overflow: hidden;
+
+  /* No blur, no 3D transforms — depth is handled by parent z-index + scale */
+  will-change: transform;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.card:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.7);
+  outline-offset: 4px;
+}
+
+.image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  pointer-events: none;
+}
+
+/* Subtle bottom gradient for depth perception */
+.overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    transparent 60%,
+    rgba(0, 0, 0, 0.15) 100%
+  );
+  pointer-events: none;
+}

@@ -1,0 +1,97 @@
+.header {
+  position: fixed;
+  top: var(--nav-offset);
+  left: 0;
+  right: 0;
+  height: var(--nav-height);
+  z-index: 50;
+  display: grid;
+  align-items: center;
+
+  /* Don't block interactions behind the nav capsule */
+  pointer-events: none;
+}
+
+.inner {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.nav {
+  pointer-events: auto;
+
+  width: max-content;
+  max-width: 100%;
+  display: flex;
+  align-items: center;
+  gap: clamp(8px, 1.2vw, 14px);
+
+  padding: 3px clamp(8px, 1.4vw, 12px);
+  border-radius: 999px;
+
+  position: relative;
+
+  /* Frosted interior (slightly lighter + more blur) */
+  background: rgba(30, 34, 42, 0.3);
+  background-clip: padding-box;
+  border: 2px solid transparent;
+  box-shadow: var(--frost-shadow);
+
+  backdrop-filter: blur(34px) saturate(140%);
+  -webkit-backdrop-filter: blur(34px) saturate(140%);
+
+  /* Let the stroke render *outside* the capsule */
+  overflow: visible;
+}
+
+.navInner {
+  display: flex;
+  align-items: center;
+  gap: inherit;
+  padding: inherit;
+  border-radius: inherit;
+
+  /* Contain nav ripples inside the capsule */
+  overflow: hidden;
+}
+
+/* Gradient stroke only (so it can't tint the frosted interior) */
+.nav::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: inherit;
+  padding: 2px;
+
+  background: linear-gradient(
+    160deg,
+    rgba(255, 255, 255, 0.92) 0%,
+    rgba(255, 255, 255, 0.22) 34%,
+    rgba(255, 255, 255, 0) 50%,
+    rgba(255, 255, 255, 0.22) 66%,
+    rgba(255, 255, 255, 0.92) 100%
+  );
+
+  /* Mask the center so only the stroke remains */
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  mask-composite: exclude;
+
+  pointer-events: none;
+}
+
+@media (max-width: 820px) {
+  .nav {
+    gap: 12px;
+    padding: 5px 14px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+}

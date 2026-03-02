@@ -1,0 +1,248 @@
+/* FeedOverlay — full-height white feed panel over blurred gallery */
+
+/* ─── Backdrop ─────────────────────────────────────────────────────────────── */
+
+.backdrop {
+  position: fixed;
+  inset: 0;
+  /* Below navbar (z-index 50) and toggle buttons (z-index 50) */
+  z-index: 40;
+
+  /* Near-transparent tint — blur does the work, colours bleed through */
+  background: rgba(8, 9, 12, 0.04);
+  backdrop-filter: blur(50px) saturate(90%);
+  -webkit-backdrop-filter: blur(50px) saturate(90%);
+
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+
+  overflow: hidden;
+}
+
+/* ─── White panel ───────────────────────────────────────────────────────────── */
+
+.panel {
+  position: relative;
+  z-index: 45;
+
+  width: min(520px, calc(100vw - 32px));
+  /* Full viewport height — stretches to top of page */
+  height: 100dvh;
+
+  background: #f8f8f6;
+  /* No top border-radius — panel fills to top edge */
+  border-radius: 0;
+  box-shadow: -8px 0 60px rgba(0, 0, 0, 0.35), 8px 0 60px rgba(0, 0, 0, 0.35);
+
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ─── Scrollable feed ───────────────────────────────────────────────────────── */
+
+.feed {
+  flex: 1;
+  overflow-y: scroll;
+  overflow-x: hidden;
+
+  /* Snap to each project on scroll */
+  scroll-snap-type: y mandatory;
+
+  /* Smooth native scroll */
+  -webkit-overflow-scrolling: touch;
+
+  /* Hide scrollbar but keep scroll behavior */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.feed::-webkit-scrollbar {
+  display: none;
+}
+
+/* ─── Feed item ─────────────────────────────────────────────────────────────── */
+
+.feedItem {
+  /* Each item snaps to fill the feed container */
+  flex-shrink: 0;
+  height: 100%;
+  padding: 20px 20px 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+
+  /* Snap point at the top of each item */
+  scroll-snap-align: start;
+
+  /* Separator between items */
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.feedItem:last-child {
+  border-bottom: none;
+}
+
+/* ─── Media frame ───────────────────────────────────────────────────────────── */
+
+.mediaFrame {
+  position: relative;
+  /* No rounded corners in feed mode */
+  border-radius: 0;
+  overflow: hidden;
+  background: #111;
+
+  /* Takes up most of the item height */
+  flex: 0 0 auto;
+  aspect-ratio: 4 / 5;
+  width: 100%;
+
+  /* Shadow: no Y offset, blur only (30px) */
+  box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
+}
+
+/* ─── Carousel ──────────────────────────────────────────────────────────────── */
+
+.carouselWrapper {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.carouselImage {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* Arrows — in the margins of the white card, outside the image frame */
+.arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 10;
+
+  background: rgba(255, 255, 255, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  color: rgba(255, 255, 255, 0.9);
+  border-radius: 50%;
+  width: 38px;
+  height: 38px;
+
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  opacity: 0;
+  transition: opacity 200ms, background 200ms;
+}
+
+.carouselWrapper:hover .arrow {
+  opacity: 1;
+}
+
+.arrow:hover {
+  background: rgba(255, 255, 255, 0.32);
+}
+
+.arrowLeft {
+  left: 10px;
+}
+
+.arrowRight {
+  right: 10px;
+}
+
+/* Dot indicators */
+.dots {
+  position: absolute;
+  bottom: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.4);
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  transition: background 200ms, transform 200ms;
+}
+
+.dotActive {
+  background: rgba(255, 255, 255, 0.95);
+  transform: scale(1.25);
+}
+
+/* ─── Text shelf ────────────────────────────────────────────────────────────── */
+
+.textShelf {
+  padding: 18px 4px 0;
+  color: #0b0c10;
+  flex: 1;
+}
+
+.title {
+  margin: 0 0 8px;
+  font-family: var(--font-serif, Georgia, serif);
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+  color: #111;
+}
+
+.description {
+  margin: 0 0 14px;
+  font-size: 14px;
+  line-height: 1.65;
+  color: rgba(0, 0, 0, 0.6);
+}
+
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.tag {
+  display: inline-flex;
+  align-items: center;
+  height: 26px;
+  padding: 0 11px;
+  border-radius: 999px;
+
+  background: #1a2e1a;
+  color: rgba(255, 255, 255, 0.88);
+
+  font-size: 11px;
+  letter-spacing: 0.01em;
+  font-weight: 500;
+}
+
+/* ─── Responsive ────────────────────────────────────────────────────────────── */
+
+@media (max-width: 600px) {
+  .panel {
+    width: 100vw;
+    border-radius: 20px 20px 0 0;
+  }
+}

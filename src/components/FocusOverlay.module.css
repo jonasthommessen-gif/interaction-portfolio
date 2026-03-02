@@ -1,0 +1,276 @@
+/* FocusOverlay — dark backdrop + white card + image carousel */
+
+/* ─── Backdrop ─────────────────────────────────────────────────────────────── */
+
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+
+  /* Dark overlay with backdrop blur — gallery still visible but suppressed */
+  background: rgba(8, 9, 12, 0.72);
+  backdrop-filter: blur(30px) saturate(80%);
+  -webkit-backdrop-filter: blur(30px) saturate(80%);
+
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+
+  /* Prevent scroll bleed */
+  overflow: hidden;
+}
+
+/* ─── Project navigation (outside white card) ───────────────────────────────── */
+
+.projectNav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 110;
+
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: rgba(255, 255, 255, 0.7);
+  border-radius: 50%;
+  width: 48px;
+  height: 48px;
+
+  font-size: 28px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  transition: background 200ms, color 200ms, opacity 200ms;
+  opacity: 0.6;
+}
+
+.projectNav:hover {
+  background: rgba(255, 255, 255, 0.16);
+  color: rgba(255, 255, 255, 0.95);
+  opacity: 1;
+}
+
+.projectNavLeft {
+  left: clamp(16px, 4vw, 60px);
+}
+
+.projectNavRight {
+  right: clamp(16px, 4vw, 60px);
+}
+
+/* ─── White card ────────────────────────────────────────────────────────────── */
+
+.whiteCard {
+  position: relative;
+  z-index: 105;
+
+  width: min(500px, calc(100vw - 32px));
+  max-height: calc(100dvh - 80px);
+  overflow-y: auto;
+  overflow-x: hidden;
+
+  background: #ffffff;
+  border-radius: 28px 28px 0 0;
+  box-shadow: 0 -8px 60px rgba(0, 0, 0, 0.4);
+
+  /* Scrollbar styling */
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 0, 0, 0.15) transparent;
+}
+
+.whiteCard::-webkit-scrollbar {
+  width: 4px;
+}
+.whiteCard::-webkit-scrollbar-track {
+  background: transparent;
+}
+.whiteCard::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.15);
+  border-radius: 2px;
+}
+
+/* ─── Image section ─────────────────────────────────────────────────────────── */
+
+.imageSection {
+  position: relative;
+  /* Sits above the white card text — z-index layering creates the shelf illusion */
+  z-index: 2;
+  margin: 16px 16px 0;
+  border-radius: 16px;
+  overflow: hidden;
+  background: #111;
+
+  /* Fixed aspect ratio for the image area */
+  aspect-ratio: 4 / 5;
+}
+
+/* ─── Carousel ──────────────────────────────────────────────────────────────── */
+
+.carouselWrapper {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.carouselImage {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* Carousel arrows — inside the image, fade in on hover */
+.carouselArrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 10;
+
+  background: rgba(0, 0, 0, 0.35);
+  border: none;
+  color: rgba(255, 255, 255, 0.9);
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+
+  font-size: 24px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  /* Hidden by default, fade in on parent hover */
+  opacity: 0;
+  transition: opacity 200ms, background 200ms;
+}
+
+.carouselWrapper:hover .carouselArrow {
+  opacity: 1;
+}
+
+.carouselArrow:hover {
+  background: rgba(0, 0, 0, 0.55);
+}
+
+.carouselArrowLeft {
+  left: 12px;
+}
+
+.carouselArrowRight {
+  right: 12px;
+}
+
+/* Dot indicators */
+.dots {
+  position: absolute;
+  bottom: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.45);
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  transition: background 200ms, transform 200ms;
+}
+
+.dotActive {
+  background: rgba(255, 255, 255, 0.95);
+  transform: scale(1.2);
+}
+
+/* ─── Text section ──────────────────────────────────────────────────────────── */
+
+.textSection {
+  position: relative;
+  z-index: 1;
+  padding: 20px 20px 32px;
+  color: #0b0c10;
+}
+
+.title {
+  margin: 0 0 10px;
+  font-family: var(--font-serif, Georgia, serif);
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1.15;
+  color: #111;
+}
+
+.description {
+  margin: 0 0 16px;
+  font-size: 14px;
+  line-height: 1.6;
+  color: rgba(0, 0, 0, 0.65);
+}
+
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.tag {
+  display: inline-flex;
+  align-items: center;
+  height: 28px;
+  padding: 0 12px;
+  border-radius: 999px;
+
+  background: #1a2e1a;
+  color: rgba(255, 255, 255, 0.9);
+
+  font-size: 12px;
+  letter-spacing: 0.01em;
+  font-weight: 500;
+}
+
+/* ─── Project counter ───────────────────────────────────────────────────────── */
+
+.counter {
+  position: fixed;
+  bottom: 20px;
+  left: 24px;
+  z-index: 120;
+
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.55);
+  letter-spacing: 0.01em;
+  pointer-events: none;
+}
+
+/* ─── Responsive ────────────────────────────────────────────────────────────── */
+
+@media (max-width: 600px) {
+  .whiteCard {
+    width: 100vw;
+    border-radius: 20px 20px 0 0;
+  }
+
+  .projectNavLeft {
+    left: 8px;
+  }
+
+  .projectNavRight {
+    right: 8px;
+  }
+}

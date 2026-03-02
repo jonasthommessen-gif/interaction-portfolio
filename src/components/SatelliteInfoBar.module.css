@@ -1,0 +1,153 @@
+/* SatelliteInfoBar — fixed bottom strip, three columns */
+.bar {
+  position: fixed;
+  bottom: 20px;
+  left: 24px;
+  right: 24px;
+  z-index: 2;
+  pointer-events: none;
+  user-select: none;
+
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+
+  font-family: 'IBM Plex Sans', system-ui, -apple-system, sans-serif;
+  font-size: 10px;
+  font-weight: 400;
+  letter-spacing: 0.1em;
+  line-height: 1.5;
+
+  animation: fadeIn 0.8s ease both;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── LEFT ── */
+.left {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 160px;
+}
+
+.regionName {
+  color: rgba(255, 255, 255, 0.50);
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  font-size: 10px;
+}
+
+.regionCoords {
+  color: rgba(255, 255, 255, 0.28);
+  letter-spacing: 0.08em;
+  font-size: 9px;
+}
+
+/* ── CENTER ── */
+.center {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.satName {
+  color: rgba(255, 255, 255, 0.52);
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.sep {
+  color: rgba(255, 255, 255, 0.16);
+  font-size: 9px;
+}
+
+.value {
+  color: rgba(255, 255, 255, 0.36);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.07em;
+}
+
+.category {
+  color: rgba(255, 255, 255, 0.20);
+  letter-spacing: 0.14em;
+  font-size: 9px;
+}
+
+.noSat {
+  color: rgba(255, 255, 255, 0.18);
+  letter-spacing: 0.12em;
+  font-size: 9px;
+}
+
+/* ── RIGHT ── */
+.right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 1px;
+  min-width: 160px;
+}
+
+.rightRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.trackingLabel {
+  color: rgba(255, 255, 255, 0.28);
+  letter-spacing: 0.12em;
+  font-size: 9px;
+}
+
+.trackingCount {
+  color: rgba(255, 255, 255, 0.50);
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+}
+
+.liveLabel {
+  color: rgba(255, 255, 255, 0.50);
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  font-size: 9px;
+}
+
+.utcTime {
+  color: rgba(255, 255, 255, 0.32);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.08em;
+  font-size: 9px;
+}
+
+.issLabel {
+  color: rgba(255, 255, 255, 0.24);
+  letter-spacing: 0.1em;
+  font-size: 9px;
+}
+
+.issTime {
+  color: rgba(255, 255, 255, 0.44);
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  font-size: 9px;
+  font-variant-numeric: tabular-nums;
+}
+
+.issInFrame {
+  color: rgba(200, 230, 255, 0.45);
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  font-size: 9px;
+}

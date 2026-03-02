@@ -1,0 +1,260 @@
+.pill {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  height: 57px;
+  padding: 0 16px;
+
+  border-radius: 999px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.86);
+  border: none;
+
+  font-size: clamp(13px, 1.25vw, 18px);
+  font-weight: 400;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+
+  transition:
+    transform 180ms var(--ease-out),
+    color 180ms var(--ease-out);
+
+  transform: scale(1);
+  will-change: transform;
+  cursor: pointer;
+
+  overflow: visible;
+
+  user-select: none;
+  white-space: nowrap;
+}
+
+/* Tight label box (matches your black rectangle reference) */
+.label {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  line-height: 1;
+
+  border-radius: 999px;
+
+  /* Fixed ripple geometry for ALL items (logo + labels).
+     Circle is intentionally taller than the navbar interior so it gets clipped
+     top/bottom, leaving the horizontal arcs (separator vibe). */
+  --ripple-diameter: 180px;
+  --ripple-x-factor: 1;
+  --ripple-y-factor: 1;
+  --ripple-start: 0.86;
+  --ripple-end: 1;
+
+  /* Stacking context so rings can sit behind text cleanly */
+  z-index: 0;
+}
+
+.labelText {
+  /* More balanced padding so the ring feels even around the text */
+  padding: 4px 8px;
+}
+
+.labelIcon {
+  padding: 0;
+  border-radius: 999px;
+}
+
+.label::before,
+.label::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: calc(var(--ripple-diameter) * var(--ripple-x-factor));
+  height: calc(var(--ripple-diameter) * var(--ripple-y-factor));
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.36);
+  opacity: 0;
+  pointer-events: none;
+  will-change: transform, opacity;
+
+  transform: translate(-50%, -50%) scale(var(--ripple-start));
+  transform-origin: center;
+
+  /* Make ripples more visible on light backgrounds without turning black */
+  filter: drop-shadow(0 0 10px rgba(0, 0, 0, 0.18));
+  mix-blend-mode: overlay;
+
+  z-index: 0;
+}
+
+.labelContent {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.wave {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: calc(var(--ripple-diameter) * var(--ripple-x-factor));
+  height: calc(var(--ripple-diameter) * var(--ripple-y-factor));
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.36);
+  opacity: 0;
+  pointer-events: none;
+  will-change: transform, opacity;
+
+  transform: translate(-50%, -50%) scale(var(--ripple-start));
+  transform-origin: center;
+  filter: drop-shadow(0 0 10px rgba(0, 0, 0, 0.18));
+  mix-blend-mode: overlay;
+
+  z-index: 0;
+}
+
+.pill:hover {
+  transform: scale(1.06);
+  color: rgba(255, 255, 255, 1);
+}
+
+.pill:hover .label::before {
+  animation: navWave1 3600ms cubic-bezier(0.16, 1, 0.3, 1) infinite;
+}
+
+.pill:hover .label::after {
+  animation: navWave2 3600ms cubic-bezier(0.16, 1, 0.3, 1) infinite;
+}
+
+.pill:hover .wave {
+  animation: navWave3 3600ms cubic-bezier(0.16, 1, 0.3, 1) infinite;
+}
+
+.pill:active {
+  transform: scale(1.03);
+}
+
+.pill:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.7);
+  outline-offset: 4px;
+}
+
+.pillActive {
+  color: rgba(255, 255, 255, 1);
+}
+
+/* Burst-of-3 behavior:
+   - 3 waves launch
+   - each hits the same "shoreline" and fades
+   - ~1s pause before the next burst (cycle = 3600ms)
+*/
+
+@keyframes navWave1 {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(var(--ripple-start));
+  }
+
+  14% {
+    opacity: 0.18;
+  }
+
+  66% {
+    opacity: 0.12;
+    transform: translate(-50%, -50%) scale(var(--ripple-end));
+  }
+
+  72% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(var(--ripple-end));
+  }
+
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(var(--ripple-end));
+  }
+}
+
+@keyframes navWave2 {
+  0%,
+  10% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(var(--ripple-start));
+  }
+
+  22% {
+    opacity: 0.16;
+  }
+
+  70% {
+    opacity: 0.1;
+    transform: translate(-50%, -50%) scale(var(--ripple-end));
+  }
+
+  76% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(var(--ripple-end));
+  }
+
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(var(--ripple-end));
+  }
+}
+
+@keyframes navWave3 {
+  0%,
+  20% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(var(--ripple-start));
+  }
+
+  32% {
+    opacity: 0.14;
+  }
+
+  74% {
+    opacity: 0.08;
+    transform: translate(-50%, -50%) scale(var(--ripple-end));
+  }
+
+  80% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(var(--ripple-end));
+  }
+
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(var(--ripple-end));
+  }
+}
+
+@media (max-width: 820px) {
+  .label {
+    --ripple-diameter: 160px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pill:hover .label::before,
+  .pill:hover .label::after {
+    animation: none;
+  }
+
+  .pill:hover .wave {
+    animation: none;
+  }
+}
+
+@media (max-width: 820px) {
+  .pill {
+    height: 50px;
+    padding: 0 14px;
+    font-size: 13px;
+    letter-spacing: 0.16em;
+  }
+}

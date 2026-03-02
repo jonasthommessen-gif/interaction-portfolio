@@ -1,0 +1,218 @@
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { archiveProjects } from '../content/archiveProjects'
+import type { ArchiveProject } from '../content/archiveProjects'
+import styles from './FeedOverlay.module.css'
+
+interface FeedOverlayProps {
+  /** The project to scroll to initially */
+  entryProjectId: string
+  /** Whether the entry was from a gallery card (true) or the Feed button (false) */
+  fromGallery: boolean
+  onClose: () => void
+}
+
+// ─── FeedItem ─────────────────────────────────────────────────────────────────
+
+function FeedItem({
+  project,
+  isEntry,
+  fromGallery,
+}: {
+  project: ArchiveProject
+  isEntry: boolean
+  fromGallery: boolean
+}) {
+  const [carouselIndex, setCarouselIndex] = useState(0)
+
+  // Animation step for the entry item only
+  // step 1: image floating in, step 2: white card rising, step 3: shelf settled
+  const [step, setStep] = useState<1 | 2 | 3>(isEntry ? 1 : 3)
+
+  useEffect(() => {
+    if (!isEntry) return
+    // Phase 1 → 2: image in place, white card starts rising
+    const t1 = setTimeout(() => setStep(2), 420)
+    // Phase 2 → 3: shelf effect
+    const t2 = setTimeout(() => setStep(3), 900)
+    return () => { clearTimeout(t1); clearTimeout(t2) }
+  }, [isEntry])
+
+  const handlePrev = useCallback(() => {
+    setCarouselIndex((i) => (i - 1 + project.images.length) % project.images.length)
+  }, [project.images.length])
+
+  const handleNext = useCallback(() => {
+    setCarouselIndex((i) => (i + 1) % project.images.length)
+  }, [project.images.length])
+
+  const hasMultiple = project.images.length > 1
+
+  // For the entry item, animate the image floating in from off-screen or from gallery
+  const imageInitial = isEntry
+    ? fromGallery
+      ? { opacity: 0, scale: 0.85, y: 40 }
+      : { opacity: 0, x: 80, scale: 0.9 }
+    : { opacity: 1, scale: 1, y: 0 }
+
+  const imageAnimate =
+    step === 1
+      ? { opacity: 1, scale: 1.04, y: 0, x: 0 }
+      : step === 2
+      ? { opacity: 1, scale: 1.04, y: 0, x: 0 }
+      : { opacity: 1, scale: 1.0, y: 0, x: 0 }
+
+  return (
+    <div className={styles.feedItem}>
+      {/* ── Media frame ─────────────────────────────────────────────────── */}
+      <motion.div
+        className={styles.mediaFrame}
+        initial={imageInitial}
+        animate={imageAnimate}
+        transition={{ type: 'spring', stiffness: 180, damping: 26 }}
+      >
+        <div className={styles.carouselWrapper}>
+          <AnimatePresence mode="sync">
+            <motion.img
+              key={`${project.id}-${carouselIndex}`}
+              className={styles.carouselImage}
+              src={project.images[carouselIndex]}
+              alt={`${project.title} — image ${carouselIndex + 1}`}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.28 }}
+              draggable={false}
+            />
+          </AnimatePresence>
+
+          {/* Arrows — only if multiple images */}
+          {hasMultiple && (
+            <>
+              <button
+                className={`${styles.arrow} ${styles.arrowLeft}`}
+                onClick={handlePrev}
+                aria-label="Previous image"
+              >
+                ‹
+              </button>
+              <button
+                className={`${styles.arrow} ${styles.arrowRight}`}
+                onClick={handleNext}
+                aria-label="Next image"
+              >
+                ›
+              </button>
+            </>
+          )}
+
+          {/* Dot indicators */}
+          {hasMultiple && (
+            <div className={styles.dots}>
+              {project.images.map((_, i) => (
+                <button
+                  key={i}
+                  className={`${styles.dot} ${i === carouselIndex ? styles.dotActive : ''}`}
+                  onClick={() => setCarouselIndex(i)}
+                  aria-label={`Image ${i + 1}`}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+      </motion.div>
+
+      {/* ── Text shelf ──────────────────────────────────────────────────── */}
+      <motion.div
+        className={styles.textShelf}
+        initial={isEntry ? { opacity: 0, y: 16 } : { opacity: 1, y: 0 }}
+        animate={{ opacity: step >= 3 ? 1 : 0, y: step >= 3 ? 0 : 16 }}
+        transition={{ duration: 0.35, ease: 'easeOut' }}
+      >
+        <h2 className={styles.title}>{project.title}</h2>
+        <p className={styles.description}>{project.description}</p>
+        <div className={styles.tags}>
+          {project.tags.map((tag) => (
+            <span key={tag} className={styles.tag}>{tag}</span>
+          ))}
+        </div>
+      </motion.div>
+    </div>
+  )
+}
+
+// ─── FeedOverlay ──────────────────────────────────────────────────────────────
+
+export function FeedOverlay({ entryProjectId, fromGallery, onClose }: FeedOverlayProps) {
+  const panelRef = useRef<HTMLDivElement>(null)
+  const feedRef = useRef<HTMLDivElement>(null)
+
+  // Build ordered project list starting from entry project
+  const orderedProjects: ArchiveProject[] = (() => {
+    const idx = archiveProjects.findIndex((p) => p.id === entryProjectId)
+    if (idx === -1) return archiveProjects
+    return [
+      ...archiveProjects.slice(idx),
+      ...archiveProjects.slice(0, idx),
+    ]
+  })()
+
+  // Keyboard: Escape to close
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose()
+    }
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+  }, [onClose])
+
+  // Click outside panel → close
+  const handleBackdropClick = (e: React.MouseEvent) => {
+    if (panelRef.current && !panelRef.current.contains(e.target as Node)) {
+      onClose()
+    }
+  }
+
+  // Prevent feed scroll from propagating to gallery
+  const handleFeedWheel = (e: React.WheelEvent) => {
+    e.stopPropagation()
+  }
+
+  return (
+    <motion.div
+      className={styles.backdrop}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.35 }}
+      onClick={handleBackdropClick}
+    >
+      {/* White feed panel — slides up from below */}
+      <motion.div
+        ref={panelRef}
+        className={styles.panel}
+        initial={{ y: '100%' }}
+        animate={{ y: 0 }}
+        exit={{ y: '100%' }}
+        transition={{ type: 'tween', ease: [0.22, 1, 0.36, 1], duration: 0.5, delay: 0.18 }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Scrollable feed — native scroll, isolated from gallery */}
+        <div
+          ref={feedRef}
+          className={styles.feed}
+          onWheel={handleFeedWheel}
+        >
+          {orderedProjects.map((project, i) => (
+            <FeedItem
+              key={project.id}
+              project={project}
+              isEntry={i === 0}
+              fromGallery={fromGallery}
+            />
+          ))}
+        </div>
+      </motion.div>
+    </motion.div>
+  )
+}
