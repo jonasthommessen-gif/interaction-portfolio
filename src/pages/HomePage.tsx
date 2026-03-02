@@ -4,6 +4,7 @@ import { SatelliteOverlay } from '../components/SatelliteOverlay'
 import { SatelliteInfoBar } from '../components/SatelliteInfoBar'
 import { useMediaQuery } from '../hooks/useMediaQuery'
 import type { OverlayInfo } from '../components/SatelliteOverlay'
+import { NORWAY_BBOX, SCANDINAVIA_BBOX } from '../lib/satelliteMath'
 import styles from './HomePage.module.css'
 
 export function HomePage() {
@@ -13,8 +14,12 @@ export function HomePage() {
   return (
     <main className={`page ${styles.page}`}>
       <GrainBackground />
-      <SatelliteOverlay onFeaturedSat={setOverlayInfo} hideTracks={isMobile} />
-      <SatelliteInfoBar info={overlayInfo} />
+      <SatelliteOverlay
+        bbox={isMobile ? NORWAY_BBOX : SCANDINAVIA_BBOX}
+        onFeaturedSat={setOverlayInfo}
+        hideTracks={isMobile}
+      />
+      <SatelliteInfoBar info={overlayInfo} isMobile={isMobile} />
     </main>
   )
 }

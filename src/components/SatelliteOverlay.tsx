@@ -22,16 +22,10 @@ import {
   computeTrail,
 } from '../lib/satelliteMath'
 import type { BBox, TrailPoint } from '../lib/satelliteMath'
+import { SCANDINAVIA_BBOX } from '../lib/satelliteMath'
 import styles from './SatelliteOverlay.module.css'
 
 // ─── Config ───────────────────────────────────────────────────────────────────
-
-const NORWAY_BBOX: BBox = {
-  latMin: 50.0,
-  latMax: 80.0,
-  lonMin: -15.0,
-  lonMax: 45.0,
-}
 
 const ENTRY_PAD = 8
 const TARGET_FPS = 30
@@ -185,7 +179,7 @@ function drawGrid(
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export function SatelliteOverlay({
-  bbox = NORWAY_BBOX,
+  bbox = SCANDINAVIA_BBOX,
   trailMinutes = 10,
   stepSeconds = 30,
   maxSats = 50,

@@ -38,6 +38,22 @@ export interface BBox {
   lonMax: number
 }
 
+/** Scandinavia / N. Europe (desktop default) */
+export const SCANDINAVIA_BBOX: BBox = {
+  latMin: 50.0,
+  latMax: 80.0,
+  lonMin: -15.0,
+  lonMax: 45.0,
+}
+
+/** Norway only (mobile home frame) */
+export const NORWAY_BBOX: BBox = {
+  latMin: 57.9,
+  latMax: 71.2,
+  lonMin: 4.6,
+  lonMax: 31.1,
+}
+
 // ─── TLE Parsing ─────────────────────────────────────────────────────────────
 
 /**

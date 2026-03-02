@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { archiveProjects } from '../content/archiveProjects'
 import type { ArchiveProject } from '../content/archiveProjects'
 import { useNavbarInvert } from '../contexts/NavbarInvertContext'
+import { useMediaQuery } from '../hooks/useMediaQuery'
 import { getImageAverageLuminance, isImageBright } from '../utils/imageLuminance'
 import styles from './FeedOverlay.module.css'
 
@@ -21,13 +22,16 @@ function FeedItem({
   isEntry,
   fromGallery,
   onEntryImageChange,
+  isMobile,
 }: {
   project: ArchiveProject
   isEntry: boolean
   fromGallery: boolean
   onEntryImageChange?: (url: string) => void
+  isMobile?: boolean
 }) {
   const [carouselIndex, setCarouselIndex] = useState(0)
+  const scrollRef = useRef<HTMLDivElement>(null)
 
   // Animation step for the entry item only
   // step 1: image floating in, step 2: white card rising, step 3: shelf settled
@@ -42,12 +46,38 @@ function FeedItem({
     return () => { clearTimeout(t1); clearTimeout(t2) }
   }, [isEntry])
 
-  // Report current image URL for entry item (logo invert based on brightness)
+  // Mobile: track visible slide index from scroll (for logo invert)
+  const [mobileVisibleIndex, setMobileVisibleIndex] = useState(0)
+  const updateVisibleIndex = useCallback(() => {
+    const el = scrollRef.current
+    if (!el || !isMobile) return
+    const w = el.clientWidth
+    if (w <= 0) return
+    const i = Math.round(el.scrollLeft / w)
+    const clamped = Math.max(0, Math.min(i, project.images.length - 1))
+    setMobileVisibleIndex(clamped)
+  }, [isMobile, project.images.length])
+
   useEffect(() => {
-    if (isEntry && onEntryImageChange && project.images[carouselIndex]) {
-      onEntryImageChange(project.images[carouselIndex])
+    if (!isMobile) return
+    const el = scrollRef.current
+    if (!el) return
+    updateVisibleIndex()
+    el.addEventListener('scroll', updateVisibleIndex)
+    const ro = new ResizeObserver(updateVisibleIndex)
+    ro.observe(el)
+    return () => {
+      el.removeEventListener('scroll', updateVisibleIndex)
+      ro.disconnect()
     }
-  }, [isEntry, onEntryImageChange, project.images, carouselIndex])
+  }, [isMobile, updateVisibleIndex])
+
+  const effectiveIndex = isMobile ? mobileVisibleIndex : carouselIndex
+  useEffect(() => {
+    if (isEntry && onEntryImageChange && project.images[effectiveIndex]) {
+      onEntryImageChange(project.images[effectiveIndex])
+    }
+  }, [isEntry, onEntryImageChange, project.images, effectiveIndex])
 
   const handlePrev = useCallback(() => {
     setCarouselIndex((i) => (i - 1 + project.images.length) % project.images.length)
@@ -82,53 +112,71 @@ function FeedItem({
         animate={imageAnimate}
         transition={{ type: 'spring', stiffness: 180, damping: 26 }}
       >
-        <div className={styles.carouselWrapper}>
-          <AnimatePresence mode="sync">
-            <motion.img
-              key={`${project.id}-${carouselIndex}`}
-              className={styles.carouselImage}
-              src={project.images[carouselIndex]}
-              alt={`${project.title} — image ${carouselIndex + 1}`}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.28 }}
-              draggable={false}
-            />
-          </AnimatePresence>
-
-          {/* Arrows — only if multiple images */}
-          {hasMultiple && (
-            <>
-              <button
-                className={`${styles.arrow} ${styles.arrowLeft}`}
-                onClick={handlePrev}
-                aria-label="Previous image"
-              >
-                ‹
-              </button>
-              <button
-                className={`${styles.arrow} ${styles.arrowRight}`}
-                onClick={handleNext}
-                aria-label="Next image"
-              >
-                ›
-              </button>
-            </>
-          )}
-
-          {/* Dot indicators */}
-          {hasMultiple && (
-            <div className={styles.dots}>
-              {project.images.map((_, i) => (
-                <button
-                  key={i}
-                  className={`${styles.dot} ${i === carouselIndex ? styles.dotActive : ''}`}
-                  onClick={() => setCarouselIndex(i)}
-                  aria-label={`Image ${i + 1}`}
-                />
+        <div
+          ref={scrollRef}
+          className={`${styles.carouselWrapper} ${isMobile ? styles.carouselScroll : ''}`}
+        >
+          {isMobile ? (
+            <div className={styles.carouselScrollTrack}>
+              {project.images.map((src, i) => (
+                <div key={i} className={styles.carouselSlide}>
+                  <img
+                    className={styles.carouselImage}
+                    src={src}
+                    alt={`${project.title} — image ${i + 1}`}
+                    draggable={false}
+                  />
+                </div>
               ))}
             </div>
+          ) : (
+            <>
+              <AnimatePresence mode="sync">
+                <motion.img
+                  key={`${project.id}-${carouselIndex}`}
+                  className={styles.carouselImage}
+                  src={project.images[carouselIndex]}
+                  alt={`${project.title} — image ${carouselIndex + 1}`}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.28 }}
+                  draggable={false}
+                />
+              </AnimatePresence>
+
+              {hasMultiple && (
+                <>
+                  <button
+                    className={`${styles.arrow} ${styles.arrowLeft}`}
+                    onClick={handlePrev}
+                    aria-label="Previous image"
+                  >
+                    ‹
+                  </button>
+                  <button
+                    className={`${styles.arrow} ${styles.arrowRight}`}
+                    onClick={handleNext}
+                    aria-label="Next image"
+                  >
+                    ›
+                  </button>
+                </>
+              )}
+
+              {hasMultiple && (
+                <div className={styles.dots}>
+                  {project.images.map((_, i) => (
+                    <button
+                      key={i}
+                      className={`${styles.dot} ${i === carouselIndex ? styles.dotActive : ''}`}
+                      onClick={() => setCarouselIndex(i)}
+                      aria-label={`Image ${i + 1}`}
+                    />
+                  ))}
+                </div>
+              )}
+            </>
           )}
         </div>
       </motion.div>
@@ -159,6 +207,7 @@ export function FeedOverlay({ entryProjectId, fromGallery, onClose }: FeedOverla
   const feedRef = useRef<HTMLDivElement>(null)
   const { setInvertLogo } = useNavbarInvert()
   const [currentEntryImageUrl, setCurrentEntryImageUrl] = useState<string | null>(null)
+  const isMobile = useMediaQuery('(max-width: 820px)')
 
   // Invert logo when the current entry (first) Feed image is bright (Option C)
   useEffect(() => {
@@ -238,6 +287,7 @@ export function FeedOverlay({ entryProjectId, fromGallery, onClose }: FeedOverla
               isEntry={i === 0}
               fromGallery={fromGallery}
               onEntryImageChange={i === 0 ? setCurrentEntryImageUrl : undefined}
+              isMobile={isMobile}
             />
           ))}
         </div>

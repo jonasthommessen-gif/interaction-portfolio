@@ -17,6 +17,8 @@ import styles from './SatelliteInfoBar.module.css'
 
 interface SatelliteInfoBarProps {
   info: OverlayInfo | null
+  /** When true, show Norway frame and region text (mobile home) */
+  isMobile?: boolean
 }
 
 function formatLat(lat: number): string {
@@ -47,9 +49,10 @@ function useOsloClock(): string {
   return time
 }
 
-export function SatelliteInfoBar({ info }: SatelliteInfoBarProps) {
+export function SatelliteInfoBar({ info, isMobile: isMobileProp }: SatelliteInfoBarProps) {
   const osloTime = useOsloClock()
-  const isMobile = useMediaQuery('(max-width: 820px)')
+  const isMobileQuery = useMediaQuery('(max-width: 820px)')
+  const isMobile = isMobileProp ?? isMobileQuery
 
   if (isMobile) {
     const latLon = info?.featured
@@ -58,8 +61,8 @@ export function SatelliteInfoBar({ info }: SatelliteInfoBarProps) {
     return (
       <div className={styles.bar} aria-hidden="true" data-mobile>
         <div className={styles.mobileRow}>
-          <span className={styles.regionName}>SCANDINAVIA / N.EUROPE</span>
-          <span className={styles.regionCoords}>50°N – 80°N · 15°W – 45°E</span>
+          <span className={styles.regionName}>NORWAY</span>
+          <span className={styles.regionCoords}>58°N – 71°N · 5°W – 31°E</span>
         </div>
         <div className={styles.mobileRow}>
           <span className={styles.value}>{latLon}</span>

@@ -1,39 +1,43 @@
+/* Always render at 98px for sharpness; scale down only when in pill */
 .logo {
-  width: 57px;
-  height: 57px;
   display: block;
-
   border-radius: 999px;
   background: transparent;
-
   overflow: visible;
-
   font-family: var(--font-serif);
   font-weight: 600;
   letter-spacing: -0.02em;
+}
+
+.logoInner {
+  display: block;
+  width: 98px;
+  height: 98px;
 }
 
 .canvas {
   width: 100%;
   height: 100%;
   display: block;
-
-  /* Visually enlarge the mascot without clipping its rare idles */
-  transform: scale(1.7);
-  transform-origin: center;
-
-  /* Let the NavLink receive pointer events for navigation */
   pointer-events: none;
 }
 
-/* Contracted mobile: full animation visible, no CSS scale (avoids clipping + blur) */
+/* Contracted mobile: 98px visible */
 .logoContracted {
   width: 98px;
   height: 98px;
 }
 
-.logoContracted .canvas {
-  transform: none;
+/* In pill (expanded mobile + desktop): 57px visible, 98px canvas scaled down for sharpness */
+.logoInPill {
+  width: 57px;
+  height: 57px;
+  overflow: hidden;
+}
+
+.logoInPill .logoInner {
+  transform: scale(0.581);
+  transform-origin: center;
 }
 
 /* Inverted for visibility on bright backgrounds (e.g. Archive Feed) */

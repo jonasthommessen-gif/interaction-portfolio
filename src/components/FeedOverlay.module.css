@@ -110,6 +110,36 @@
   height: 100%;
 }
 
+/* Mobile: horizontal scroll (Instagram-style), no arrows/dots */
+.carouselScroll {
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.carouselScroll::-webkit-scrollbar {
+  display: none;
+}
+.carouselScrollTrack {
+  display: flex;
+  flex-direction: row;
+  height: 100%;
+  width: max-content;
+}
+.carouselSlide {
+  flex: 0 0 auto;
+  min-width: 100%;
+  height: 100%;
+  scroll-snap-align: start;
+  position: relative;
+}
+.carouselSlide .carouselImage {
+  position: absolute;
+  inset: 0;
+}
+
 .carouselImage {
   position: absolute;
   inset: 0;

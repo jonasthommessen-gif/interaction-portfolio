@@ -108,10 +108,12 @@ export function RiveLogoButton({
 
   return (
     <span
-      className={`${styles.logo} ${contracted ? styles.logoContracted : ''} ${invert ? styles.logoInverted : ''}`}
+      className={`${styles.logo} ${contracted ? styles.logoContracted : styles.logoInPill} ${invert ? styles.logoInverted : ''}`}
       aria-hidden="true"
     >
-      <RiveComponent className={styles.canvas} />
+      <span className={styles.logoInner}>
+        <RiveComponent className={styles.canvas} />
+      </span>
     </span>
   )
 }
