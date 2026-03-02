@@ -45,6 +45,17 @@
   transform-origin: center;
 }
 
+@media (min-width: 821px) {
+  .logoInPill {
+    width: 64px;
+    height: 64px;
+  }
+
+  .logoInPill .logoInner {
+    transform: translate(-50%, -50%) scale(0.653061224);
+  }
+}
+
 /* Inverted for visibility on bright backgrounds (e.g. Archive Feed) */
 .logoInverted {
   filter: invert(1);

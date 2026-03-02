@@ -269,3 +269,9 @@
     letter-spacing: 0.16em;
   }
 }
+
+@media (min-width: 821px) {
+  .pill {
+    height: 64px;
+  }
+}
