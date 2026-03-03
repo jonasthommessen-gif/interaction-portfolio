@@ -12,6 +12,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import {
   EventType,
+  StateMachineInput,
   StateMachineInputType,
   useRive,
 } from '@rive-app/react-canvas'
@@ -29,8 +30,8 @@ export function LoadingScreen({ ready }: LoadingScreenProps) {
   const [visible, setVisible] = useState(true)
   const [fading, setFading] = useState(false)
   const readyRef = useRef(ready)
-  const numberInputRef = useRef<{ value: number } | null>(null)
-  const triggerInputRef = useRef<{ fire: () => void } | null>(null)
+  const numberInputRef = useRef<StateMachineInput | null>(null)
+  const triggerInputRef = useRef<StateMachineInput | null>(null)
 
   useEffect(() => {
     readyRef.current = ready
