@@ -79,6 +79,7 @@ export function Navbar() {
                   to="/projects"
                   rippleStartPx={54}
                   rippleEndPx={65}
+                  rippleOriginX="-0.35em"
                   onSamePageTap={isMobile ? () => setIsMobileNavExpanded(false) : undefined}
                 >
                   Projects

@@ -13,11 +13,13 @@ type NavPillProps = {
   rippleStartPx?: number
   /** Override ripple end distance from center (px). Default uses CSS value (60px). */
   rippleEndPx?: number
+  /** Nudge ripple origin horizontally (e.g. "-0.35em" to shift left). PROJECTS only. */
+  rippleOriginX?: string
 }
 
 const RIPPLE_RADIUS_PX = 90
 
-export function NavPill({ to, children, ariaLabel, end, onSamePageTap, rippleStartPx, rippleEndPx }: NavPillProps) {
+export function NavPill({ to, children, ariaLabel, end, onSamePageTap, rippleStartPx, rippleEndPx, rippleOriginX }: NavPillProps) {
   const match = useMatch({ path: to, end: end ?? (to === '/') })
   const isActive = !!match
   const isTextLabel = typeof children === 'string' || typeof children === 'number'
@@ -25,10 +27,11 @@ export function NavPill({ to, children, ariaLabel, end, onSamePageTap, rippleSta
     isTextLabel ? styles.labelText : styles.labelIcon
   }`
   const labelStyle =
-    rippleStartPx != null || rippleEndPx != null
+    rippleStartPx != null || rippleEndPx != null || rippleOriginX != null
       ? ({
           ...(rippleStartPx != null && { '--ripple-start': (rippleStartPx / RIPPLE_RADIUS_PX).toFixed(4) }),
           ...(rippleEndPx != null && { '--ripple-end': (rippleEndPx / RIPPLE_RADIUS_PX).toFixed(4) }),
+          ...(rippleOriginX != null && { '--ripple-origin-x': rippleOriginX }),
         } as React.CSSProperties)
       : undefined
 
