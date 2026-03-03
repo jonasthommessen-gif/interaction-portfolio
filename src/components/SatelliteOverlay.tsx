@@ -567,8 +567,9 @@ export function SatelliteOverlay({
       const nowMs = Date.now()
       const currentBbox = bboxRef.current
 
-      // Count only satellites currently in frame (same criterion as drawing the dot)
+      // Count only satellites currently in frame; record which names are in frame for featured selection
       let objectCount = 0
+      const inFrameNames = new Set<string>()
       for (const data of registry.values()) {
         const { trail } = data
         if (trail.length < 2) continue
@@ -581,19 +582,23 @@ export function SatelliteOverlay({
             break
           }
         }
-        if (headIdx === n - 1) objectCount++
+        if (headIdx === n - 1) {
+          objectCount++
+          inFrameNames.add(data.name)
+        }
       }
 
       // User-picked satellite overrides priority-based selection when still in frame
-      const picked = pickedSatNameRef.current && registry.has(pickedSatNameRef.current)
+      const picked = pickedSatNameRef.current && inFrameNames.has(pickedSatNameRef.current)
         ? satsRef.current.find(s => s.name === pickedSatNameRef.current)
         : null
 
-      // Priority: Space Station > Weather > Earth Obs > Science > others (used when no pick)
+      // Priority: Space Station > Weather > Earth Obs > Science > others (used when no pick); only consider in-frame
       const priority = ['Space Station', 'Weather', 'Earth Obs', 'Science', 'Satellite']
       let best: { sat: ParsedSatWithMeta; priority: number } | null = null
 
       for (const [name] of registry) {
+        if (!inFrameNames.has(name)) continue
         const sat = satsRef.current.find(s => s.name === name)
         if (!sat) continue
         const p = priority.indexOf(sat.category)
