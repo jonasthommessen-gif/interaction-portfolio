@@ -9,6 +9,8 @@ import { useTLEData } from './hooks/useTLEData'
 const TLE_TIMEOUT_MS = 5000
 // Minimum time the loading screen is shown — ensures animation plays through once
 const MIN_LOADING_MS = 1500
+// After TLEs load, wait this long so the overlay can run recomputeTrails and draw at least one frame
+const POST_TLE_DELAY_MS = 800
 
 export function AppLayout() {
   const [docReady, setDocReady] = useState(
@@ -18,6 +20,8 @@ export function AppLayout() {
   const [tleTimedOut, setTleTimedOut] = useState(false)
   // Minimum display time — always show loading screen for at least MIN_LOADING_MS
   const [minTimeElapsed, setMinTimeElapsed] = useState(false)
+  // After TLE load, delay before allowing ready so overlay can draw sats
+  const [tleSettledElapsed, setTleSettledElapsed] = useState(false)
 
   useEffect(() => {
     if (document.readyState === 'complete') {
@@ -41,8 +45,19 @@ export function AppLayout() {
   // TLE loading state — the loading screen stays until TLEs are fetched (or failed/timed out)
   const { loading: tleLoading } = useTLEData()
 
-  // App is ready when: doc loaded + (TLEs done OR timed out) + minimum time elapsed
-  const appReady = docReady && (!tleLoading || tleTimedOut) && minTimeElapsed
+  // When TLE loading finishes, wait POST_TLE_DELAY_MS so overlay can draw sats before we hide loading
+  useEffect(() => {
+    if (tleLoading) return
+    const timer = setTimeout(() => setTleSettledElapsed(true), POST_TLE_DELAY_MS)
+    return () => clearTimeout(timer)
+  }, [tleLoading])
+
+  // App is ready when: doc loaded + (TLEs done OR timed out) + min time + (post-TLE delay elapsed OR timed out)
+  const appReady =
+    docReady &&
+    (!tleLoading || tleTimedOut) &&
+    minTimeElapsed &&
+    (tleSettledElapsed || tleTimedOut)
 
   return (
     <NavbarInvertProvider>
