@@ -25,7 +25,7 @@ export function NavPill({ to, children, ariaLabel, end, onSamePageTap, rippleSta
   const isTextLabel = typeof children === 'string' || typeof children === 'number'
   const labelClassName = `${styles.label} ${
     isTextLabel ? styles.labelText : styles.labelIcon
-  }`
+  }${rippleOriginX != null ? ` ${styles.labelRippleOrigin}` : ''}`
   const labelStyle =
     rippleStartPx != null || rippleEndPx != null || rippleOriginX != null
       ? ({

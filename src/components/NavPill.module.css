@@ -51,7 +51,6 @@
   /* Start at 47px from center; end at 60px */
   --ripple-start: 0.5222;
   --ripple-end: 0.6667;
-  --ripple-origin-x: 0;
 
   /* Stacking context so rings can sit behind text cleanly */
   z-index: 0;
@@ -67,12 +66,16 @@
   border-radius: 999px;
 }
 
+.labelRippleOrigin {
+  /* Modifier: offset positioning and Offset keyframes applied via .label.labelRippleOrigin */
+}
+
 .label::before,
 .label::after {
   content: '';
   position: absolute;
   top: 50%;
-  left: calc(50% + var(--ripple-origin-x, 0));
+  left: 50%;
   width: calc(var(--ripple-diameter) * var(--ripple-x-factor));
   height: calc(var(--ripple-diameter) * var(--ripple-y-factor));
   border-radius: 50%;
@@ -81,7 +84,7 @@
   pointer-events: none;
   will-change: transform, opacity;
 
-  transform: translate(calc(-50% - var(--ripple-origin-x, 0)), -50%) scale(var(--ripple-start));
+  transform: translate(-50%, -50%) scale(var(--ripple-start));
   transform-origin: center;
 
   /* Make ripples more visible on light backgrounds without turning black */
@@ -102,7 +105,7 @@
 .wave {
   position: absolute;
   top: 50%;
-  left: calc(50% + var(--ripple-origin-x, 0));
+  left: 50%;
   width: calc(var(--ripple-diameter) * var(--ripple-x-factor));
   height: calc(var(--ripple-diameter) * var(--ripple-y-factor));
   border-radius: 50%;
@@ -111,12 +114,24 @@
   pointer-events: none;
   will-change: transform, opacity;
 
-  transform: translate(calc(-50% - var(--ripple-origin-x, 0)), -50%) scale(var(--ripple-start));
+  transform: translate(-50%, -50%) scale(var(--ripple-start));
   transform-origin: center;
   filter: drop-shadow(0 0 10px rgba(0, 0, 0, 0.18));
   mix-blend-mode: overlay;
 
   z-index: 0;
+}
+
+/* Ripple origin offset: only when .labelRippleOrigin (e.g. PROJECTS) */
+.label.labelRippleOrigin::before,
+.label.labelRippleOrigin::after {
+  left: calc(50% + var(--ripple-origin-x));
+  transform: translate(calc(-50% - var(--ripple-origin-x)), -50%) scale(var(--ripple-start));
+}
+
+.label.labelRippleOrigin .wave {
+  left: calc(50% + var(--ripple-origin-x));
+  transform: translate(calc(-50% - var(--ripple-origin-x)), -50%) scale(var(--ripple-start));
 }
 
 .pill:hover {
@@ -134,6 +149,18 @@
 
 .pill:hover .wave {
   animation: navWave3 3600ms cubic-bezier(0.16, 1, 0.3, 1) infinite;
+}
+
+.pill:hover .label.labelRippleOrigin::before {
+  animation: navWave1Offset 3600ms cubic-bezier(0.16, 1, 0.3, 1) infinite;
+}
+
+.pill:hover .label.labelRippleOrigin::after {
+  animation: navWave2Offset 3600ms cubic-bezier(0.16, 1, 0.3, 1) infinite;
+}
+
+.pill:hover .label.labelRippleOrigin .wave {
+  animation: navWave3Offset 3600ms cubic-bezier(0.16, 1, 0.3, 1) infinite;
 }
 
 .pill:active {
@@ -158,7 +185,7 @@
 @keyframes navWave1 {
   0% {
     opacity: 0;
-    transform: translate(calc(-50% - var(--ripple-origin-x, 0)), -50%) scale(var(--ripple-start));
+    transform: translate(-50%, -50%) scale(var(--ripple-start));
   }
 
   14% {
@@ -167,17 +194,17 @@
 
   66% {
     opacity: 0.12;
-    transform: translate(calc(-50% - var(--ripple-origin-x, 0)), -50%) scale(var(--ripple-end));
+    transform: translate(-50%, -50%) scale(var(--ripple-end));
   }
 
   72% {
     opacity: 0;
-    transform: translate(calc(-50% - var(--ripple-origin-x, 0)), -50%) scale(var(--ripple-end));
+    transform: translate(-50%, -50%) scale(var(--ripple-end));
   }
 
   100% {
     opacity: 0;
-    transform: translate(calc(-50% - var(--ripple-origin-x, 0)), -50%) scale(var(--ripple-end));
+    transform: translate(-50%, -50%) scale(var(--ripple-end));
   }
 }
 
@@ -185,7 +212,7 @@
   0%,
   10% {
     opacity: 0;
-    transform: translate(calc(-50% - var(--ripple-origin-x, 0)), -50%) scale(var(--ripple-start));
+    transform: translate(-50%, -50%) scale(var(--ripple-start));
   }
 
   22% {
@@ -194,17 +221,17 @@
 
   70% {
     opacity: 0.1;
-    transform: translate(calc(-50% - var(--ripple-origin-x, 0)), -50%) scale(var(--ripple-end));
+    transform: translate(-50%, -50%) scale(var(--ripple-end));
   }
 
   76% {
     opacity: 0;
-    transform: translate(calc(-50% - var(--ripple-origin-x, 0)), -50%) scale(var(--ripple-end));
+    transform: translate(-50%, -50%) scale(var(--ripple-end));
   }
 
   100% {
     opacity: 0;
-    transform: translate(calc(-50% - var(--ripple-origin-x, 0)), -50%) scale(var(--ripple-end));
+    transform: translate(-50%, -50%) scale(var(--ripple-end));
   }
 }
 
@@ -212,7 +239,7 @@
   0%,
   20% {
     opacity: 0;
-    transform: translate(calc(-50% - var(--ripple-origin-x, 0)), -50%) scale(var(--ripple-start));
+    transform: translate(-50%, -50%) scale(var(--ripple-start));
   }
 
   32% {
@@ -221,17 +248,97 @@
 
   74% {
     opacity: 0.08;
-    transform: translate(calc(-50% - var(--ripple-origin-x, 0)), -50%) scale(var(--ripple-end));
+    transform: translate(-50%, -50%) scale(var(--ripple-end));
   }
 
   80% {
     opacity: 0;
-    transform: translate(calc(-50% - var(--ripple-origin-x, 0)), -50%) scale(var(--ripple-end));
+    transform: translate(-50%, -50%) scale(var(--ripple-end));
   }
 
   100% {
     opacity: 0;
-    transform: translate(calc(-50% - var(--ripple-origin-x, 0)), -50%) scale(var(--ripple-end));
+    transform: translate(-50%, -50%) scale(var(--ripple-end));
+  }
+}
+
+@keyframes navWave1Offset {
+  0% {
+    opacity: 0;
+    transform: translate(calc(-50% - var(--ripple-origin-x)), -50%) scale(var(--ripple-start));
+  }
+
+  14% {
+    opacity: 0.18;
+  }
+
+  66% {
+    opacity: 0.12;
+    transform: translate(calc(-50% - var(--ripple-origin-x)), -50%) scale(var(--ripple-end));
+  }
+
+  72% {
+    opacity: 0;
+    transform: translate(calc(-50% - var(--ripple-origin-x)), -50%) scale(var(--ripple-end));
+  }
+
+  100% {
+    opacity: 0;
+    transform: translate(calc(-50% - var(--ripple-origin-x)), -50%) scale(var(--ripple-end));
+  }
+}
+
+@keyframes navWave2Offset {
+  0%,
+  10% {
+    opacity: 0;
+    transform: translate(calc(-50% - var(--ripple-origin-x)), -50%) scale(var(--ripple-start));
+  }
+
+  22% {
+    opacity: 0.16;
+  }
+
+  70% {
+    opacity: 0.1;
+    transform: translate(calc(-50% - var(--ripple-origin-x)), -50%) scale(var(--ripple-end));
+  }
+
+  76% {
+    opacity: 0;
+    transform: translate(calc(-50% - var(--ripple-origin-x)), -50%) scale(var(--ripple-end));
+  }
+
+  100% {
+    opacity: 0;
+    transform: translate(calc(-50% - var(--ripple-origin-x)), -50%) scale(var(--ripple-end));
+  }
+}
+
+@keyframes navWave3Offset {
+  0%,
+  20% {
+    opacity: 0;
+    transform: translate(calc(-50% - var(--ripple-origin-x)), -50%) scale(var(--ripple-start));
+  }
+
+  32% {
+    opacity: 0.14;
+  }
+
+  74% {
+    opacity: 0.08;
+    transform: translate(calc(-50% - var(--ripple-origin-x)), -50%) scale(var(--ripple-end));
+  }
+
+  80% {
+    opacity: 0;
+    transform: translate(calc(-50% - var(--ripple-origin-x)), -50%) scale(var(--ripple-end));
+  }
+
+  100% {
+    opacity: 0;
+    transform: translate(calc(-50% - var(--ripple-origin-x)), -50%) scale(var(--ripple-end));
   }
 }
 
@@ -254,11 +361,14 @@
 
 @media (prefers-reduced-motion: reduce) {
   .pill:hover .label::before,
-  .pill:hover .label::after {
+  .pill:hover .label::after,
+  .pill:hover .label.labelRippleOrigin::before,
+  .pill:hover .label.labelRippleOrigin::after {
     animation: none;
   }
 
-  .pill:hover .wave {
+  .pill:hover .wave,
+  .pill:hover .label.labelRippleOrigin .wave {
     animation: none;
   }
 }
