@@ -70,6 +70,11 @@ export const CURATED_SATS: CuratedSat[] = [
   { noradId: 43017, label: 'Fox-1D',        category: 'Amateur satellite' },
 ]
 
+/** NORAD IDs of the curated "first batch" Starlinks — always included in TLE merge when present in feed. */
+export const STARLINK_PRIORITY_NORAD_IDS: ReadonlySet<number> = new Set(
+  CURATED_SATS.filter(s => s.category === 'Starlink satellite').map(s => s.noradId)
+)
+
 /**
  * Build the CelesTrak GP fetch URL for the curated satellite list.
  */

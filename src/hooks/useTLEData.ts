@@ -16,7 +16,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { parseTLEText } from '../lib/satelliteMath'
-import { getCategoryForName } from '../lib/curatedSats'
+import { getCategoryForName, STARLINK_PRIORITY_NORAD_IDS } from '../lib/curatedSats'
 
 // ─── Extended ParsedSat with category ────────────────────────────────────────
 
@@ -59,7 +59,7 @@ const WEATHER_URL  = 'https://celestrak.org/NORAD/elements/gp.php?GROUP=weather&
 const STARLINK_URL = 'https://celestrak.org/NORAD/elements/gp.php?GROUP=starlink&FORMAT=TLE'
 const VISUAL_URL   = 'https://celestrak.org/NORAD/elements/gp.php?GROUP=visual&FORMAT=TLE'
 
-const STARLINK_MERGE_CAP = 200
+const STARLINK_MERGE_CAP = 40
 
 async function tryFetch(url: string): Promise<string> {
   const res = await fetch(url)
@@ -83,54 +83,59 @@ async function fetchAll(): Promise<ParsedSatWithMeta[]> {
   const results: ParsedSatWithMeta[] = []
   const seen = new Set<string>()
 
-  // Fetch stations (ISS etc.) — small, fast, always works
-  try {
-    const text = await tryFetch(STATIONS_URL)
+  // Fetch all four groups in parallel — total time ≈ slowest request, not sum
+  const [stationsRes, weatherRes, starlinkRes, visualRes] = await Promise.allSettled([
+    tryFetch(STATIONS_URL),
+    tryFetch(WEATHER_URL),
+    tryFetch(STARLINK_URL),
+    tryFetch(VISUAL_URL),
+  ])
+
+  function mergeGroup(text: string) {
     const sats = parseWithMeta(text)
     for (const s of sats) {
       if (!seen.has(s.name)) { seen.add(s.name); results.push(s) }
     }
-    console.debug(`[useTLEData] stations: ${sats.length} sats`)
-  } catch (e) {
-    console.warn('[useTLEData] stations fetch failed:', e)
+    return sats.length
   }
 
-  // Fetch weather sats — NOAA, Metop, Suomi NPP, etc.
-  try {
-    const text = await tryFetch(WEATHER_URL)
-    const sats = parseWithMeta(text)
-    for (const s of sats) {
-      if (!seen.has(s.name)) { seen.add(s.name); results.push(s) }
-    }
-    console.debug(`[useTLEData] weather: ${sats.length} sats`)
-  } catch (e) {
-    console.warn('[useTLEData] weather fetch failed:', e)
+  if (stationsRes.status === 'fulfilled') {
+    const n = mergeGroup(stationsRes.value)
+    console.debug(`[useTLEData] stations: ${n} sats`)
+  } else {
+    console.warn('[useTLEData] stations fetch failed:', stationsRes.reason)
   }
 
-  // Fetch Starlink — cap merge to keep list size and recompute performant
-  try {
-    const text = await tryFetch(STARLINK_URL)
-    const sats = parseWithMeta(text)
-    let merged = 0
-    for (const s of sats) {
-      if (merged >= STARLINK_MERGE_CAP) break
-      if (!seen.has(s.name)) { seen.add(s.name); results.push(s); merged++ }
-    }
-    console.debug(`[useTLEData] starlink: ${merged} merged (cap ${STARLINK_MERGE_CAP})`)
-  } catch (e) {
-    console.warn('[useTLEData] starlink fetch failed:', e)
+  if (weatherRes.status === 'fulfilled') {
+    const n = mergeGroup(weatherRes.value)
+    console.debug(`[useTLEData] weather: ${n} sats`)
+  } else {
+    console.warn('[useTLEData] weather fetch failed:', weatherRes.reason)
   }
 
-  // Fetch 100 (or so) Brightest — naked-eye visible
-  try {
-    const text = await tryFetch(VISUAL_URL)
-    const sats = parseWithMeta(text)
+  if (starlinkRes.status === 'fulfilled') {
+    const sats = parseWithMeta(starlinkRes.value)
+    let priorityCount = 0
+    let otherCount = 0
     for (const s of sats) {
-      if (!seen.has(s.name)) { seen.add(s.name); results.push(s) }
+      const isPriority = STARLINK_PRIORITY_NORAD_IDS.has(s.satrec.satnum)
+      if (isPriority) {
+        if (!seen.has(s.name)) { seen.add(s.name); results.push(s); priorityCount++ }
+      } else {
+        if (otherCount >= STARLINK_MERGE_CAP) continue
+        if (!seen.has(s.name)) { seen.add(s.name); results.push(s); otherCount++ }
+      }
     }
-    console.debug(`[useTLEData] visual: ${sats.length} sats`)
-  } catch (e) {
-    console.warn('[useTLEData] visual fetch failed:', e)
+    console.debug(`[useTLEData] starlink: ${priorityCount} priority + ${otherCount} other (cap ${STARLINK_MERGE_CAP})`)
+  } else {
+    console.warn('[useTLEData] starlink fetch failed:', starlinkRes.reason)
+  }
+
+  if (visualRes.status === 'fulfilled') {
+    const n = mergeGroup(visualRes.value)
+    console.debug(`[useTLEData] visual: ${n} sats`)
+  } else {
+    console.warn('[useTLEData] visual fetch failed:', visualRes.reason)
   }
 
   if (results.length === 0) {
