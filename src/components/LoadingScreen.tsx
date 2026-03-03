@@ -9,8 +9,9 @@
  * ─────────────────────────────────────────────────────────────────────────────
  */
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import {
+  EventType,
   StateMachineInputType,
   useRive,
 } from '@rive-app/react-canvas'
@@ -27,6 +28,13 @@ interface LoadingScreenProps {
 export function LoadingScreen({ ready }: LoadingScreenProps) {
   const [visible, setVisible] = useState(true)
   const [fading, setFading] = useState(false)
+  const readyRef = useRef(ready)
+  const numberInputRef = useRef<{ value: number } | null>(null)
+  const triggerInputRef = useRef<{ fire: () => void } | null>(null)
+
+  useEffect(() => {
+    readyRef.current = ready
+  }, [ready])
 
   const { rive, RiveComponent } = useRive({
     src: RIVE_SRC,
@@ -39,7 +47,7 @@ export function LoadingScreen({ ready }: LoadingScreenProps) {
     [],
   )
 
-  // Set idle index to 2 (the loading-loop animation) as soon as Rive is ready
+  // Set loading animation (idle index 2) when Rive is ready; replay on Loop/Stop until ready
   useEffect(() => {
     if (!rive) return
 
@@ -56,10 +64,37 @@ export function LoadingScreen({ ready }: LoadingScreenProps) {
     const triggerInput =
       inputs.find(i => i.type === StateMachineInputType.Trigger) ?? null
 
+    numberInputRef.current = numberInput
+    triggerInputRef.current = triggerInput
+
+    function replayLoadingAnimation() {
+      const num = numberInputRef.current
+      const trig = triggerInputRef.current
+      if (num && trig) {
+        // eslint-disable-next-line react-hooks/immutability
+        num.value = 2
+        trig.fire()
+      }
+    }
+
     if (numberInput && triggerInput) {
       // eslint-disable-next-line react-hooks/immutability
       numberInput.value = 2
       triggerInput.fire()
+    }
+
+    const onLoopOrStop = () => {
+      if (!readyRef.current) replayLoadingAnimation()
+    }
+
+    rive.on(EventType.Loop, onLoopOrStop)
+    rive.on(EventType.Stop, onLoopOrStop)
+
+    return () => {
+      rive.off(EventType.Loop, onLoopOrStop)
+      rive.off(EventType.Stop, onLoopOrStop)
+      numberInputRef.current = null
+      triggerInputRef.current = null
     }
   }, [normalize, rive])
 
