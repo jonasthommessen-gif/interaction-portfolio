@@ -11,7 +11,6 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react'
 import {
-  EventType,
   StateMachineInput,
   StateMachineInputType,
   useRive,
@@ -20,6 +19,7 @@ import styles from './LoadingScreen.module.css'
 
 const RIVE_SRC = '/rive/White.logo.mascot.riv'
 const STATE_MACHINE = 'Logo_State Machine'
+const LOADING_ANIMATION_INTERVAL_MS = 2500
 
 interface LoadingScreenProps {
   /** Set to true once the app content is ready to show */
@@ -48,7 +48,7 @@ export function LoadingScreen({ ready }: LoadingScreenProps) {
     [],
   )
 
-  // Set loading animation (idle index 2) when Rive is ready; replay on Loop/Stop until ready
+  // Set loading animation (idle index 2) when Rive is ready; replay on timer until ready
   useEffect(() => {
     if (!rive) return
 
@@ -84,16 +84,12 @@ export function LoadingScreen({ ready }: LoadingScreenProps) {
       triggerInput.fire()
     }
 
-    const onLoopOrStop = () => {
+    const interval = setInterval(() => {
       if (!readyRef.current) replayLoadingAnimation()
-    }
-
-    rive.on(EventType.Loop, onLoopOrStop)
-    rive.on(EventType.Stop, onLoopOrStop)
+    }, LOADING_ANIMATION_INTERVAL_MS)
 
     return () => {
-      rive.off(EventType.Loop, onLoopOrStop)
-      rive.off(EventType.Stop, onLoopOrStop)
+      clearInterval(interval)
       numberInputRef.current = null
       triggerInputRef.current = null
     }
