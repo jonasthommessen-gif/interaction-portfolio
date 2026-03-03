@@ -89,6 +89,8 @@ export interface SatelliteOverlayProps {
   onFeaturedSat?: (info: OverlayInfo | null) => void
   /** When true, do not draw trails or dots (e.g. for mobile) */
   hideTracks?: boolean
+  /** When true, recompute trails after canvas resize (desktop only). */
+  recomputeTrailsOnResize?: boolean
 }
 
 export interface FeaturedSatInfo {
@@ -261,12 +263,16 @@ export function SatelliteOverlay({
   tleUrl,
   onFeaturedSat,
   hideTracks = false,
+  recomputeTrailsOnResize = false,
 }: SatelliteOverlayProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const registryRef = useRef<Map<string, SatTrailData>>(new Map())
   const rafRef = useRef<number>(0)
   const hideTracksRef = useRef(hideTracks)
   hideTracksRef.current = hideTracks
+  const recomputeTrailsOnResizeRef = useRef(recomputeTrailsOnResize)
+  recomputeTrailsOnResizeRef.current = recomputeTrailsOnResize
+  const recomputeTrailsRef = useRef<() => void>(() => {})
 
   const { sats } = useTLEData({ tleUrl, refreshHours })
 
@@ -291,86 +297,87 @@ export function SatelliteOverlay({
     visible: false, x: 0, y: 0, name: '', category: '', description: null, nearRight: false,
   })
 
-  // ── Trail recompute ───────────────────────────────────────────────────────
-  useEffect(() => {
-    const recompute = () => {
-      const canvas = canvasRef.current
-      if (!canvas || satsRef.current.length === 0) return
+  function recomputeTrails() {
+    const canvas = canvasRef.current
+    if (!canvas || satsRef.current.length === 0) return
 
-      const W = canvas.width
-      const H = canvas.height
-      const nowMs = Date.now()
-      const currentBbox = bboxRef.current
-      const prevRegistry = registryRef.current
+    const W = canvas.width
+    const H = canvas.height
+    const nowMs = Date.now()
+    const currentBbox = bboxRef.current
+    const prevRegistry = registryRef.current
 
-      const entryBbox: BBox = {
-        latMin: currentBbox.latMin - ENTRY_PAD,
-        latMax: currentBbox.latMax + ENTRY_PAD,
-        lonMin: currentBbox.lonMin - ENTRY_PAD,
-        lonMax: currentBbox.lonMax + ENTRY_PAD,
-      }
-
-      const nextRegistry = new Map<string, SatTrailData>()
-
-      // Add new entrants
-      for (const sat of satsRef.current) {
-        if (nextRegistry.size >= maxSats) break
-        if (prevRegistry.has(sat.name)) continue
-
-        const ll = propagateToLatLon(sat.satrec, new Date(nowMs))
-        if (!ll) continue
-        if (!isInBBox(ll, entryBbox)) continue
-
-        const rawTrail = computeTrail(sat.satrec, nowMs, trailMinutes, stepSeconds, currentBbox, W, H)
-        const trail = smoothTrailWithSpline(
-          rawTrail,
-          TRAIL_SMOOTHING_CONFIG.samplesPerSegment,
-          TRAIL_SMOOTHING_CONFIG.splineTension,
-        )
-        let head: TrailPoint | undefined
-        for (let i = trail.length - 1; i >= 0; i--) {
-          if (!isNaN(trail[i]!.x) && !isNaN(trail[i]!.y)) { head = trail[i]; break }
-        }
-        nextRegistry.set(sat.name, {
-          name: sat.name,
-          category: sat.category,
-          trail,
-          smoothX: head?.x ?? 0,
-          smoothY: head?.y ?? 0,
-        })
-      }
-
-      // Update existing + evict fully-exited
-      for (const [name, existing] of prevRegistry) {
-        const sat = satsRef.current.find(s => s.name === name)
-        if (!sat) continue
-
-        const rawTrail = computeTrail(sat.satrec, nowMs, trailMinutes, stepSeconds, currentBbox, W, H)
-        const trail = smoothTrailWithSpline(
-          rawTrail,
-          TRAIL_SMOOTHING_CONFIG.samplesPerSegment,
-          TRAIL_SMOOTHING_CONFIG.splineTension,
-        )
-        const hasValidPoint = trail.some(p => !isNaN(p.x) && !isNaN(p.y))
-
-        if (!hasValidPoint) {
-          continue
-        } else {
-          nextRegistry.set(name, {
-            name,
-            category: sat.category,
-            trail,
-            smoothX: existing.smoothX,
-            smoothY: existing.smoothY,
-          })
-        }
-      }
-
-      registryRef.current = nextRegistry
+    const entryBbox: BBox = {
+      latMin: currentBbox.latMin - ENTRY_PAD,
+      latMax: currentBbox.latMax + ENTRY_PAD,
+      lonMin: currentBbox.lonMin - ENTRY_PAD,
+      lonMax: currentBbox.lonMax + ENTRY_PAD,
     }
 
-    recompute()
-    const interval = setInterval(recompute, TRAIL_RECOMPUTE_MS)
+    const nextRegistry = new Map<string, SatTrailData>()
+
+    // Add new entrants
+    for (const sat of satsRef.current) {
+      if (nextRegistry.size >= maxSats) break
+      if (prevRegistry.has(sat.name)) continue
+
+      const ll = propagateToLatLon(sat.satrec, new Date(nowMs))
+      if (!ll) continue
+      if (!isInBBox(ll, entryBbox)) continue
+
+      const rawTrail = computeTrail(sat.satrec, nowMs, trailMinutes, stepSeconds, currentBbox, W, H)
+      const trail = smoothTrailWithSpline(
+        rawTrail,
+        TRAIL_SMOOTHING_CONFIG.samplesPerSegment,
+        TRAIL_SMOOTHING_CONFIG.splineTension,
+      )
+      let head: TrailPoint | undefined
+      for (let i = trail.length - 1; i >= 0; i--) {
+        if (!isNaN(trail[i]!.x) && !isNaN(trail[i]!.y)) { head = trail[i]; break }
+      }
+      nextRegistry.set(sat.name, {
+        name: sat.name,
+        category: sat.category,
+        trail,
+        smoothX: head?.x ?? 0,
+        smoothY: head?.y ?? 0,
+      })
+    }
+
+    // Update existing + evict fully-exited
+    for (const [name, existing] of prevRegistry) {
+      const sat = satsRef.current.find(s => s.name === name)
+      if (!sat) continue
+
+      const rawTrail = computeTrail(sat.satrec, nowMs, trailMinutes, stepSeconds, currentBbox, W, H)
+      const trail = smoothTrailWithSpline(
+        rawTrail,
+        TRAIL_SMOOTHING_CONFIG.samplesPerSegment,
+        TRAIL_SMOOTHING_CONFIG.splineTension,
+      )
+      const hasValidPoint = trail.some(p => !isNaN(p.x) && !isNaN(p.y))
+
+      if (!hasValidPoint) {
+        continue
+      } else {
+        nextRegistry.set(name, {
+          name,
+          category: sat.category,
+          trail,
+          smoothX: existing.smoothX,
+          smoothY: existing.smoothY,
+        })
+      }
+    }
+
+    registryRef.current = nextRegistry
+  }
+  recomputeTrailsRef.current = recomputeTrails
+
+  // ── Trail recompute ───────────────────────────────────────────────────────
+  useEffect(() => {
+    recomputeTrails()
+    const interval = setInterval(() => recomputeTrailsRef.current?.(), TRAIL_RECOMPUTE_MS)
     return () => clearInterval(interval)
   }, [sats, maxSats, trailMinutes, stepSeconds])
 
@@ -397,6 +404,9 @@ export function SatelliteOverlay({
       canvas.height = Math.floor(H * dpr)
       canvas.style.width = `${W}px`
       canvas.style.height = `${H}px`
+      if (recomputeTrailsOnResizeRef.current) {
+        recomputeTrailsRef.current?.()
+      }
     }
     resize()
     window.addEventListener('resize', resize)
@@ -557,7 +567,22 @@ export function SatelliteOverlay({
       const nowMs = Date.now()
       const currentBbox = bboxRef.current
 
-      const objectCount = registry.size
+      // Count only satellites currently in frame (same criterion as drawing the dot)
+      let objectCount = 0
+      for (const data of registry.values()) {
+        const { trail } = data
+        if (trail.length < 2) continue
+        const n = trail.length
+        let headIdx = -1
+        for (let i = n - 1; i >= 0; i--) {
+          const p = trail[i]!
+          if (!isNaN(p.x) && !isNaN(p.y)) {
+            headIdx = i
+            break
+          }
+        }
+        if (headIdx === n - 1) objectCount++
+      }
 
       // User-picked satellite overrides priority-based selection when still in frame
       const picked = pickedSatNameRef.current && registry.has(pickedSatNameRef.current)
