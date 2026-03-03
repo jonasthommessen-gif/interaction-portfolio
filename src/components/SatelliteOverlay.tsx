@@ -106,6 +106,8 @@ export interface OverlayInfo {
   featured: FeaturedSatInfo | null
   objectCount: number
   issNextPassMin: number | null | undefined  // null = ISS currently in frame, undefined = ISS not found/unknown
+  /** true when featured was chosen by priority (not user-picked) */
+  featuredIsPriority?: boolean
 }
 
 // ─── Internal types ───────────────────────────────────────────────────────────
@@ -662,6 +664,7 @@ export function SatelliteOverlay({
         featured,
         objectCount,
         issNextPassMin,
+        featuredIsPriority: chosen != null && picked == null,
       })
     }
 

@@ -88,7 +88,16 @@ export function SatelliteInfoBar({ info, isMobile: isMobileProp }: SatelliteInfo
           <>
             <span className={styles.category}>{info.featured.category.toUpperCase()}</span>
             <span className={styles.sep}>·</span>
-            <span className={styles.satName}>{info.featured.name}</span>
+            {info.featuredIsPriority ? (
+              <span className={`${styles.satName} ${styles.tooltipTarget}`}>
+                {info.featured.name}
+                <span className={styles.inlineTooltip}>
+                  Currently the most interesting object in frame.
+                </span>
+              </span>
+            ) : (
+              <span className={styles.satName}>{info.featured.name}</span>
+            )}
             <span className={styles.sep}>·</span>
             <span className={styles.value}>
               {formatLat(info.featured.lat)}&nbsp;&nbsp;{formatLon(info.featured.lon)}

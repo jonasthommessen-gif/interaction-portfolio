@@ -56,6 +56,10 @@ const DEFAULT_REFRESH_HOURS = 6
 // CelesTrak GROUP endpoints — all return CORS: * (confirmed)
 const STATIONS_URL = 'https://celestrak.org/NORAD/elements/gp.php?GROUP=stations&FORMAT=TLE'
 const WEATHER_URL  = 'https://celestrak.org/NORAD/elements/gp.php?GROUP=weather&FORMAT=TLE'
+const STARLINK_URL = 'https://celestrak.org/NORAD/elements/gp.php?GROUP=starlink&FORMAT=TLE'
+const VISUAL_URL   = 'https://celestrak.org/NORAD/elements/gp.php?GROUP=visual&FORMAT=TLE'
+
+const STARLINK_MERGE_CAP = 200
 
 async function tryFetch(url: string): Promise<string> {
   const res = await fetch(url)
@@ -101,6 +105,32 @@ async function fetchAll(): Promise<ParsedSatWithMeta[]> {
     console.debug(`[useTLEData] weather: ${sats.length} sats`)
   } catch (e) {
     console.warn('[useTLEData] weather fetch failed:', e)
+  }
+
+  // Fetch Starlink — cap merge to keep list size and recompute performant
+  try {
+    const text = await tryFetch(STARLINK_URL)
+    const sats = parseWithMeta(text)
+    let merged = 0
+    for (const s of sats) {
+      if (merged >= STARLINK_MERGE_CAP) break
+      if (!seen.has(s.name)) { seen.add(s.name); results.push(s); merged++ }
+    }
+    console.debug(`[useTLEData] starlink: ${merged} merged (cap ${STARLINK_MERGE_CAP})`)
+  } catch (e) {
+    console.warn('[useTLEData] starlink fetch failed:', e)
+  }
+
+  // Fetch 100 (or so) Brightest — naked-eye visible
+  try {
+    const text = await tryFetch(VISUAL_URL)
+    const sats = parseWithMeta(text)
+    for (const s of sats) {
+      if (!seen.has(s.name)) { seen.add(s.name); results.push(s) }
+    }
+    console.debug(`[useTLEData] visual: ${sats.length} sats`)
+  } catch (e) {
+    console.warn('[useTLEData] visual fetch failed:', e)
   }
 
   if (results.length === 0) {
