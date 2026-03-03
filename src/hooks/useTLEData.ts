@@ -118,7 +118,7 @@ async function fetchAll(): Promise<ParsedSatWithMeta[]> {
     let priorityCount = 0
     let otherCount = 0
     for (const s of sats) {
-      const isPriority = STARLINK_PRIORITY_NORAD_IDS.has(s.satrec.satnum)
+      const isPriority = STARLINK_PRIORITY_NORAD_IDS.has(Number(s.satrec.satnum))
       if (isPriority) {
         if (!seen.has(s.name)) { seen.add(s.name); results.push(s); priorityCount++ }
       } else {
