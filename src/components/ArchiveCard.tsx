@@ -32,7 +32,7 @@ export function ArchiveCard({
   const idleRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const mountedRef = useRef(true)
 
-  // Idle float animation — very subtle, relative offsets only (±1px y, ±0.2deg)
+  // Idle float animation — gentle bob and tilt (±3px y, ±0.5deg)
   // These are RELATIVE to the card's current position, not absolute
   useEffect(() => {
     mountedRef.current = true
@@ -43,10 +43,10 @@ export function ArchiveCard({
     idleRef.current = setTimeout(() => {
       if (!mountedRef.current) return
       controls.start({
-        y: [0, -1, 0, 1, 0],
-        rotate: [0, 0.2, 0, -0.2, 0],
+        y: [0, -3, 0, 3, 0],
+        rotate: [0, 0.5, 0, -0.5, 0],
         transition: {
-          duration: 5 + (cardNum % 3),
+          duration: 6 + (cardNum % 4),
           repeat: Infinity,
           ease: 'easeInOut',
         },

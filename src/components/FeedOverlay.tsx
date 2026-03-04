@@ -87,6 +87,16 @@ function FeedItem({
     setCarouselIndex((i) => (i + 1) % project.images.length)
   }, [project.images.length])
 
+  const handleMobileDotClick = useCallback(
+    (index: number) => {
+      const el = scrollRef.current
+      if (!el) return
+      const w = el.clientWidth
+      el.scrollTo({ left: index * w, behavior: 'smooth' })
+    },
+    []
+  )
+
   const hasMultiple = project.images.length > 1
 
   // For the entry item, animate the image floating in from off-screen or from gallery
@@ -117,21 +127,23 @@ function FeedItem({
           className={`${styles.carouselWrapper} ${isMobile ? styles.carouselScroll : ''}`}
         >
           {isMobile ? (
-            <div
-              className={styles.carouselScrollTrack}
-              style={{ '--slide-count': project.images.length } as React.CSSProperties}
-            >
-              {project.images.map((src, i) => (
-                <div key={i} className={styles.carouselSlide}>
-                  <img
-                    className={styles.carouselImage}
-                    src={src}
-                    alt={`${project.title} — image ${i + 1}`}
-                    draggable={false}
-                  />
-                </div>
-              ))}
-            </div>
+            <>
+              <div
+                className={styles.carouselScrollTrack}
+                style={{ '--slide-count': project.images.length } as React.CSSProperties}
+              >
+                {project.images.map((src, i) => (
+                  <div key={i} className={styles.carouselSlide}>
+                    <img
+                      className={styles.carouselImage}
+                      src={src}
+                      alt={`${project.title} — image ${i + 1}`}
+                      draggable={false}
+                    />
+                  </div>
+                ))}
+              </div>
+            </>
           ) : (
             <>
               <AnimatePresence mode="sync">
@@ -155,34 +167,40 @@ function FeedItem({
                     onClick={handlePrev}
                     aria-label="Previous image"
                   >
-                    ‹
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+                      <path d="M12 4l-6 6 6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
                   </button>
                   <button
                     className={`${styles.arrow} ${styles.arrowRight}`}
                     onClick={handleNext}
                     aria-label="Next image"
                   >
-                    ›
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+                      <path d="M8 4l6 6-6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
                   </button>
                 </>
-              )}
-
-              {hasMultiple && (
-                <div className={styles.dots}>
-                  {project.images.map((_, i) => (
-                    <button
-                      key={i}
-                      className={`${styles.dot} ${i === carouselIndex ? styles.dotActive : ''}`}
-                      onClick={() => setCarouselIndex(i)}
-                      aria-label={`Image ${i + 1}`}
-                    />
-                  ))}
-                </div>
               )}
             </>
           )}
         </div>
       </motion.div>
+
+      {hasMultiple && (
+        <div className={styles.dotsWrap}>
+          <div className={styles.dots}>
+            {project.images.map((_, i) => (
+              <button
+                key={i}
+                className={`${styles.dot} ${i === (isMobile ? mobileVisibleIndex : carouselIndex) ? styles.dotActive : ''}`}
+                onClick={() => (isMobile ? handleMobileDotClick(i) : setCarouselIndex(i))}
+                aria-label={`Image ${i + 1}`}
+              />
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* ── Text shelf ──────────────────────────────────────────────────── */}
       <motion.div

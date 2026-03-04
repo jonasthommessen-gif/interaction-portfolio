@@ -19,12 +19,21 @@ function getInitialArchiveState(): { viewMode: 'gallery' | 'feed'; feedEntryId: 
 const PROJECTS = archiveProjects
 const TOTAL = PROJECTS.length
 const LOOP_WIDTH = 4000
-const FRICTION = 0.92
+const FRICTION = 0.94
 
 /** Idle auto-scroll: starts after 10s of no interaction */
 const IDLE_TIMEOUT_MS = 10_000
 /** Auto-scroll speed in px/frame (~0.3px at 60fps) */
 const IDLE_SCROLL_SPEED = 0.35
+
+/** Lerp factor for smooth scroll: display follows target by this fraction per frame */
+const SMOOTH_LERP = 0.12
+
+/** Max wheel delta per event so target does not jump too far and break smoothness */
+const MAX_WHEEL_DELTA = 20
+
+/** Snap to target when within this distance (avoids drift and micro-jitter) */
+const SNAP_THRESHOLD = 0.4
 
 // ─── Layout data ──────────────────────────────────────────────────────────────
 
@@ -102,6 +111,8 @@ export function ArchivePage() {
 
   // ── Momentum scroll ──────────────────────────────────────────────────────
   const offsetMV = useMotionValue(0)
+  const targetOffsetRef = useRef(0)
+  const smoothRafRef = useRef<number | null>(null)
   const recentDeltas = useRef<number[]>([])
   const rafRef = useRef<number | null>(null)
   const scrollTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -125,13 +136,11 @@ export function ArchivePage() {
     isIdleScrolling.current = true
     const tick = () => {
       if (!isIdleScrolling.current) return
-      const current = offsetMV.get()
-      const next = ((current + IDLE_SCROLL_SPEED) % LOOP_WIDTH + LOOP_WIDTH) % LOOP_WIDTH
-      offsetMV.set(next)
+      targetOffsetRef.current += IDLE_SCROLL_SPEED
       idleRafRef.current = requestAnimationFrame(tick)
     }
     idleRafRef.current = requestAnimationFrame(tick)
-  }, [offsetMV])
+  }, [])
 
   const resetIdleTimer = useCallback(() => {
     stopIdleScroll()
@@ -163,16 +172,14 @@ export function ArchivePage() {
   // ── Momentum scroll logic ─────────────────────────────────────────────────
   const runMomentum = useCallback(() => {
     momentumVelocity.current *= FRICTION
-    if (Math.abs(momentumVelocity.current) < 0.15) {
+    if (Math.abs(momentumVelocity.current) < 0.09) {
       momentumVelocity.current = 0
       rafRef.current = null
       return
     }
-    const current = offsetMV.get()
-    const next = ((current + momentumVelocity.current) % LOOP_WIDTH + LOOP_WIDTH) % LOOP_WIDTH
-    offsetMV.set(next)
+    targetOffsetRef.current += momentumVelocity.current
     rafRef.current = requestAnimationFrame(runMomentum)
-  }, [offsetMV])
+  }, [])
 
   const containerRef = useRef<HTMLDivElement>(null)
 
@@ -184,10 +191,10 @@ export function ArchivePage() {
 
       resetIdleTimer()
 
-      const delta = e.deltaY
-      const current = offsetMV.get()
-      const next = ((current + delta) % LOOP_WIDTH + LOOP_WIDTH) % LOOP_WIDTH
-      offsetMV.set(next)
+      const rawDelta = e.deltaY
+      const delta =
+        Math.sign(rawDelta) * Math.min(Math.abs(rawDelta), MAX_WHEEL_DELTA)
+      targetOffsetRef.current += delta
 
       recentDeltas.current.push(delta)
       if (recentDeltas.current.length > 5) recentDeltas.current.shift()
@@ -205,12 +212,12 @@ export function ArchivePage() {
             : 0
         recentDeltas.current = []
         momentumVelocity.current = avg * 0.6
-        if (Math.abs(momentumVelocity.current) > 0.15) {
+        if (Math.abs(momentumVelocity.current) > 0.09) {
           rafRef.current = requestAnimationFrame(runMomentum)
         }
       }, 60)
     },
-    [isFeedOpen, offsetMV, resetIdleTimer, runMomentum],
+    [isFeedOpen, resetIdleTimer, runMomentum],
   )
 
   useEffect(() => {
@@ -223,9 +230,27 @@ export function ArchivePage() {
   useEffect(() => {
     return () => {
       if (rafRef.current) cancelAnimationFrame(rafRef.current)
+      if (smoothRafRef.current) cancelAnimationFrame(smoothRafRef.current)
       if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current)
     }
   }, [])
+
+  // Smooth scroll: lerp display offset toward target every frame (unbounded; no wrap so crossing 0/LOOP_WIDTH doesn't jump)
+  useEffect(() => {
+    const tick = () => {
+      const current = offsetMV.get()
+      const target = targetOffsetRef.current
+      const d = target - current
+      const next =
+        Math.abs(d) <= SNAP_THRESHOLD ? target : current + d * SMOOTH_LERP
+      offsetMV.set(next)
+      smoothRafRef.current = requestAnimationFrame(tick)
+    }
+    smoothRafRef.current = requestAnimationFrame(tick)
+    return () => {
+      if (smoothRafRef.current) cancelAnimationFrame(smoothRafRef.current)
+    }
+  }, [offsetMV])
 
   // Touch support
   const lastTouchX = useRef(0)
@@ -248,11 +273,9 @@ export function ArchivePage() {
       const dx = lastTouchX.current - e.touches[0].clientX
       touchVelocityRef.current = dx
       lastTouchX.current = e.touches[0].clientX
-      const current = offsetMV.get()
-      const next = ((current + dx) % LOOP_WIDTH + LOOP_WIDTH) % LOOP_WIDTH
-      offsetMV.set(next)
+      targetOffsetRef.current += dx
     },
-    [isFeedOpen, offsetMV],
+    [isFeedOpen],
   )
 
   const handleTouchEnd = useCallback(() => {
@@ -409,9 +432,11 @@ function ScrollCanvas({
         const el = slotRefs.current.get(project.id)
         if (!el) return
 
+        // Use unbounded offset so crossing 0/LOOP_WIDTH doesn't cause a visible jump
         const parallaxOffset = offset * PARALLAX_SPEED[layout.depth]
         const cardAbsX = layout.xFraction * LOOP_WIDTH
-        let relX = ((cardAbsX - parallaxOffset) % LOOP_WIDTH + LOOP_WIDTH) % LOOP_WIDTH
+        const relXUnwrapped = cardAbsX - parallaxOffset
+        let relX = ((relXUnwrapped % LOOP_WIDTH) + LOOP_WIDTH) % LOOP_WIDTH
         if (relX > LOOP_WIDTH / 2) relX -= LOOP_WIDTH
 
         const halfCard = (layout.width * layout.scale) / 2
