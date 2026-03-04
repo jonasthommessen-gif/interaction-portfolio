@@ -10,7 +10,7 @@ const TLE_TIMEOUT_MS = 5000
 // Minimum time the loading screen is shown — ensures animation plays through once
 const MIN_LOADING_MS = 1500
 // After TLEs load, wait this long so the overlay can run recomputeTrails and draw at least one frame
-const POST_TLE_DELAY_MS = 800
+const POST_TLE_DELAY_MS = 1200
 
 export function AppLayout() {
   const [docReady, setDocReady] = useState(
