@@ -856,8 +856,8 @@ export function SatelliteOverlay({
           className={styles.tooltip}
           style={
             tooltip.nearRight
-              ? { right: window.innerWidth - tooltip.x + 10, top: tooltip.y }
-              : { left: tooltip.x + 10, top: tooltip.y }
+              ? { right: window.innerWidth - tooltip.x + 30, top: tooltip.y }
+              : { left: tooltip.x + 30, top: tooltip.y }
           }
           aria-hidden="true"
         >
