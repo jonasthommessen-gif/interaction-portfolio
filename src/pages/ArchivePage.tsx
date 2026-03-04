@@ -54,6 +54,9 @@ function seededRandom(seed: number): () => number {
   }
 }
 
+/** Minimum horizontal gap between cards as a fraction of the loop (avoids overlap) */
+const MIN_X_GAP_FRACTION = 0.8 / TOTAL
+
 function buildLayouts(): CardLayout[] {
   const rng = seededRandom(42)
   const layouts: CardLayout[] = []
@@ -79,6 +82,28 @@ function buildLayouts(): CardLayout[] {
       scale,
     })
   }
+
+  // Enforce minimum x spacing so cards don't overlap (no doubled/tripled look)
+  const byX = layouts
+    .map((layout, index) => ({ index, xFraction: layout.xFraction }))
+    .sort((a, b) => a.xFraction - b.xFraction)
+  for (let k = 1; k < byX.length; k++) {
+    const prev = byX[k - 1].xFraction
+    const minNext = prev + MIN_X_GAP_FRACTION
+    const current = layouts[byX[k].index].xFraction
+    if (current < minNext) {
+      layouts[byX[k].index] = {
+        ...layouts[byX[k].index],
+        xFraction: minNext,
+      }
+      byX[k].xFraction = minNext
+    }
+  }
+  // Normalize any xFraction that ended up >= 1 back into [0, 1)
+  for (const layout of layouts) {
+    layout.xFraction = ((layout.xFraction % 1) + 1) % 1
+  }
+
   return layouts
 }
 
