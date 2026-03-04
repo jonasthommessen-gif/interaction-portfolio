@@ -1,0 +1,88 @@
+/* Layer B: fixed viewport overlay; all coordinates from About page CSS variables */
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.lineTopBorder,
+.lineLeftBorder,
+.lineRightBorder,
+.lineTopContent,
+.lineVerticalSplit,
+.lineMid {
+  position: absolute;
+  background: var(--about-lineColor, rgba(255, 255, 255, 0.28));
+}
+
+.lineTopBorder {
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 1px;
+}
+
+.lineLeftBorder {
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+}
+
+.lineRightBorder {
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+}
+
+.lineTopContent {
+  left: var(--about-splitX, 66.67vw);
+  right: 0;
+  top: var(--about-topLineY, 150px);
+  height: 1px;
+}
+
+.lineVerticalSplit {
+  left: var(--about-splitX, 66.67vw);
+  top: 0;
+  bottom: 0;
+  width: 1px;
+}
+
+.lineMid {
+  left: var(--about-splitX, 66.67vw);
+  right: 0;
+  top: var(--about-midLineY, 61vh);
+  height: 1px;
+}
+
+/* Glyph ~47×46; center on intersection */
+.glyphTop,
+.glyphMid {
+  position: absolute;
+  width: 47px;
+  height: 46px;
+  left: var(--about-splitX, 66.67vw);
+  transform: translate(-50%, -50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.glyphTop {
+  top: var(--about-topLineY, 150px);
+}
+
+.glyphMid {
+  top: var(--about-midLineY, 61vh);
+}
+
+.glyphTop img,
+.glyphMid img {
+  display: block;
+  width: 47px;
+  height: 46px;
+  object-fit: contain;
+}

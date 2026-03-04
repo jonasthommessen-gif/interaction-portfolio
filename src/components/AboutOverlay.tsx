@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import styles from './AboutOverlay.module.css'
 
 const IconLinkedIn = () => (
@@ -21,98 +21,143 @@ const IconMail = () => (
 
 export function AboutOverlay() {
   const [portraitError, setPortraitError] = useState(false)
+  const leftColumnRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const el = leftColumnRef.current
+    if (!el) return
+    const handleWheel = (e: WheelEvent) => {
+      if (el.scrollTop === 0 && e.deltaY > 0) {
+        e.preventDefault()
+        const lineTop = document.querySelector('[data-about-line="top"]')
+        const lineMid = document.querySelector('[data-about-line="mid"]')
+        if (lineTop && lineMid) {
+          const top = lineTop.getBoundingClientRect().top
+          const mid = lineMid.getBoundingClientRect().top
+          el.scrollTop = mid - top
+        }
+      }
+    }
+    el.addEventListener('wheel', handleWheel, { passive: false })
+    return () => el.removeEventListener('wheel', handleWheel)
+  }, [])
 
   return (
-    <div className={styles.overlay}>
-      <div className={styles.layout}>
-        {/* Left column: name, title, bio, skills diagram */}
-        <section className={styles.leftColumn} aria-label="About">
-          <header className={styles.header}>
-            <div className={styles.headerLineLeft} />
-            <div className={styles.headerChevron} aria-hidden />
-            <h1 className={styles.name}>JONAS THOMMESSEN</h1>
-            <div className={styles.headerLineRight} aria-hidden />
-          </header>
-
-          <div className={styles.bioBlock}>
-            <h2 className={styles.title}>Interaction & product designer</h2>
-            <div className={styles.bioText}>
-              <p>
-                I work across strategy and interaction design, focusing on making complexity navigable.
-              </p>
-              <p>
-                Interfaces don&apos;t exist on their own. They&apos;re shaped by context, limitations, and the way people make sense of what they see. My practice is about clarifying those relationships, making information frictionless to navigate and decisions easier to understand.
-              </p>
-              <p>Based in Norway</p>
-            </div>
-          </div>
-
-          <div className={styles.diagramSection}>
-            <div className={styles.diagramLine} aria-hidden />
-            <div className={styles.diagram}>
-              <div className={styles.diagramLabels}>
-                <span className={styles.diagramLabelTop}>Systems thinking</span>
-                <span className={styles.diagramLabelRight}>Products</span>
-                <span className={styles.diagramLabelBottomRight}>UI</span>
-                <span className={styles.diagramLabelBottomLeft}>Motion</span>
-                <span className={styles.diagramLabelLeft}>Prototyping</span>
-                <span className={styles.diagramLabelTopLeft}>UX</span>
+    <>
+      {/* Left column: scroll-snap — one scroll = one panel (separator/content area) */}
+      <div ref={leftColumnRef} className={styles.leftColumn}>
+        {/* Panel 1: name + bio + first simple separator (snaps so top separator aligns) */}
+        <div className={styles.snapPanel}>
+          <section className={`${styles.section} ${styles.sectionFirstCard}`} aria-label="About">
+            <header className={styles.topSeparator}>
+              <div className={styles.topSeparatorLine} aria-hidden>
+                <div className={styles.lineSegment} />
+                <span className={styles.lineHeadGlyph}>
+                  <img src="/Other/Name.glyph.svg" alt="" width="47" height="46" aria-hidden />
+                </span>
+                <span className={styles.nameGap} />
+                <h1 className={styles.name}>JONAS THOMMESSEN</h1>
+                <span className={styles.nameGap} />
+                <span className={styles.lineHeadGlyph}>
+                  <img src="/Other/Name.glyph.svg" alt="" width="47" height="46" aria-hidden />
+                </span>
+                <div className={styles.lineSegment} />
               </div>
-              <div className={styles.diagramConnectors} aria-hidden />
-              <div className={styles.diagramPill}>
-                <span>INTERACTION DESIGNER</span>
+            </header>
+            <div className={styles.separatorGapBlock}>
+              <div className={styles.textBlockCentered}>
+                <h2 className={styles.title}>Interaction & product designer</h2>
+                <div className={styles.bioText}>
+                  <p>
+                    I work across strategy and interaction design, focusing on making complexity navigable.
+                  </p>
+                  <p>
+                    Interfaces don&apos;t exist on their own. They&apos;re shaped by context, limitations, and the way people make sense of what they see. My practice is about clarifying those relationships, making information frictionless to navigate and decisions easier to understand.
+                  </p>
+                  <p>Based in Norway</p>
+                </div>
               </div>
             </div>
-          </div>
-        </section>
+          </section>
+        </div>
 
-        {/* Right column: vertical rule, portrait, contact */}
-        <aside className={styles.rightColumn}>
-          <div className={styles.verticalRule} aria-hidden />
-          <div className={styles.cornerOrnaments} aria-hidden />
-
-          <div className={styles.portraitBlock}>
-            <div className={styles.portraitFrame}>
-              <div className={styles.portraitLineTop} />
-              <div className={styles.portraitImageWrap}>
-                {!portraitError && (
-                  <img
-                    src="/about-portrait.jpg"
-                    alt=""
-                    className={styles.portraitImage}
-                    onError={() => setPortraitError(true)}
-                  />
-                )}
-              </div>
-              <div className={styles.portraitLineBottom} />
+        {/* Panel 2: first simple separator at TOP so one scroll brings this line to top */}
+        <div className={styles.snapPanel}>
+          <section className={`${styles.section} ${styles.sectionSnapStart} ${styles.sectionPanel2}`} aria-label="About continued">
+            <div className={styles.separatorLineWrapper} aria-hidden>
+              <div className={styles.separatorLine} />
             </div>
-          </div>
+            <div className={`${styles.separatorGapCell} ${styles.separatorGapCellBetweenSeparators}`} aria-hidden />
+            <div className={styles.keywordsSection1}>
+              <span className={styles.keywordUx}>UX</span>
+              <span className={styles.keywordProducts}>Products</span>
+              <span className={styles.keywordSystems}>Systems thinking</span>
+            </div>
+          </section>
+        </div>
 
-          <div className={styles.contactBlock}>
-            <h2 className={styles.contactHeading}>How to reach me</h2>
-            <ul className={styles.contactList}>
-              <li>
-                <a href="https://www.linkedin.com/in/jonasthommessen" target="_blank" rel="noopener noreferrer" className={styles.contactLink}>
-                  <span className={styles.contactIcon}><IconLinkedIn /></span>
-                  Jonas Thommessen
-                </a>
-              </li>
-              <li>
-                <a href="https://www.instagram.com/jonasthommessen" target="_blank" rel="noopener noreferrer" className={styles.contactLink}>
-                  <span className={styles.contactIcon}><IconInstagram /></span>
-                  @jonasthommessen
-                </a>
-              </li>
-              <li>
-                <a href="mailto:jonas.thommessen@icloud.com" className={styles.contactLink}>
-                  <span className={styles.contactIcon}><IconMail /></span>
-                  jonas.thommessen@icloud.com
-                </a>
-              </li>
-            </ul>
-          </div>
-        </aside>
+        {/* Panel 3: Section 2 (skills + connectors) */}
+        <div className={styles.snapPanel}>
+          <section className={`${styles.section} ${styles.sectionSnapStart}`} aria-label="Skills">
+            <div className={styles.separatorLineWrapper} aria-hidden>
+              <div className={styles.separatorLine} />
+            </div>
+            <div className={styles.separatorGapCell}>
+              <div className={styles.keywordsSection2}>
+                <div className={styles.connectorsSvg} aria-hidden>
+                  <svg viewBox="0 0 400 200" preserveAspectRatio="none">
+                    <line x1="80" y1="160" x2="200" y2="100" stroke="var(--about-lineColor)" strokeWidth="1" />
+                    <line x1="320" y1="80" x2="220" y2="110" stroke="var(--about-lineColor)" strokeWidth="1" />
+                    <line x1="140" y1="180" x2="200" y2="120" stroke="var(--about-lineColor)" strokeWidth="1" />
+                  </svg>
+                </div>
+                <span className={styles.keywordUx}>UX</span>
+                <span className={styles.keywordProducts}>Products</span>
+                <span className={styles.keywordSystems}>Systems thinking</span>
+              </div>
+            </div>
+          </section>
+        </div>
       </div>
-    </div>
+
+      {/* Right panel: fixed, image block + contact block */}
+      <aside className={styles.rightPanel}>
+        <div className={styles.imageBlock}>
+          <div className={styles.imageWrap}>
+            {!portraitError && (
+              <img
+                src="/images/placeholders/IMG_7240.JPG"
+                alt=""
+                className={styles.portraitImage}
+                onError={() => setPortraitError(true)}
+              />
+            )}
+          </div>
+        </div>
+        <div className={styles.contactBlock}>
+          <h2 className={styles.contactHeading}>How to reach me</h2>
+          <ul className={styles.contactList}>
+            <li>
+              <a href="https://www.linkedin.com/in/jonasthommessen" target="_blank" rel="noopener noreferrer" className={styles.contactLink}>
+                <span className={styles.contactIcon}><IconLinkedIn /></span>
+                Jonas Thommessen
+              </a>
+            </li>
+            <li>
+              <a href="https://www.instagram.com/jonasthommessen" target="_blank" rel="noopener noreferrer" className={styles.contactLink}>
+                <span className={styles.contactIcon}><IconInstagram /></span>
+                @jonasthommessen
+              </a>
+            </li>
+            <li>
+              <a href="mailto:jonas.thommessen@icloud.com" className={styles.contactLink}>
+                <span className={styles.contactIcon}><IconMail /></span>
+                jonas.thommessen@icloud.com
+              </a>
+            </li>
+          </ul>
+        </div>
+      </aside>
+    </>
   )
 }
