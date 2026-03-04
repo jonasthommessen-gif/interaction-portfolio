@@ -16,7 +16,8 @@ const initialRefs: AboutGridOverlayRefs = {
   trailLine: null,
   topLine: null,
   splitLine: null,
-  midLine: null,
+  midLineLeft: null,
+  midLineRight: null,
   nameText: null,
   chevronLeft: null,
   chevronRight: null,
@@ -42,7 +43,7 @@ export function AboutPage() {
   useEffect(() => {
     if (visited || timelineRun.current) return
     const r = gridRefs.current
-    if (!r.topLine || !r.splitLine || !r.midLine || !contentRef.current) return
+    if (!r.topLine || !r.splitLine || !r.midLineLeft || !r.midLineRight || !contentRef.current) return
 
     timelineRun.current = true
     const tl = gsap.timeline({
@@ -56,7 +57,7 @@ export function AboutPage() {
 
     const topLen = r.topLine.getTotalLength?.() ?? 2000
     const splitLen = r.splitLine.getTotalLength?.() ?? 1000
-    const midLen = r.midLine.getTotalLength?.() ?? 2000
+    const midRightLen = r.midLineRight.getTotalLength?.() ?? 1500
     const leftLen = r.leftEdge?.getTotalLength?.() ?? 1000
     const rightLen = r.rightEdge?.getTotalLength?.() ?? 1000
     const trailLen = r.trailLine?.getTotalLength?.() ?? 100
@@ -83,8 +84,9 @@ export function AboutPage() {
     tl.fromTo(r.leaderVertical, { y: 0 }, { y: splitLen, duration: step(0.7), ease: 'none' }, step(1.0))
     tl.to(r.leaderVertical, { opacity: 0, duration: 0.05 }, step(1.7))
 
-    // Step 4: Mid line + leader (leader moves right with draw head)
-    tl.fromTo(r.midLine, { strokeDashoffset: midLen }, { strokeDashoffset: 0, duration: step(0.6), ease: 'power2.out' }, step(1.6))
+    // Step 4: Mid line left visible, right segment + leader (leader moves right with draw head)
+    tl.set(r.midLineLeft, { strokeDashoffset: 0 }, step(1.6))
+    tl.fromTo(r.midLineRight, { strokeDashoffset: midRightLen }, { strokeDashoffset: 0, duration: step(0.6), ease: 'power2.out' }, step(1.6))
     tl.to(r.leaderHorizontal, { opacity: 1, duration: 0.01 }, step(1.6))
     const rightwardDist = typeof window !== 'undefined' ? window.innerWidth - 400 : 500
     tl.fromTo(r.leaderHorizontal, { x: 0 }, { x: rightwardDist, duration: step(0.6), ease: 'none' }, step(1.6))
@@ -141,9 +143,11 @@ export function AboutPage() {
 
         <aside className={styles.rightPanel}>
           <div className={styles.rightImageWrap}>
-            <div className={styles.rightImagePlaceholder}>
-              Image
-            </div>
+            <img
+              src="https://placehold.co/600x800/1a1a1a/888"
+              alt=""
+              className={styles.rightImage}
+            />
           </div>
           <div className={styles.contactBlock}>
             <h3 className={styles.contactHeading}>How to reach me</h3>

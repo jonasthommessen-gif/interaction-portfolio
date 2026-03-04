@@ -5,7 +5,8 @@ export interface AboutGridOverlayRefs {
   trailLine: SVGLineElement | null
   topLine: SVGLineElement | null
   splitLine: SVGLineElement | null
-  midLine: SVGLineElement | null
+  midLineLeft: SVGLineElement | null
+  midLineRight: SVGLineElement | null
   nameText: HTMLElement | null
   chevronLeft: HTMLElement | null
   chevronRight: HTMLElement | null
@@ -73,7 +74,8 @@ export function AboutGridOverlay({ visible = false, refs }: AboutGridOverlayProp
 
   const topLineLength = w
   const splitLineLength = h - topY
-  const midLineLength = w
+  const midLineLeftLength = splitX
+  const midLineRightLength = w - splitX
   const leftEdgeLength = h
   const rightEdgeLength = h
   const trailLength = Math.min(120, w - splitX - 40)
@@ -130,14 +132,14 @@ export function AboutGridOverlay({ visible = false, refs }: AboutGridOverlayProp
           strokeDasharray={trailLength}
           strokeDashoffset={visible ? 0 : trailLength}
         />
-        {/* Top horizontal */}
+        {/* Top horizontal — path right→left so draw starts at trail */}
         <line
           ref={(el) => {
             if (refs.current) refs.current.topLine = el
           }}
-          x1={0}
+          x1={w}
           y1={topY}
-          x2={w}
+          x2={0}
           y2={topY}
           className={styles.line}
           strokeDasharray={topLineLength}
@@ -156,18 +158,31 @@ export function AboutGridOverlay({ visible = false, refs }: AboutGridOverlayProp
           strokeDasharray={splitLineLength}
           strokeDashoffset={visible ? 0 : splitLineLength}
         />
-        {/* Mid horizontal */}
+        {/* Mid horizontal left (0–splitX): visible when visible, shown at step 4 */}
         <line
           ref={(el) => {
-            if (refs.current) refs.current.midLine = el
+            if (refs.current) refs.current.midLineLeft = el
           }}
           x1={0}
+          y1={midY}
+          x2={splitX}
+          y2={midY}
+          className={styles.line}
+          strokeDasharray={midLineLeftLength}
+          strokeDashoffset={visible ? 0 : midLineLeftLength}
+        />
+        {/* Mid horizontal right (splitX–w): animated with leader */}
+        <line
+          ref={(el) => {
+            if (refs.current) refs.current.midLineRight = el
+          }}
+          x1={splitX}
           y1={midY}
           x2={w}
           y2={midY}
           className={styles.line}
-          strokeDasharray={midLineLength}
-          strokeDashoffset={visible ? 0 : midLineLength}
+          strokeDasharray={midLineRightLength}
+          strokeDashoffset={visible ? 0 : midLineRightLength}
         />
       </svg>
 
@@ -261,8 +276,8 @@ export function AboutGridOverlay({ visible = false, refs }: AboutGridOverlayProp
           left: 120,
           top: topY + 12,
           fontFamily: 'var(--font-sans)',
-          fontSize: 'clamp(1.25rem, 2.5vw, 1.75rem)',
-          fontWeight: 600,
+          fontSize: '28px',
+          fontWeight: 400,
           letterSpacing: '0.12em',
           color: 'rgba(255,255,255,0.92)',
           opacity: visible ? 1 : 0,
