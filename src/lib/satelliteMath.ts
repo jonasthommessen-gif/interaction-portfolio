@@ -175,6 +175,8 @@ export function latLonToCanvas(
 export interface TrailPoint {
   x: number
   y: number
+  /** When set, point is inside the strict (visible) bbox; used for dot and "in frame" only. */
+  inStrictBBox?: boolean
 }
 
 /**
@@ -184,10 +186,11 @@ export interface TrailPoint {
  * @param nowMs        Current time in milliseconds (Date.now())
  * @param trailMinutes How many minutes of history to show
  * @param stepSeconds  Sampling interval in seconds
- * @param bbox         Scandinavia bounding box
+ * @param bbox         Bounding box for inclusion and projection (e.g. expanded)
  * @param canvasW      Canvas width in pixels
  * @param canvasH      Canvas height in pixels
- * @returns Array of {x,y} points from oldest → newest (head = current position)
+ * @param bboxStrict   Optional strict (visible) bbox; when set, each point gets inStrictBBox for "in frame" / dot
+ * @returns Array of {x,y,inStrictBBox?} from oldest → newest (head = current position)
  */
 /**
  * A segment of the trail — a contiguous run of in-bbox points.
@@ -297,6 +300,7 @@ export function computeTrail(
   bbox: BBox,
   canvasW: number,
   canvasH: number,
+  bboxStrict?: BBox,
 ): TrailPoint[] {
   const points: TrailPoint[] = []
   const totalSeconds = trailMinutes * 60
@@ -308,14 +312,11 @@ export function computeTrail(
     const ll = propagateToLatLon(satrec, date)
     if (!ll) continue
 
-    // Only include trail points that are inside the bbox.
-    // Points outside are represented as null sentinels so the draw
-    // loop can break the polyline rather than drawing across the gap.
     if (isInBBox(ll, bbox)) {
       const { x, y } = latLonToCanvas(ll, bbox, canvasW, canvasH)
-      points.push({ x, y })
+      const inStrictBBox = bboxStrict ? isInBBox(ll, bboxStrict) : true
+      points.push({ x, y, inStrictBBox })
     } else {
-      // Sentinel: NaN coordinates signal a break in the trail
       points.push({ x: NaN, y: NaN })
     }
   }

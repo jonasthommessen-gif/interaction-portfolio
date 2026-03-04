@@ -29,6 +29,8 @@ import styles from './SatelliteOverlay.module.css'
 // ─── Config ───────────────────────────────────────────────────────────────────
 
 const ENTRY_PAD = 8
+/** Fraction of bbox size to expand on each side for trail computation (unseen margin). */
+const CANVAS_EXPAND_FRAC = 0.1
 const TARGET_FPS = 30
 const TRAIL_RECOMPUTE_MS = 500
 const DOT_RADIUS = 4
@@ -135,6 +137,42 @@ function getCanvasTransform(canvas: HTMLCanvasElement) {
   const scaleX = canvas.width / rect.width
   const scaleY = canvas.height / rect.height
   return { rect, scaleX, scaleY }
+}
+
+/** Expand bbox by a fraction of its size on each side. */
+function expandBBox(bbox: BBox, frac: number): BBox {
+  const latRange = bbox.latMax - bbox.latMin
+  const lonRange = bbox.lonMax - bbox.lonMin
+  const padLat = latRange * frac
+  const padLon = lonRange * frac
+  return {
+    latMin: bbox.latMin - padLat,
+    latMax: bbox.latMax + padLat,
+    lonMin: bbox.lonMin - padLon,
+    lonMax: bbox.lonMax + padLon,
+  }
+}
+
+/** Visible rect (strict bbox in expanded pixel space) and transform to map it to (0,0,W,H). */
+function getVisibleRectAndTransform(
+  bbox: BBox,
+  bboxExpanded: BBox,
+  W: number,
+  H: number,
+): { visibleLeft: number; visibleTop: number; visibleRight: number; visibleBottom: number; scaleX: number; scaleY: number; tx: number; ty: number } {
+  const lonRangeExp = bboxExpanded.lonMax - bboxExpanded.lonMin
+  const latRangeExp = bboxExpanded.latMax - bboxExpanded.latMin
+  const visibleLeft = ((bbox.lonMin - bboxExpanded.lonMin) / lonRangeExp) * W
+  const visibleRight = ((bbox.lonMax - bboxExpanded.lonMin) / lonRangeExp) * W
+  const visibleTop = ((bboxExpanded.latMax - bbox.latMax) / latRangeExp) * H
+  const visibleBottom = ((bboxExpanded.latMax - bbox.latMin) / latRangeExp) * H
+  const visibleWidth = visibleRight - visibleLeft
+  const visibleHeight = visibleBottom - visibleTop
+  const scaleX = W / visibleWidth
+  const scaleY = H / visibleHeight
+  const tx = -visibleLeft * scaleX
+  const ty = -visibleTop * scaleY
+  return { visibleLeft, visibleTop, visibleRight, visibleBottom, scaleX, scaleY, tx, ty }
 }
 
 function clientToCanvas(
@@ -294,6 +332,15 @@ export function SatelliteOverlay({
   const hoveredSatNameRef = useRef<string | null>(null)
   const baseGlyphRef = useRef<HTMLImageElement | null>(null)
   const issGlyphRef = useRef<HTMLImageElement | null>(null)
+  /** Updated each frame for hit-testing and tooltip (expanded space <-> screen). */
+  const visibleRectRef = useRef({
+    visibleLeft: 0,
+    visibleTop: 0,
+    scaleX: 1,
+    scaleY: 1,
+    visibleWidth: 1,
+    visibleHeight: 1,
+  })
 
   const [tooltip, setTooltip] = useState<TooltipState>({
     visible: false, x: 0, y: 0, name: '', category: '', description: null, nearRight: false,
@@ -307,6 +354,7 @@ export function SatelliteOverlay({
     const H = canvas.height
     const nowMs = Date.now()
     const currentBbox = bboxRef.current
+    const bboxExpanded = expandBBox(currentBbox, CANVAS_EXPAND_FRAC)
     const prevRegistry = registryRef.current
 
     const entryBbox: BBox = {
@@ -327,7 +375,7 @@ export function SatelliteOverlay({
       if (!ll) continue
       if (!isInBBox(ll, entryBbox)) continue
 
-      const rawTrail = computeTrail(sat.satrec, nowMs, trailMinutes, stepSeconds, currentBbox, W, H)
+      const rawTrail = computeTrail(sat.satrec, nowMs, trailMinutes, stepSeconds, bboxExpanded, W, H, currentBbox)
       const trail = smoothTrailWithSpline(
         rawTrail,
         TRAIL_SMOOTHING_CONFIG.samplesPerSegment,
@@ -351,7 +399,7 @@ export function SatelliteOverlay({
       const sat = satsRef.current.find(s => s.name === name)
       if (!sat) continue
 
-      const rawTrail = computeTrail(sat.satrec, nowMs, trailMinutes, stepSeconds, currentBbox, W, H)
+      const rawTrail = computeTrail(sat.satrec, nowMs, trailMinutes, stepSeconds, bboxExpanded, W, H, currentBbox)
       const trail = smoothTrailWithSpline(
         rawTrail,
         TRAIL_SMOOTHING_CONFIG.samplesPerSegment,
@@ -435,10 +483,30 @@ export function SatelliteOverlay({
       const H = canvas.height
       ctx.clearRect(0, 0, W, H)
 
-      // Draw grid first (behind satellites)
-      drawGrid(ctx, bboxRef.current, W, H)
+      const currentBbox = bboxRef.current
+      const bboxExpanded = expandBBox(currentBbox, CANVAS_EXPAND_FRAC)
+      const { visibleLeft, visibleTop, visibleRight, visibleBottom, scaleX, scaleY, tx, ty } =
+        getVisibleRectAndTransform(currentBbox, bboxExpanded, W, H)
 
-      if (hideTracksRef.current) return
+      visibleRectRef.current = {
+        visibleLeft,
+        visibleTop,
+        scaleX,
+        scaleY,
+        visibleWidth: visibleRight - visibleLeft,
+        visibleHeight: visibleBottom - visibleTop,
+      }
+
+      ctx.save()
+      ctx.setTransform(scaleX, 0, 0, scaleY, tx, ty)
+
+      // Draw grid and trails in expanded space; transform zooms to visible bbox
+      drawGrid(ctx, bboxExpanded, W, H)
+
+      if (hideTracksRef.current) {
+        ctx.restore()
+        return
+      }
 
       const registry = registryRef.current
       if (registry.size === 0) return
@@ -460,11 +528,9 @@ export function SatelliteOverlay({
           if (!isNaN(p.x) && !isNaN(p.y)) { headIdx = i; break }
         }
 
-        // If the head is the very last point, the satellite is currently in bbox.
-        // If headIdx < n-1, the satellite has already exited — the tail of the trail
-        // array is NaN sentinels. We only draw up to headIdx.
+        // In frame (for dot and count) only when head is last point and inside visible bbox.
         const headIsValid = headIdx >= 0
-        const satCurrentlyInBBox = headIdx === n - 1
+        const satCurrentlyInBBox = headIdx === n - 1 && (trail[headIdx]?.inStrictBBox === true)
 
         if (!headIsValid) continue
 
@@ -531,7 +597,7 @@ export function SatelliteOverlay({
           i = segEnd
         }
 
-        // Only draw the dot when the satellite is currently inside the bbox
+        // Only draw the dot when the satellite is inside the visible (strict) bbox
         if (satCurrentlyInBBox) {
           const isHovered = hoveredName && hoveredName === data.name
           const drawX = Math.round(data.smoothX)
@@ -554,6 +620,8 @@ export function SatelliteOverlay({
           }
         }
       }
+
+      ctx.restore()
     }
 
     rafRef.current = requestAnimationFrame(draw)
@@ -584,7 +652,8 @@ export function SatelliteOverlay({
             break
           }
         }
-        if (headIdx === n - 1) {
+        const inStrictBBox = trail[headIdx]?.inStrictBBox === true
+        if (headIdx === n - 1 && inStrictBBox) {
           objectCount++
           inFrameNames.add(data.name)
         }
@@ -680,15 +749,18 @@ export function SatelliteOverlay({
 
     const handlePointerDown = (e: PointerEvent) => {
       const registry = registryRef.current
-      const { rect, scaleX, scaleY } = getCanvasTransform(canvas)
-      const canvasX = (e.clientX - rect.left) * scaleX
-      const canvasY = (e.clientY - rect.top) * scaleY
-      const hitRadiusCanvas = HIT_RADIUS * Math.max(scaleX, scaleY)
+      const { rect, scaleX: cssScaleX, scaleY: cssScaleY } = getCanvasTransform(canvas)
+      const screenX = (e.clientX - rect.left) * cssScaleX
+      const screenY = (e.clientY - rect.top) * cssScaleY
+      const vr = visibleRectRef.current
+      const expandedX = vr.visibleLeft + screenX / vr.scaleX
+      const expandedY = vr.visibleTop + screenY / vr.scaleY
+      const hitRadiusCanvas = HIT_RADIUS * Math.max(cssScaleX, cssScaleY)
 
       let closest: { dist: number; name: string; x: number; y: number } | null = null
       for (const data of registry.values()) {
-        const dx = data.smoothX - canvasX
-        const dy = data.smoothY - canvasY
+        const dx = data.smoothX - expandedX
+        const dy = data.smoothY - expandedY
         const dist = Math.sqrt(dx * dx + dy * dy)
         if (dist < hitRadiusCanvas && (!closest || dist < closest.dist)) {
           closest = { dist, name: data.name, x: data.smoothX, y: data.smoothY }
@@ -697,7 +769,9 @@ export function SatelliteOverlay({
       if (closest) {
         setPickedSatName(closest.name)
         hoveredSatNameRef.current = closest.name
-        const clientPos = canvasToClient(canvas, closest.x, closest.y)
+        const screenDotX = (closest.x - vr.visibleLeft) * vr.scaleX
+        const screenDotY = (closest.y - vr.visibleTop) * vr.scaleY
+        const clientPos = canvasToClient(canvas, screenDotX, screenDotY)
         const nearBottom = clientPos.y > window.innerHeight - 70
         const nearRight = clientPos.x > window.innerWidth - 180
         setTooltip({
@@ -727,18 +801,19 @@ export function SatelliteOverlay({
 
     const onMouseMove = (e: MouseEvent) => {
       const registry = registryRef.current
-      const { scaleX, scaleY } = getCanvasTransform(canvas)
+      const { scaleX: cssScaleX, scaleY: cssScaleY } = getCanvasTransform(canvas)
       const canvasPos = clientToCanvas(canvas, e.clientX, e.clientY)
-      const cx = canvasPos.x
-      const cy = canvasPos.y
+      const vr = visibleRectRef.current
+      const expandedX = vr.visibleLeft + canvasPos.x / vr.scaleX
+      const expandedY = vr.visibleTop + canvasPos.y / vr.scaleY
 
       let closest: { dist: number; name: string; category: string; x: number; y: number } | null = null
 
       for (const data of registry.values()) {
-        const dx = data.smoothX - cx
-        const dy = data.smoothY - cy
+        const dx = data.smoothX - expandedX
+        const dy = data.smoothY - expandedY
         const dist = Math.sqrt(dx * dx + dy * dy)
-        const hitRadiusCanvas = HIT_RADIUS * Math.max(scaleX, scaleY)
+        const hitRadiusCanvas = HIT_RADIUS * Math.max(cssScaleX, cssScaleY)
         if (dist < hitRadiusCanvas && (!closest || dist < closest.dist)) {
           closest = { dist, name: data.name, category: data.category, x: data.smoothX, y: data.smoothY }
         }
@@ -746,7 +821,9 @@ export function SatelliteOverlay({
 
       if (closest) {
         hoveredSatNameRef.current = closest.name
-        const clientPos = canvasToClient(canvas, closest.x, closest.y)
+        const screenDotX = (closest.x - vr.visibleLeft) * vr.scaleX
+        const screenDotY = (closest.y - vr.visibleTop) * vr.scaleY
+        const clientPos = canvasToClient(canvas, screenDotX, screenDotY)
         // Flip tooltip above dot if near bottom edge (avoid overlapping info bar)
         // Flip tooltip left if near right edge (avoid clipping)
         const nearBottom = clientPos.y > window.innerHeight - 70
