@@ -137,6 +137,7 @@
   display: flex;
   flex-direction: column;
   overflow: visible;
+  padding-left: 16px;
 }
 
 /* First-panel text block: 40px from left (via sectionFirstCard), centered in panel */
