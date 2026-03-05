@@ -1,8 +1,7 @@
 /* Layer C: left column (scroll + snap) + right panel (fixed). Uses --about-* from page. */
 
-/* ─── Left column (scroll container: card-in-feed snap) ────────
- * Direct children are exactly three .snapPanel (no intermediate scroll).
- * Parent .page has overflow: hidden and no transform so Safari scroll-snap works.
+/* ─── Left column (fixed, no scroll — first panel visible, rest clipped) ─────────────
+ * Direct children are three .snapPanel; overflow hidden so only panel 1 (bio) is visible.
  */
 .leftColumn {
   position: fixed;
@@ -10,13 +9,9 @@
   top: 0;
   width: var(--about-splitX);
   height: 100vh;
-  overflow-y: auto;
+  overflow-y: hidden;
   overflow-x: hidden;
-  scroll-snap-type: y mandatory;
-  -webkit-scroll-snap-type: y mandatory;
   -webkit-overflow-scrolling: touch;
-  scroll-snap-stop: always;
-  scroll-padding-top: 0;
   overscroll-behavior-y: contain;
   z-index: 2;
   color: var(--fg);
@@ -30,11 +25,8 @@
   display: none;
 }
 
-/* Snap card: content-sized so one scroll = one card (separator at top when snapped) */
+/* Panel: content-sized block (scroll stops computed in JS) */
 .snapPanel {
-  scroll-snap-align: start;
-  -webkit-scroll-snap-align: start;
-  scroll-snap-stop: always;
   flex-shrink: 0;
 }
 
@@ -55,10 +47,11 @@
   padding-bottom: 0;
 }
 
-/* First section: no bottom padding so gap from top separator line to first simple separator stays exactly --about-separatorGap */
+/* First section: no bottom padding so gap from top separator line to first simple separator stays exactly --about-separatorGap; tight left so text hugs panel and stays central */
 .sectionFirstCard {
   padding-bottom: 0;
-  padding-left: 40px;
+  padding-left: 12px;
+  padding-right: 24px;
 }
 
 /* Special separator (top): one horizontal line with title; left line to viewport left, right line to split so it meets the intersection glyph */
@@ -81,10 +74,11 @@
   box-sizing: border-box;
 }
 
-/* First section has padding-left 40px so bleed must extend from 0 to split (100% = splitX - 64) */
+/* First section has padding 12px left so bleed must extend from 0 to split */
 .sectionFirstCard .topSeparatorLine {
-  margin-left: -40px;
-  width: calc(100% + 40px + 24px);
+  margin-left: -12px;
+  margin-right: -24px;
+  width: calc(100% + 12px + 24px);
 }
 
 .lineSegment {
@@ -148,8 +142,9 @@
 /* First-panel text block: 40px from left (via sectionFirstCard), centered in panel */
 .textBlockCentered {
   max-width: 520px;
-  margin-left: auto;
-  margin-right: auto;
+  margin-left: 0;
+  margin-right: 0;
+  margin-top: 24px;
 }
 
 /* Baseline gap between any two consecutive separators (same as right-hand grid) */

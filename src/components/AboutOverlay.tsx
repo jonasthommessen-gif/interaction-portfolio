@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useState } from 'react'
 import styles from './AboutOverlay.module.css'
 
 const IconLinkedIn = () => (
@@ -21,31 +21,11 @@ const IconMail = () => (
 
 export function AboutOverlay() {
   const [portraitError, setPortraitError] = useState(false)
-  const leftColumnRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    const el = leftColumnRef.current
-    if (!el) return
-    const handleWheel = (e: WheelEvent) => {
-      if (el.scrollTop === 0 && e.deltaY > 0) {
-        e.preventDefault()
-        const lineTop = document.querySelector('[data-about-line="top"]')
-        const lineMid = document.querySelector('[data-about-line="mid"]')
-        if (lineTop && lineMid) {
-          const top = lineTop.getBoundingClientRect().top
-          const mid = lineMid.getBoundingClientRect().top
-          el.scrollTop = mid - top
-        }
-      }
-    }
-    el.addEventListener('wheel', handleWheel, { passive: false })
-    return () => el.removeEventListener('wheel', handleWheel)
-  }, [])
 
   return (
     <>
-      {/* Left column: scroll-snap — one scroll = one panel (separator/content area) */}
-      <div ref={leftColumnRef} className={styles.leftColumn}>
+      {/* Left column: fixed, no scroll — bio (panel 1) visible; skills (panels 2–3) in DOM but clipped */}
+      <div className={styles.leftColumn}>
         {/* Panel 1: name + bio + first simple separator (snaps so top separator aligns) */}
         <div className={styles.snapPanel}>
           <section className={`${styles.section} ${styles.sectionFirstCard}`} aria-label="About">
