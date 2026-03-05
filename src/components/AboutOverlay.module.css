@@ -229,10 +229,12 @@
   white-space: nowrap;
 }
 
-/* Panel 2: when keywords are inside the gap cell, fill the cell so the container has height */
+/* Panel 2: when keywords are inside the gap cell, fill the cell so the container has height and full width */
 .separatorGapCell .keywordsSection1 {
   top: 0;
   bottom: 0;
+  left: 0;
+  right: 0;
   margin-top: 0;
 }
 

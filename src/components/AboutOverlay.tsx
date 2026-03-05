@@ -5,19 +5,20 @@ const FLOATING_KEYWORDS = ['Systems thinking', 'UX', 'UI', 'Products', 'Prototyp
 
 type WordState = { x: number; y: number; vx: number; vy: number }
 
+const FLOAT_SPEED = 24
+
 function initWordStates(containerWidth: number, containerHeight: number, wordWidths: number[], wordHeights: number[]): WordState[] {
-  const speedMin = 14
-  const speedMax = 34
   return FLOATING_KEYWORDS.map((_, i) => {
     const w = wordWidths[i] ?? 60
     const h = wordHeights[i] ?? 20
     const maxX = Math.max(0, containerWidth - w)
     const maxY = Math.max(0, containerHeight - h)
+    const angle = Math.random() * 2 * Math.PI
     return {
       x: maxX > 0 ? Math.random() * maxX : 0,
       y: maxY > 0 ? Math.random() * maxY : 0,
-      vx: (Math.random() - 0.5) * 2 * (speedMax - speedMin) + (Math.random() > 0.5 ? speedMin : -speedMin),
-      vy: (Math.random() - 0.5) * 2 * (speedMax - speedMin) + (Math.random() > 0.5 ? speedMin : -speedMin),
+      vx: FLOAT_SPEED * Math.cos(angle),
+      vy: FLOAT_SPEED * Math.sin(angle),
     }
   })
 }
@@ -44,7 +45,7 @@ function FloatingKeywords() {
   const containerRef = useRef<HTMLDivElement>(null)
   const wordRefs = useRef<(HTMLSpanElement | null)[]>([])
   const [positions, setPositions] = useState<WordState[]>(() =>
-    FLOATING_KEYWORDS.map(() => ({ x: 0, y: 0, vx: 16, vy: 12 }))
+    FLOATING_KEYWORDS.map(() => ({ x: 0, y: 0, vx: FLOAT_SPEED * 0.7, vy: FLOAT_SPEED * 0.7 }))
   )
   const initializedRef = useRef(false)
   const lastTimeRef = useRef<number>(0)
@@ -87,11 +88,11 @@ function FloatingKeywords() {
       const dt = prev ? Math.min((now - prev) / 1000, 0.1) : 0.016
       lastTimeRef.current = now
 
-      const { width: cw, height: ch } = container.getBoundingClientRect()
-      if (cw <= 0 || ch <= 0) return
+      const rect = container.getBoundingClientRect()
+      if (rect.width <= 0 || rect.height <= 0) return
 
-      const boundsW = Math.max(cw, 1)
-      const boundsH = Math.max(ch, 1)
+      const boundsW = Math.max(rect.width, 1)
+      const boundsH = Math.max(1, Math.min(rect.height, Math.max(0, window.innerHeight - rect.top)))
 
       setPositions((prevPositions) => {
         const refs = wordRefs.current
