@@ -1,5 +1,26 @@
-import { useState } from 'react'
+import { useState, useRef, useEffect, useLayoutEffect } from 'react'
 import styles from './AboutOverlay.module.css'
+
+const FLOATING_KEYWORDS = ['Systems thinking', 'UX', 'UI', 'Products', 'Prototyping', 'Motion'] as const
+
+type WordState = { x: number; y: number; vx: number; vy: number }
+
+function initWordStates(containerWidth: number, containerHeight: number, wordWidths: number[], wordHeights: number[]): WordState[] {
+  const speedMin = 20
+  const speedMax = 50
+  return FLOATING_KEYWORDS.map((_, i) => {
+    const w = wordWidths[i] ?? 60
+    const h = wordHeights[i] ?? 20
+    const maxX = Math.max(0, containerWidth - w)
+    const maxY = Math.max(0, containerHeight - h)
+    return {
+      x: maxX > 0 ? Math.random() * maxX : 0,
+      y: maxY > 0 ? Math.random() * maxY : 0,
+      vx: (Math.random() - 0.5) * 2 * (speedMax - speedMin) + (Math.random() > 0.5 ? speedMin : -speedMin),
+      vy: (Math.random() - 0.5) * 2 * (speedMax - speedMin) + (Math.random() > 0.5 ? speedMin : -speedMin),
+    }
+  })
+}
 
 const IconLinkedIn = () => (
   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden>
@@ -18,6 +39,110 @@ const IconMail = () => (
     <path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z" fill="currentColor" />
   </svg>
 )
+
+function FloatingKeywords() {
+  const containerRef = useRef<HTMLDivElement>(null)
+  const wordRefs = useRef<(HTMLSpanElement | null)[]>([])
+  const [positions, setPositions] = useState<WordState[]>(() =>
+    FLOATING_KEYWORDS.map(() => ({ x: 0, y: 0, vx: 24, vy: 18 }))
+  )
+  const initializedRef = useRef(false)
+  const lastTimeRef = useRef<number>(0)
+
+  const tryInit = useRef(() => {
+    const container = containerRef.current
+    if (!container || initializedRef.current) return
+    const refs = wordRefs.current
+    const { width: cw, height: ch } = container.getBoundingClientRect()
+    if (cw <= 0 || ch <= 0) return
+    const widths = refs.map((el) => Math.max(el?.offsetWidth ?? 0, 60))
+    const heights = refs.map((el) => Math.max(el?.offsetHeight ?? 0, 20))
+    setPositions(initWordStates(cw, ch, widths, heights))
+    initializedRef.current = true
+  })
+
+  useLayoutEffect(() => {
+    tryInit.current()
+  })
+
+  useEffect(() => {
+    const container = containerRef.current
+    if (!container) return
+    const ro = new ResizeObserver(() => {
+      if (initializedRef.current) return
+      tryInit.current()
+    })
+    ro.observe(container)
+    return () => ro.disconnect()
+  }, [])
+
+  useEffect(() => {
+    const container = containerRef.current
+    if (!container) return
+
+    let rafId = 0
+    const tick = (now: number) => {
+      rafId = requestAnimationFrame(tick)
+      const prev = lastTimeRef.current
+      const dt = prev ? Math.min((now - prev) / 1000, 0.1) : 0.016
+      lastTimeRef.current = now
+
+      const { width: cw, height: ch } = container.getBoundingClientRect()
+      if (cw <= 0 || ch <= 0) return
+
+      const boundsW = Math.max(cw, 1)
+      const boundsH = Math.max(ch, 1)
+
+      setPositions((prevPositions) => {
+        const refs = wordRefs.current
+        const next = prevPositions.map((p, i) => {
+          const w = refs[i]?.offsetWidth ?? 60
+          const h = refs[i]?.offsetHeight ?? 20
+          let { x, y, vx, vy } = p
+          x += vx * dt
+          y += vy * dt
+          if (x <= 0) {
+            x = 0
+            vx = Math.abs(vx)
+          }
+          if (x + w >= boundsW) {
+            x = boundsW - w
+            vx = -Math.abs(vx)
+          }
+          if (y <= 0) {
+            y = 0
+            vy = Math.abs(vy)
+          }
+          if (y + h >= boundsH) {
+            y = boundsH - h
+            vy = -Math.abs(vy)
+          }
+          return { x, y, vx, vy }
+        })
+        return next
+      })
+    }
+    rafId = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(rafId)
+  }, [])
+
+  return (
+    <div ref={containerRef} className={styles.keywordsSection1} aria-hidden>
+      {FLOATING_KEYWORDS.map((word, i) => (
+        <span
+          key={word}
+          ref={(el) => {
+            wordRefs.current[i] = el
+          }}
+          className={styles.keywordFloat}
+          style={{ left: positions[i].x, top: positions[i].y }}
+        >
+          {word}
+        </span>
+      ))}
+    </div>
+  )
+}
 
 export function AboutOverlay() {
   const [portraitError, setPortraitError] = useState(false)
@@ -68,11 +193,7 @@ export function AboutOverlay() {
               <div className={styles.separatorLine} />
             </div>
             <div className={`${styles.separatorGapCell} ${styles.separatorGapCellBetweenSeparators}`} aria-hidden />
-            <div className={styles.keywordsSection1}>
-              <span className={styles.keywordUx}>UX</span>
-              <span className={styles.keywordProducts}>Products</span>
-              <span className={styles.keywordSystems}>Systems thinking</span>
-            </div>
+            <FloatingKeywords />
           </section>
         </div>
 

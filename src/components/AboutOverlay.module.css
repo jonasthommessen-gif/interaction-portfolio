@@ -219,34 +219,14 @@
   pointer-events: none;
 }
 
-.keywordsSection1 .keywordUx {
+/* Floating keywords in Panel 2: position set by JS */
+.keywordsSection1 .keywordFloat {
   position: absolute;
-  bottom: 30%;
-  left: 8%;
   font-size: clamp(14px, 2.2vmin, 20px);
   font-weight: 400;
   letter-spacing: -0.01em;
   color: white;
-}
-
-.keywordsSection1 .keywordProducts {
-  position: absolute;
-  bottom: 28%;
-  right: 22%;
-  font-size: clamp(14px, 2.2vmin, 20px);
-  font-weight: 400;
-  letter-spacing: -0.01em;
-  color: white;
-}
-
-.keywordsSection1 .keywordSystems {
-  position: absolute;
-  bottom: 12%;
-  left: 5%;
-  font-size: clamp(14px, 2.2vmin, 20px);
-  font-weight: 400;
-  letter-spacing: -0.01em;
-  color: white;
+  white-space: nowrap;
 }
 
 /* Panel 2: keywords start after separator + gap cell so they align with panel grid */
