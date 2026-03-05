@@ -229,9 +229,11 @@
   white-space: nowrap;
 }
 
-/* Panel 2: keywords start after separator + gap cell so they align with panel grid */
-.sectionPanel2 .keywordsSection1 {
-  top: var(--about-separatorGap);
+/* Panel 2: when keywords are inside the gap cell, fill the cell so the container has height */
+.separatorGapCell .keywordsSection1 {
+  top: 0;
+  bottom: 0;
+  margin-top: 0;
 }
 
 /* Section 2: keywords with connector lines */

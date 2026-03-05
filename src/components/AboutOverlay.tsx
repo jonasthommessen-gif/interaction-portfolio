@@ -6,8 +6,8 @@ const FLOATING_KEYWORDS = ['Systems thinking', 'UX', 'UI', 'Products', 'Prototyp
 type WordState = { x: number; y: number; vx: number; vy: number }
 
 function initWordStates(containerWidth: number, containerHeight: number, wordWidths: number[], wordHeights: number[]): WordState[] {
-  const speedMin = 20
-  const speedMax = 50
+  const speedMin = 14
+  const speedMax = 34
   return FLOATING_KEYWORDS.map((_, i) => {
     const w = wordWidths[i] ?? 60
     const h = wordHeights[i] ?? 20
@@ -44,7 +44,7 @@ function FloatingKeywords() {
   const containerRef = useRef<HTMLDivElement>(null)
   const wordRefs = useRef<(HTMLSpanElement | null)[]>([])
   const [positions, setPositions] = useState<WordState[]>(() =>
-    FLOATING_KEYWORDS.map(() => ({ x: 0, y: 0, vx: 24, vy: 18 }))
+    FLOATING_KEYWORDS.map(() => ({ x: 0, y: 0, vx: 16, vy: 12 }))
   )
   const initializedRef = useRef(false)
   const lastTimeRef = useRef<number>(0)
@@ -192,8 +192,9 @@ export function AboutOverlay() {
             <div className={styles.separatorLineWrapper} aria-hidden>
               <div className={styles.separatorLine} />
             </div>
-            <div className={`${styles.separatorGapCell} ${styles.separatorGapCellBetweenSeparators}`} aria-hidden />
-            <FloatingKeywords />
+            <div className={`${styles.separatorGapCell} ${styles.separatorGapCellBetweenSeparators}`} aria-hidden>
+              <FloatingKeywords />
+            </div>
           </section>
         </div>
 
