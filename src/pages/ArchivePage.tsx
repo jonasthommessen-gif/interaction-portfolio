@@ -397,6 +397,7 @@ export function ArchivePage() {
                   onHover={() => {}}
                   onClick={() => openFeedFromCard(project.id)}
                   layoutId={`archive-card-${project.id}`}
+                  disableFloat
                 />
               </div>
             ))}

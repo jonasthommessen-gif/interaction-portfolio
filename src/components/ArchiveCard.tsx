@@ -18,6 +18,8 @@ interface ArchiveCardProps {
   onClick: () => void
   /** Unique layoutId for shared element transition */
   layoutId: string
+  /** When true, disables idle float animation (e.g. for mobile grid) */
+  disableFloat?: boolean
 }
 
 export function ArchiveCard({
@@ -27,14 +29,16 @@ export function ArchiveCard({
   onHover,
   onClick,
   layoutId,
+  disableFloat = false,
 }: ArchiveCardProps) {
   const controls = useAnimationControls()
   const idleRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const mountedRef = useRef(true)
 
   // Idle float animation — gentle bob and tilt (±3px y, ±0.5deg)
-  // These are RELATIVE to the card's current position, not absolute
+  // Skipped when disableFloat (e.g. mobile grid) so photos stay still
   useEffect(() => {
+    if (disableFloat) return
     mountedRef.current = true
 
     const cardNum = parseInt(project.id.replace('arc-', ''), 10) - 1
@@ -58,7 +62,7 @@ export function ArchiveCard({
       if (idleRef.current) clearTimeout(idleRef.current)
       controls.stop()
     }
-  }, [controls, project.id])
+  }, [controls, project.id, disableFloat])
 
   // Stop idle when any card is focused
   useEffect(() => {

@@ -7,7 +7,6 @@ export function AdminArchiveNewPage() {
   const navigate = useNavigate()
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
-  const [tags, setTags] = useState('')
   const [categories, setCategories] = useState('')
   const [files, setFiles] = useState<File[]>([])
   const [saving, setSaving] = useState(false)
@@ -26,7 +25,6 @@ export function AdminArchiveNewPage() {
     }
     setSaving(true)
     setError(null)
-    const tagList = tags.split(/[,;]/).map((s) => s.trim()).filter(Boolean)
     const categoryList = categories.split(/[,;]/).map((s) => s.trim()).filter(Boolean)
     const uploaded: { type: 'image' | 'video'; src: string; alt?: string }[] = []
     for (const file of files) {
@@ -44,7 +42,6 @@ export function AdminArchiveNewPage() {
       {
         title: title.trim(),
         description: description.trim(),
-        tags: tagList,
         categories: categoryList,
         cover_src,
       },
@@ -85,17 +82,6 @@ export function AdminArchiveNewPage() {
             onChange={(e) => setDescription(e.target.value)}
             className={styles.textarea}
             rows={3}
-          />
-        </div>
-        <div className={styles.field}>
-          <label htmlFor="archive-tags" className={styles.label}>Tags (comma-separated)</label>
-          <input
-            id="archive-tags"
-            type="text"
-            value={tags}
-            onChange={(e) => setTags(e.target.value)}
-            className={styles.input}
-            placeholder="tag1, tag2"
           />
         </div>
         <div className={styles.field}>
