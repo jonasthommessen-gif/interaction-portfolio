@@ -199,14 +199,32 @@ export function AboutOverlay() {
             </div>
             <div className={`${styles.separatorGapCell} ${styles.separatorGapCellBetweenSeparators}`} aria-hidden>
               {isMobile ? (
-                <div className={styles.keywordsStatic} aria-hidden>
-                  {FLOATING_KEYWORDS.map((word) => (
-                    <span key={word}>{word}</span>
-                  ))}
+                <div className={styles.keywordsCarouselWrap} aria-hidden>
+                  <div className={styles.keywordsCarouselTrack}>
+                    <div className={styles.keywordsCarouselSegment}>
+                      {FLOATING_KEYWORDS.map((word, i) => (
+                        <span key={`a-${word}`}>
+                          {i > 0 && ' · '}
+                          {word}
+                        </span>
+                      ))}
+                    </div>
+                    <div className={styles.keywordsCarouselSegment} aria-hidden>
+                      {FLOATING_KEYWORDS.map((word, i) => (
+                        <span key={`b-${word}`}>
+                          {i > 0 && ' · '}
+                          {word}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
                 </div>
               ) : (
                 <FloatingKeywords />
               )}
+            </div>
+            <div className={styles.separatorLineWrapper} aria-hidden>
+              <div className={styles.separatorLine} />
             </div>
           </section>
         </div>
