@@ -91,6 +91,13 @@
   pointer-events: none;
 }
 
+/* Desktop: ensure first pill (logo) always has room so overflow:hidden never clips */
+@media (min-width: 821px) {
+  .navInner .pill:first-child {
+    min-height: 128px;
+  }
+}
+
 /* Mobile: contracted = transparent logo-only, top-left */
 .logoOnlyBtn {
   display: inline-flex;

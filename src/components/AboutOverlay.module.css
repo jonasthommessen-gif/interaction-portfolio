@@ -419,6 +419,11 @@
     overflow: visible;
   }
 
+  /* Single keyword row only; hide Panel 3 (duplicate keywords + large gap cell) */
+  .leftColumn .snapPanel:nth-child(3) {
+    display: none;
+  }
+
   .rightPanel {
     position: relative;
     left: 0;
@@ -428,7 +433,7 @@
   }
 
   .imageBlock {
-    margin-top: 0;
+    margin-top: 1.5rem;
     height: auto;
     min-height: 0;
     padding: 24px 20px;
@@ -441,7 +446,7 @@
   }
 
   .contactBlock {
-    padding: 28px 20px 2rem;
+    padding: 28px 20px 4rem;
   }
 
   .section {
