@@ -227,4 +227,9 @@
     padding: 8px 14px;
     border-radius: 999px;
   }
+
+  /* First pill (logo) needs room for 128px logo; otherwise overflow:hidden clips it */
+  .nav[data-expanded='true'][data-home-nav='true'] .navInner .pill:first-child {
+    min-height: 128px;
+  }
 }
