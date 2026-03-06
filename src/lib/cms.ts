@@ -142,17 +142,25 @@ export async function fetchProjectRowBySlug(slug: string): Promise<ProjectRow | 
   return (data as ProjectRow) ?? null
 }
 
-/** Admin: create a new project. Returns the new slug on success. */
+/** Admin: create a new project. Returns the new slug on success. New project gets order = max(order) + 1 so it appears at the end. */
 export async function createProject(params: {
   title: string
   slug: string
 }): Promise<{ slug?: string; error: string | null }> {
   if (!supabase) return { error: 'Database not configured' }
+  const { data: maxRow } = await supabase
+    .from('projects')
+    .select('order')
+    .order('order', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+  const nextOrder = maxRow?.order != null ? maxRow.order + 1 : 0
   const { data, error } = await supabase
     .from('projects')
     .insert({
       title: params.title.trim(),
       slug: params.slug.trim().toLowerCase().replace(/\s+/g, '-'),
+      order: nextOrder,
       updated_at: new Date().toISOString(),
     })
     .select('slug')
@@ -315,7 +323,7 @@ export async function uploadPortfolioMedia(file: File, folder = 'archive'): Prom
   return { url: data.publicUrl, error: null }
 }
 
-/** Admin: create archive post with media. */
+/** Admin: create archive post with media. New post gets order = max(order) + 1 and visible = true so it appears at the end. */
 export async function createArchivePost(
   params: {
     title: string
@@ -327,6 +335,13 @@ export async function createArchivePost(
   media: { type: 'image' | 'video'; src: string; alt?: string }[]
 ): Promise<{ id?: string; error: string | null }> {
   if (!supabase) return { error: 'Database not configured' }
+  const { data: maxRow } = await supabase
+    .from('archive_posts')
+    .select('order')
+    .order('order', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+  const nextOrder = maxRow?.order != null ? maxRow.order + 1 : 0
   const { data: post, error: postError } = await supabase
     .from('archive_posts')
     .insert({
@@ -335,6 +350,8 @@ export async function createArchivePost(
       tags: params.tags ?? [],
       categories: params.categories ?? [],
       cover_src: params.cover_src,
+      visible: true,
+      order: nextOrder,
       updated_at: new Date().toISOString(),
     })
     .select('id')
