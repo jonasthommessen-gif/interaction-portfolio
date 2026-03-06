@@ -62,6 +62,8 @@ export type ArchivePostRow = {
   categories: string[]
   duration: string
   cover_src: string
+  visible?: boolean
+  order?: number
   created_at: string
   updated_at: string
 }
@@ -78,6 +80,8 @@ export type ArchiveMediaRow = {
 
 /** Normalized project for the public site (matches existing Project type + sections). */
 export type Project = {
+  /** Present when loaded from DB (admin); absent for static fallback. */
+  id?: string
   slug: string
   title: string
   description?: string
@@ -104,6 +108,8 @@ export type ArchiveProject = {
   categories: string[]
   duration: string
   cover: string
+  visible: boolean
+  order: number
   images: string[]
   media: { type: 'image' | 'video'; src: string; alt?: string }[]
 }

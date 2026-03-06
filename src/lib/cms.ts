@@ -28,6 +28,7 @@ function projectRowToProject(row: ProjectRow, sections: ProjectSectionRow[]): Pr
       : { type: 'image' as const, src: row.cover_src, alt: row.cover_alt || '' }
   const sortedSections = [...sections].sort((a, b) => a.order - b.order)
   return {
+    id: row.id,
     slug: row.slug,
     title: row.title,
     description: row.description ?? undefined,
@@ -44,6 +45,54 @@ function projectRowToProject(row: ProjectRow, sections: ProjectSectionRow[]): Pr
       order: s.order,
     })),
   }
+}
+
+/** Reason the projects list is from static content (no ids). Used by admin to show actionable message. */
+export async function getProjectsStaticReason(): Promise<
+  { reason: 'no-env' } | { reason: 'error'; errorMessage: string } | { reason: 'empty' } | null
+> {
+  if (!supabase) return { reason: 'no-env' }
+  const { data, error } = await supabase.from('projects').select('id').limit(1)
+  if (error) return { reason: 'error', errorMessage: error.message }
+  if (!data?.length) return { reason: 'empty' }
+  return null
+}
+
+/** Admin: insert static projects into the database. Skips slugs that already exist. Call when table is empty to enable reorder/visibility/delete. */
+export async function importStaticProjectsToDb(): Promise<
+  { imported: number; errors?: string[] } | { error: string }
+> {
+  if (!supabase) return { error: 'Database not configured' }
+  const errors: string[] = []
+  let imported = 0
+  for (let order = 0; order < staticProjectsRaw.length; order++) {
+    const p = staticProjectsRaw[order]
+    const row = {
+      slug: p.slug,
+      title: p.title,
+      categories: p.categories ?? [],
+      gradient_from: p.gradient.from,
+      gradient_to: p.gradient.to,
+      cover_type: p.cover.type,
+      cover_src: p.cover.src,
+      cover_poster: p.cover.type === 'video' ? (p.cover.poster ?? null) : null,
+      cover_alt: p.cover.type === 'image' ? p.cover.alt ?? '' : '',
+      visible: true,
+      order,
+      updated_at: new Date().toISOString(),
+    }
+    const { error } = await supabase.from('projects').insert(row)
+    if (error) {
+      if (error.code === '23505') {
+        // unique violation on slug – already exists, skip
+        continue
+      }
+      errors.push(`${p.slug}: ${error.message}`)
+    } else {
+      imported += 1
+    }
+  }
+  return { imported, errors: errors.length ? errors : undefined }
 }
 
 export async function fetchProjects(): Promise<Project[]> {
@@ -142,6 +191,17 @@ export async function updateProject(
   return { error: null }
 }
 
+/** Admin: delete project by id (and its sections via cascade). */
+export async function deleteProject(id: string): Promise<{ error: string | null }> {
+  if (!supabase) return { error: 'Database not configured' }
+  const { error } = await supabase.from('projects').delete().eq('id', id)
+  if (error) {
+    console.warn('CMS delete project:', error)
+    return { error: error.message }
+  }
+  return { error: null }
+}
+
 /** Admin: fetch sections for a project. */
 export async function fetchProjectSections(projectId: string): Promise<ProjectSectionRow[]> {
   if (!supabase) return []
@@ -223,14 +283,18 @@ function archiveRowsToArchivePost(post: ArchivePostRow, media: ArchiveMediaRow[]
     categories: post.categories ?? [],
     duration: post.duration ?? '',
     cover: post.cover_src,
+    visible: post.visible ?? true,
+    order: post.order ?? 0,
     images: sorted.filter((m) => m.type === 'image').map((m) => m.src),
     media: sorted.map((m) => ({ type: m.type, src: m.src, alt: m.alt ?? undefined })),
   }
 }
 
-const staticArchiveNormalized: ArchiveProject[] = staticArchive.map((a) => ({
+const staticArchiveNormalized: ArchiveProject[] = staticArchive.map((a, i) => ({
   ...a,
   categories: 'categories' in a ? (a as ArchiveProject).categories : [],
+  visible: true,
+  order: i,
   media: (a.images ?? []).map((src) => ({ type: 'image' as const, src })),
 }))
 
@@ -302,7 +366,7 @@ export async function fetchArchiveProjects(): Promise<ArchiveProject[]> {
   const { data: posts, error } = await supabase
     .from('archive_posts')
     .select('*')
-    .order('created_at', { ascending: false })
+    .order('order', { ascending: true })
   if (error) {
     console.warn('CMS fetch archive:', error)
     return staticArchiveNormalized
@@ -317,4 +381,35 @@ export async function fetchArchiveProjects(): Promise<ArchiveProject[]> {
   return (posts as ArchivePostRow[]).map((p) =>
     archiveRowsToArchivePost(p, media.filter((m) => m.archive_id === p.id))
   ) as ArchiveProject[]
+}
+
+/** Admin: update archive post by id. */
+export async function updateArchivePost(
+  id: string,
+  patch: { visible?: boolean; order?: number }
+): Promise<{ error: string | null }> {
+  if (!supabase) return { error: 'Database not configured' }
+  const { error } = await supabase
+    .from('archive_posts')
+    .update({
+      ...patch,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', id)
+  if (error) {
+    console.warn('CMS update archive post:', error)
+    return { error: error.message }
+  }
+  return { error: null }
+}
+
+/** Admin: delete archive post by id (cascades to archive_media). */
+export async function deleteArchivePost(id: string): Promise<{ error: string | null }> {
+  if (!supabase) return { error: 'Database not configured' }
+  const { error } = await supabase.from('archive_posts').delete().eq('id', id)
+  if (error) {
+    console.warn('CMS delete archive post:', error)
+    return { error: error.message }
+  }
+  return { error: null }
 }

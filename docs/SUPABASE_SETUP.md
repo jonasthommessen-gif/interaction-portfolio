@@ -23,3 +23,7 @@ The hidden admin login (trigger on About page) and `/admin` use Supabase Auth. T
 **Forgot password:** Use "Forgot password?" in the login modal; Supabase sends a reset link to your email. Set the redirect URL in Supabase **Authentication → URL Configuration** to include `https://yourdomain.com/admin` (and `http://localhost:5173/admin` for local dev).
 
 **Database (for projects and archive):** Run the SQL migration so the app can store projects and archive posts. In Supabase: **SQL Editor → New query**. Paste the contents of [supabase/migrations/001_initial_schema.sql](../supabase/migrations/001_initial_schema.sql) and run it. That creates the `projects`, `project_sections`, `archive_posts`, and `archive_media` tables plus a storage bucket `portfolio-media` for uploads.
+
+**Optional – seed projects:** To pre-fill the projects table so the admin list is editable (reorder, visibility, delete) without using the in-app import, run [supabase/migrations/003_seed_projects.sql](../supabase/migrations/003_seed_projects.sql) in the SQL Editor after the initial schema. Otherwise, open Admin → Projects and click **Import projects into database** when the table is empty.
+
+**Optional – archive reorder/visibility:** For reorder and visibility toggle on the Admin Archive page, run [supabase/migrations/004_archive_visible_order.sql](../supabase/migrations/004_archive_visible_order.sql) after the initial schema. It adds `visible` and `order` columns to `archive_posts`.
