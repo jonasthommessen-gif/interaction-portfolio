@@ -198,24 +198,20 @@
 
   .nav[data-expanded='true'] .navInner {
     flex-direction: column;
-    align-items: stretch;
-    gap: 4px;
+    align-items: center;
+    gap: 0;
     width: 100%;
     padding: 0;
   }
 
   .nav[data-expanded='true'] .navInner > * {
-    justify-content: flex-start;
+    justify-content: center;
     padding: 12px 14px;
     height: auto;
     min-height: 56px;
     border-radius: 14px;
     font-size: var(--text-base);
     letter-spacing: 0.12em;
-  }
-
-  .nav[data-expanded='true'] .navInner > :first-child {
-    justify-content: center;
   }
 
   /* Home page: expanded nav without card — logo and labels on background */
@@ -232,14 +228,14 @@
     display: none;
   }
 
+  .nav[data-expanded='true'][data-home-nav='true'] .navInner {
+    align-items: center;
+    gap: 0;
+  }
+
   .nav[data-expanded='true'][data-home-nav='true'] .navInner > * {
     min-height: 56px;
     padding: 8px 14px;
     border-radius: 999px;
-  }
-
-  /* First pill (logo): same as others so bar stays at source-of-truth height (56px) */
-  .nav[data-expanded='true'][data-home-nav='true'] .navInner > :first-child {
-    min-height: 56px;
   }
 }
