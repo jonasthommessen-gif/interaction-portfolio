@@ -214,6 +214,14 @@
     letter-spacing: 0.12em;
   }
 
+  /* No border/outline around the logo button in expanded nav */
+  .nav[data-expanded='true'] .navInner > :first-child,
+  .nav[data-expanded='true'] .navInner > :first-child:focus-visible {
+    border: none;
+    outline: none;
+    box-shadow: none;
+  }
+
   /* Home page: expanded nav without card — logo and labels on background */
   .nav[data-expanded='true'][data-home-nav='true'] {
     background: transparent;
@@ -237,5 +245,12 @@
     min-height: 56px;
     padding: 8px 14px;
     border-radius: 999px;
+  }
+
+  .nav[data-expanded='true'][data-home-nav='true'] .navInner > :first-child,
+  .nav[data-expanded='true'][data-home-nav='true'] .navInner > :first-child:focus-visible {
+    border: none;
+    outline: none;
+    box-shadow: none;
   }
 }
