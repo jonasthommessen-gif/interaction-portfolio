@@ -234,7 +234,7 @@ export function AdminProjectsPage() {
         return
       }
       setStaticReason(result.reason)
-      setStaticErrorMessage('error' in result ? result.errorMessage : null)
+      setStaticErrorMessage(result.reason === 'error' ? result.errorMessage : null)
     })
     return () => {
       cancelled = true
@@ -302,7 +302,7 @@ export function AdminProjectsPage() {
     setDragOverKey(null)
   }
 
-  const handleDrop = (e: React.DragEvent, targetProject: Project, list: Project[]) => {
+  const handleDrop = (e: React.DragEvent, targetProject: Project, _list: Project[]) => {
     e.preventDefault()
     setDragOverKey(null)
     const raw = e.dataTransfer.getData('application/json')

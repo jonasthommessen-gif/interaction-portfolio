@@ -132,7 +132,7 @@ export function AdminArchivePage() {
 
   const handleDragLeave = () => setDragOverKey(null)
 
-  const handleDrop = (e: React.DragEvent, targetPost: ArchiveProject, list: ArchiveProject[]) => {
+  const handleDrop = (e: React.DragEvent, targetPost: ArchiveProject, _list: ArchiveProject[]) => {
     e.preventDefault()
     setDragOverKey(null)
     const raw = e.dataTransfer.getData('application/json')
