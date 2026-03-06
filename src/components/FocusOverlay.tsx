@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import type { ArchiveProject } from '../content/archiveProjects'
+import { useFocusTrap } from '../hooks/useFocusTrap'
 import styles from './FocusOverlay.module.css'
 
 interface FocusOverlayProps {
@@ -34,6 +35,9 @@ export function FocusOverlay({
 
   const whiteCardRef = useRef<HTMLDivElement>(null)
   const overlayRef = useRef<HTMLDivElement>(null)
+
+  useFocusTrap(overlayRef, true)
+  const reduceMotion = useReducedMotion()
 
   // Sequence the 3 steps on mount
   useEffect(() => {
@@ -92,6 +96,8 @@ export function FocusOverlay({
 
   const currentImageVariant = step === 3 ? 'step3' : step === 2 ? 'step2' : 'step1'
 
+  const backdropTransition = reduceMotion ? { duration: 0 } : { duration: 0.3 }
+
   return (
     <motion.div
       ref={overlayRef}
@@ -99,7 +105,7 @@ export function FocusOverlay({
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      transition={{ duration: 0.3 }}
+      transition={backdropTransition}
       onClick={handleBackdropClick}
     >
       {/* Project navigation arrows (outside white card) */}
@@ -122,25 +128,23 @@ export function FocusOverlay({
       <motion.div
         ref={whiteCardRef}
         className={styles.whiteCard}
-        initial={{ y: '100%' }}
-        animate={step >= 2 ? { y: 0 } : { y: '100%' }}
-        exit={{ y: '100%' }}
-        transition={{
-          type: 'tween',
-          ease: [0.22, 1, 0.36, 1],
-          duration: 0.45,
-        }}
+        initial={{ y: reduceMotion ? 0 : '100%' }}
+        animate={step >= 2 ? { y: 0 } : reduceMotion ? { y: 0 } : { y: '100%' }}
+        exit={{ y: reduceMotion ? 0 : '100%' }}
+        transition={
+          reduceMotion
+            ? { duration: 0 }
+            : { type: 'tween', ease: [0.22, 1, 0.36, 1], duration: 0.45 }
+        }
         onClick={(e) => e.stopPropagation()}
       >
         {/* Image section — sits on top of white card, shifts up in step 3 */}
         <motion.div
           className={styles.imageSection}
           animate={imageVariants[currentImageVariant]}
-          transition={{
-            type: 'spring',
-            stiffness: 200,
-            damping: 28,
-          }}
+          transition={
+            reduceMotion ? { duration: 0 } : { type: 'spring', stiffness: 200, damping: 28 }
+          }
         >
           {/* Carousel image with crossfade */}
           <div className={styles.carouselWrapper}>
@@ -154,7 +158,7 @@ export function FocusOverlay({
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                transition={{ duration: 0.3 }}
+                transition={{ duration: reduceMotion ? 0 : 0.3 }}
                 draggable={false}
               />
             </AnimatePresence>

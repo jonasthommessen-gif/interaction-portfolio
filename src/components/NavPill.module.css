@@ -12,7 +12,7 @@
   color: rgba(255, 255, 255, 0.86);
   border: none;
 
-  font-size: clamp(13px, 1.25vw, 16px);
+  font-size: clamp(var(--text-sm), 1.25vw, var(--text-base));
   font-weight: 400;
   letter-spacing: 0.18em;
   text-transform: uppercase;
@@ -377,7 +377,7 @@
   .pill {
     height: 50px;
     padding: 0 14px;
-    font-size: 13px;
+    font-size: var(--text-sm);
     letter-spacing: 0.16em;
   }
 }

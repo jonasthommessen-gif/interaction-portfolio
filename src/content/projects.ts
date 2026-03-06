@@ -62,6 +62,11 @@ export const projects: Project[] = [
   },
 ]
 
+/**
+ * Returns the project with the given slug, or undefined if not found.
+ * @param slug - URL-safe project identifier (e.g. `'kinetic-cards'`)
+ * @returns The project object or undefined
+ */
 export function getProjectBySlug(slug: string): Project | undefined {
   return projects.find((project) => project.slug === slug)
 }

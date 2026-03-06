@@ -17,3 +17,11 @@
   overflow: hidden;
   min-height: 100dvh;
 }
+
+@media (max-width: 820px) {
+  .page {
+    position: relative;
+    overflow-y: auto;
+    min-height: 100dvh;
+  }
+}

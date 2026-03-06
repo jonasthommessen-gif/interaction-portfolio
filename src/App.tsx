@@ -1,27 +1,37 @@
+import { lazy, Suspense } from 'react'
 import { BrowserRouter, Route, Routes } from 'react-router-dom'
+import { ErrorBoundary } from './components/ErrorBoundary'
 import { AppLayout } from './AppLayout'
-import { AboutPage } from './pages/AboutPage'
-import { ArchivePage } from './pages/ArchivePage'
-import { HomePage } from './pages/HomePage'
-import { NotFoundPage } from './pages/NotFoundPage'
-import { ProjectDetailPage } from './pages/ProjectDetailPage'
-import { ProjectsPage } from './pages/ProjectsPage'
+
+const HomePage = lazy(() => import('./pages/HomePage').then(m => ({ default: m.HomePage })))
+const ProjectsPage = lazy(() => import('./pages/ProjectsPage').then(m => ({ default: m.ProjectsPage })))
+const ProjectDetailPage = lazy(() => import('./pages/ProjectDetailPage').then(m => ({ default: m.ProjectDetailPage })))
+const ArchivePage = lazy(() => import('./pages/ArchivePage').then(m => ({ default: m.ArchivePage })))
+const AboutPage = lazy(() => import('./pages/AboutPage').then(m => ({ default: m.AboutPage })))
+const NotFoundPage = lazy(() => import('./pages/NotFoundPage').then(m => ({ default: m.NotFoundPage })))
+
+/** Minimal fallback so main content area does not collapse during route load (reduces CLS). */
+const RouteFallback = () => (
+  <div style={{ minHeight: '50vh' }} aria-hidden aria-busy="true" />
+)
 
 export default function App() {
   return (
-    <BrowserRouter>
-      <Routes>
+    <ErrorBoundary>
+      <BrowserRouter>
+        <Routes>
         <Route element={<AppLayout />}>
-          <Route path="/" element={<HomePage />} />
-          <Route path="/projects" element={<ProjectsPage />} />
-          <Route path="/projects/:slug" element={<ProjectDetailPage />} />
-          <Route path="/archive" element={<ArchivePage />} />
-          <Route path="/about" element={<AboutPage />} />
+          <Route path="/" element={<Suspense fallback={<RouteFallback />}><HomePage /></Suspense>} />
+          <Route path="/projects" element={<Suspense fallback={<RouteFallback />}><ProjectsPage /></Suspense>} />
+          <Route path="/projects/:slug" element={<Suspense fallback={<RouteFallback />}><ProjectDetailPage /></Suspense>} />
+          <Route path="/archive" element={<Suspense fallback={<RouteFallback />}><ArchivePage /></Suspense>} />
+          <Route path="/about" element={<Suspense fallback={<RouteFallback />}><AboutPage /></Suspense>} />
 
-          <Route path="*" element={<NotFoundPage />} />
+          <Route path="*" element={<Suspense fallback={<RouteFallback />}><NotFoundPage /></Suspense>} />
         </Route>
       </Routes>
     </BrowserRouter>
+    </ErrorBoundary>
   )
 }
 

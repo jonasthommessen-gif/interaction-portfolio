@@ -1,9 +1,28 @@
 import { useState, useEffect } from 'react'
-import { Outlet } from 'react-router-dom'
+import { Outlet, useLocation } from 'react-router-dom'
 import { NavbarInvertProvider } from './contexts/NavbarInvertContext'
 import { Navbar } from './components/Navbar'
 import { LoadingScreen } from './components/LoadingScreen'
 import { useTLEData } from './hooks/useTLEData'
+import { getProjectBySlug } from './content/projects'
+
+const SITE_TITLE = 'Jonas Thommessen'
+const DEFAULT_DESCRIPTION =
+  'Portfolio of Jonas Thommessen — UX, UI, systems thinking, prototyping, and motion design.'
+
+function getPageMeta(pathname: string): { title: string; description: string } {
+  if (pathname === '/') return { title: SITE_TITLE, description: DEFAULT_DESCRIPTION }
+  if (pathname === '/projects') return { title: `Projects | ${SITE_TITLE}`, description: 'Project case studies and prototypes.' }
+  if (pathname === '/about') return { title: `About | ${SITE_TITLE}`, description: 'About Jonas Thommessen and how to get in touch.' }
+  if (pathname === '/archive') return { title: `Archive | ${SITE_TITLE}`, description: 'Archive of work and experiments.' }
+  const projectMatch = pathname.match(/^\/projects\/(.+)$/)
+  if (projectMatch) {
+    const project = getProjectBySlug(projectMatch[1])
+    if (project) return { title: `${project.title} | ${SITE_TITLE}`, description: project.categories.join(', ') + '.' }
+    return { title: `Not found | ${SITE_TITLE}`, description: DEFAULT_DESCRIPTION }
+  }
+  return { title: `Not found | ${SITE_TITLE}`, description: DEFAULT_DESCRIPTION }
+}
 
 // Maximum time to wait for TLEs before showing the app anyway
 const TLE_TIMEOUT_MS = 5000
@@ -13,6 +32,22 @@ const MIN_LOADING_MS = 1500
 const POST_TLE_DELAY_MS = 1200
 
 export function AppLayout() {
+  const location = useLocation()
+
+  // Per-route document title and meta for SEO
+  useEffect(() => {
+    const { title, description } = getPageMeta(location.pathname)
+    document.title = title
+    const metaDesc = document.querySelector('meta[name="description"]')
+    if (metaDesc) metaDesc.setAttribute('content', description)
+    const ogTitle = document.querySelector('meta[property="og:title"]')
+    if (ogTitle) ogTitle.setAttribute('content', title)
+    const ogDesc = document.querySelector('meta[property="og:description"]')
+    if (ogDesc) ogDesc.setAttribute('content', description)
+    const ogUrl = document.querySelector('meta[property="og:url"]')
+    if (ogUrl && typeof window !== 'undefined') ogUrl.setAttribute('content', window.location.origin + location.pathname)
+  }, [location.pathname])
+
   const [docReady, setDocReady] = useState(
     typeof document !== 'undefined' && document.readyState === 'complete',
   )
@@ -61,9 +96,14 @@ export function AppLayout() {
 
   return (
     <NavbarInvertProvider>
+      <a href="#main-content" className="skipLink">
+        Skip to main content
+      </a>
       <LoadingScreen ready={appReady} />
       <Navbar />
-      <Outlet />
+      <div id="main-content">
+        <Outlet />
+      </div>
     </NavbarInvertProvider>
   )
 }

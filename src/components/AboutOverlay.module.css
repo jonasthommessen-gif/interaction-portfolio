@@ -329,6 +329,7 @@
   flex: 1 1 auto;
   min-height: 0;
   min-width: 0;
+  aspect-ratio: 3 / 4;
   background: rgba(255, 255, 255, 0.06);
   overflow: hidden;
 }
@@ -352,7 +353,7 @@
 
 .contactHeading {
   margin: 0;
-  font-size: 20px;
+  font-size: var(--text-xl);
   font-weight: 500;
   line-height: 1.35;
   color: white;
@@ -374,7 +375,7 @@
   color: white;
   opacity: 0.85;
   text-decoration: none;
-  font-size: 20px;
+  font-size: var(--text-xl);
   font-weight: 300;
   line-height: 1.35;
   transition: opacity 0.2s ease;
@@ -392,4 +393,110 @@
   align-items: center;
   justify-content: center;
   color: inherit;
+}
+
+/* Static keyword row (mobile only; used when FloatingKeywords is replaced) */
+.keywordsStatic {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  font-size: clamp(14px, 2.2vmin, 20px);
+  font-weight: 400;
+  letter-spacing: -0.01em;
+  color: white;
+}
+
+.keywordsStatic span {
+  white-space: nowrap;
+}
+
+/* ─── Mobile: single-column stack ───────────────────────────────────────────── */
+@media (max-width: 820px) {
+  .leftColumn {
+    position: relative;
+    width: 100%;
+    height: auto;
+    overflow: visible;
+  }
+
+  .rightPanel {
+    position: relative;
+    left: 0;
+    width: 100%;
+    right: auto;
+    bottom: auto;
+  }
+
+  .imageBlock {
+    margin-top: 0;
+    height: auto;
+    min-height: 0;
+    padding: 24px 20px;
+    aspect-ratio: 3 / 4;
+    max-height: 70vh;
+  }
+
+  .imageWrap {
+    max-height: 70vh;
+  }
+
+  .contactBlock {
+    padding: 28px 20px 2rem;
+  }
+
+  .section {
+    padding-left: 16px;
+    padding-right: 20px;
+  }
+
+  .sectionFirstCard {
+    padding-left: 16px;
+    padding-right: 20px;
+  }
+
+  .topSeparatorLine {
+    margin-left: -16px;
+    margin-right: -20px;
+    width: calc(100% + 16px + 20px);
+    min-width: 0;
+  }
+
+  .separatorLineWrapper {
+    margin-left: -16px;
+    margin-right: -20px;
+    width: calc(100% + 16px + 20px);
+  }
+
+  .keywordsSection2 {
+    position: relative;
+    left: 0;
+    right: 0;
+    bottom: auto;
+    top: auto;
+    margin-top: 1rem;
+    min-height: 80px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .keywordsSection2 .keywordUx,
+  .keywordsSection2 .keywordProducts,
+  .keywordsSection2 .keywordSystems {
+    position: static;
+    bottom: auto;
+    left: auto;
+    right: auto;
+  }
+
+  .connectorsSvg {
+    display: none;
+  }
+
+  .separatorGapCellBetweenSeparators {
+    min-height: 0;
+    height: auto;
+    padding: 0.5rem 0;
+  }
 }

@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useLayoutEffect } from 'react'
 import styles from './AboutOverlay.module.css'
+import { useMediaQuery } from '../hooks/useMediaQuery'
 
 const FLOATING_KEYWORDS = ['Systems thinking', 'UX', 'UI', 'Products', 'Prototyping', 'Motion'] as const
 
@@ -145,8 +146,11 @@ function FloatingKeywords() {
   )
 }
 
+const MOBILE_BREAKPOINT = '(max-width: 820px)'
+
 export function AboutOverlay() {
   const [portraitError, setPortraitError] = useState(false)
+  const isMobile = useMediaQuery(MOBILE_BREAKPOINT)
 
   return (
     <>
@@ -194,7 +198,15 @@ export function AboutOverlay() {
               <div className={styles.separatorLine} />
             </div>
             <div className={`${styles.separatorGapCell} ${styles.separatorGapCellBetweenSeparators}`} aria-hidden>
-              <FloatingKeywords />
+              {isMobile ? (
+                <div className={styles.keywordsStatic} aria-hidden>
+                  {FLOATING_KEYWORDS.map((word) => (
+                    <span key={word}>{word}</span>
+                  ))}
+                </div>
+              ) : (
+                <FloatingKeywords />
+              )}
             </div>
           </section>
         </div>
@@ -244,12 +256,14 @@ export function AboutOverlay() {
               <a href="https://www.linkedin.com/in/jonasthommessen" target="_blank" rel="noopener noreferrer" className={styles.contactLink}>
                 <span className={styles.contactIcon}><IconLinkedIn /></span>
                 Jonas Thommessen
+                <span className="srOnly">Opens in new window</span>
               </a>
             </li>
             <li>
               <a href="https://www.instagram.com/jonasthommessen" target="_blank" rel="noopener noreferrer" className={styles.contactLink}>
                 <span className={styles.contactIcon}><IconInstagram /></span>
                 @jonasthommessen
+                <span className="srOnly">Opens in new window</span>
               </a>
             </li>
             <li>

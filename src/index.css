@@ -1,8 +1,31 @@
+/* Design tokens: see CONTRIBUTING.md "Design tokens and breakpoints" for usage. */
 :root {
   /* Typography */
   --font-sans: 'IBM Plex Sans', system-ui, -apple-system, Segoe UI, Roboto,
     Helvetica, Arial, sans-serif;
   --font-serif: 'IBM Plex Serif', ui-serif, Georgia, 'Times New Roman', serif;
+  /* Type scale — use these instead of raw px/rem for consistency */
+  --text-xs: 0.75rem;
+  --text-sm: 0.8125rem;
+  --text-base: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.25rem;
+  --text-2xl: 1.375rem;
+  --text-3xl: 1.5rem;
+  --heading-1: clamp(1.5rem, 4vw, 2rem);
+  /* Optional: line-height and letter-spacing */
+  --leading-tight: 1.2;
+  --leading-normal: 1.5;
+  --leading-relaxed: 1.65;
+  --tracking-tight: -0.01em;
+  --tracking-normal: 0;
+  --tracking-wide: 0.08em;
+  /* HUD (SatelliteInfoBar, SatelliteOverlay): labels vs values */
+  --tracking-hud-label: 0.08em;
+  --tracking-hud-value: 0.05em;
+  --hud-text: 10px;
+  --hud-text-sm: 9px;
+  --hud-text-xs: 8px;
 
   /* Layout */
   --container-max: 1120px;
@@ -12,7 +35,8 @@
   /* Colors */
   --bg: #0b0c10;
   --fg: rgba(255, 255, 255, 0.92);
-  --muted: rgba(255, 255, 255, 0.72);
+  /* AA contrast on --bg: 4.5:1 requires ~0.58+ opacity; 0.78 gives comfortable margin */
+  --muted: rgba(255, 255, 255, 0.78);
 
   /* Frosted surfaces */
   --frost-bg: rgba(15, 16, 20, 0.55);
@@ -75,7 +99,8 @@ button {
 
 .title {
   font-family: var(--font-serif);
-  letter-spacing: -0.01em;
+  font-size: var(--heading-1);
+  letter-spacing: var(--tracking-tight);
 }
 
 .container {
@@ -100,4 +125,20 @@ button {
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
   border: 0;
+}
+
+.skipLink {
+  position: absolute;
+  left: -9999px;
+  z-index: 9999;
+  padding: 0.75rem 1rem;
+  background: var(--pill-bg);
+  color: var(--pill-fg);
+  font-weight: 500;
+  border-radius: var(--pill-radius);
+}
+
+.skipLink:focus {
+  left: 1rem;
+  top: 1rem;
 }

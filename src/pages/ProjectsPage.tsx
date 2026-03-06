@@ -206,6 +206,7 @@ export function ProjectsPage() {
                 }}
               >
                 {rowProjects.map((project, colIndex) => {
+                  const isFirstCard = rowIndex === 0 && colIndex === 0
                   const isActive = project.slug === activeSlug
                   const inActiveRow = hasActive && rowIndex === activeRow
 
@@ -258,7 +259,10 @@ export function ProjectsPage() {
                           className={styles.media}
                           src={project.cover.src}
                           alt={project.cover.alt}
-                          loading="lazy"
+                          width={800}
+                          height={600}
+                          loading={isFirstCard ? 'eager' : 'lazy'}
+                          fetchPriority={isFirstCard ? 'high' : undefined}
                         />
                       )}
 

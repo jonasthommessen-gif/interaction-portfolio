@@ -1,6 +1,7 @@
-import { useMemo } from 'react'
+import { Suspense, useMemo } from 'react'
 import { NavLink, useParams } from 'react-router-dom'
 import { getProjectBySlug } from '../content/projects'
+import { NotFoundPage } from './NotFoundPage'
 import styles from './ProjectDetailPage.module.css'
 
 type SectionId =
@@ -37,6 +38,14 @@ export function ProjectDetailPage() {
   const { slug } = useParams()
 
   const project = slug ? getProjectBySlug(slug) : undefined
+
+  if (slug && !project) {
+    return (
+      <Suspense fallback={null}>
+        <NotFoundPage />
+      </Suspense>
+    )
+  }
 
   const title = useMemo(() => {
     if (project) return project.title

@@ -12,7 +12,8 @@ export function HomePage() {
   const isMobile = useMediaQuery('(max-width: 820px)')
 
   return (
-    <main className={`page ${styles.page}`}>
+    <main className={`page ${styles.page}`} aria-label="Home">
+      <h1 className="srOnly">Jonas Thommessen</h1>
       <GrainBackground />
       <SatelliteOverlay
         bbox={isMobile ? NORWAY_BBOX : SCANDINAVIA_BBOX}

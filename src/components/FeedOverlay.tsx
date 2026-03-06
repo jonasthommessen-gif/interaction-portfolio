@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import { archiveProjects } from '../content/archiveProjects'
 import type { ArchiveProject } from '../content/archiveProjects'
 import { useNavbarInvert } from '../contexts/NavbarInvertContext'
+import { useFocusTrap } from '../hooks/useFocusTrap'
 import { useMediaQuery } from '../hooks/useMediaQuery'
 import { getImageAverageLuminance, isImageBright } from '../utils/imageLuminance'
 import styles from './FeedOverlay.module.css'
@@ -225,10 +226,14 @@ function FeedItem({
 
 export function FeedOverlay({ entryProjectId, fromGallery, onClose }: FeedOverlayProps) {
   const panelRef = useRef<HTMLDivElement>(null)
+  const backdropRef = useRef<HTMLDivElement>(null)
   const feedRef = useRef<HTMLDivElement>(null)
   const { setInvertLogo } = useNavbarInvert()
   const [currentEntryImageUrl, setCurrentEntryImageUrl] = useState<string | null>(null)
   const isMobile = useMediaQuery('(max-width: 820px)')
+  const reduceMotion = useReducedMotion()
+
+  useFocusTrap(backdropRef, true)
 
   // Invert logo when the current entry (first) Feed image is bright (Option C)
   useEffect(() => {
@@ -276,23 +281,29 @@ export function FeedOverlay({ entryProjectId, fromGallery, onClose }: FeedOverla
     e.stopPropagation()
   }
 
+  const backdropTransition = reduceMotion ? { duration: 0 } : { duration: 0.35 }
+  const panelTransition = reduceMotion
+    ? { duration: 0 }
+    : { type: 'tween' as const, ease: [0.22, 1, 0.36, 1] as const, duration: 0.5, delay: 0.18 }
+
   return (
     <motion.div
+      ref={backdropRef}
       className={styles.backdrop}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      transition={{ duration: 0.35 }}
+      transition={backdropTransition}
       onClick={handleBackdropClick}
     >
       {/* White feed panel — slides up from below */}
       <motion.div
         ref={panelRef}
         className={styles.panel}
-        initial={{ y: '100%' }}
+        initial={{ y: reduceMotion ? 0 : '100%' }}
         animate={{ y: 0 }}
-        exit={{ y: '100%' }}
-        transition={{ type: 'tween', ease: [0.22, 1, 0.36, 1], duration: 0.5, delay: 0.18 }}
+        exit={{ y: reduceMotion ? 0 : '100%' }}
+        transition={panelTransition}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Scrollable feed — native scroll, isolated from gallery */}

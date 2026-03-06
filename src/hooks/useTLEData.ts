@@ -17,6 +17,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { parseTLEText } from '../lib/satelliteMath'
 import { getCategoryForName, STARLINK_PRIORITY_NORAD_IDS } from '../lib/curatedSats'
+import { STATIC_TLE_TEXT } from '../lib/staticTLEs'
 
 // ─── Extended ParsedSat with category ────────────────────────────────────────
 
@@ -60,15 +61,25 @@ const STARLINK_URL = 'https://celestrak.org/NORAD/elements/gp.php?GROUP=starlink
 const VISUAL_URL   = 'https://celestrak.org/NORAD/elements/gp.php?GROUP=visual&FORMAT=TLE'
 
 const STARLINK_MERGE_CAP = 40
+const FETCH_TIMEOUT_MS = 15_000
 
 async function tryFetch(url: string): Promise<string> {
-  const res = await fetch(url)
-  if (!res.ok) throw new Error(`HTTP ${res.status} ${res.statusText}`)
-  const text = await res.text()
-  if (text.trim().length < 50 || text.trim().startsWith('No GP data') || text.trim().startsWith('Invalid')) {
-    throw new Error(`CelesTrak returned invalid data: ${text.slice(0, 80)}`)
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS)
+  try {
+    const res = await fetch(url, { signal: controller.signal })
+    clearTimeout(timeoutId)
+    if (!res.ok) throw new Error(`HTTP ${res.status} ${res.statusText}`)
+    const text = await res.text()
+    if (text.trim().length < 50 || text.trim().startsWith('No GP data') || text.trim().startsWith('Invalid')) {
+      throw new Error(`CelesTrak returned invalid data: ${text.slice(0, 80)}`)
+    }
+    return text
+  } catch (err) {
+    clearTimeout(timeoutId)
+    if (err instanceof Error) throw err
+    throw new Error(String(err))
   }
-  return text
 }
 
 function parseWithMeta(text: string): ParsedSatWithMeta[] {
@@ -139,13 +150,19 @@ async function fetchAll(): Promise<ParsedSatWithMeta[]> {
   }
 
   if (results.length === 0) {
-    throw new Error('All TLE fetches failed — no satellite data available')
+    console.warn('[useTLEData] All fetches failed — using static TLE fallback')
+    return parseWithMeta(STATIC_TLE_TEXT)
   }
 
   console.debug(`[useTLEData] total: ${results.length} satellites loaded`)
   return results
 }
 
+/**
+ * Fetches and caches TLE data from CelesTrak; uses static fallback when all fetches fail.
+ * @param options - Optional refresh interval; tleUrl is reserved for API compat
+ * @returns { sats, loading, error } — sats are parsed with category; error is set only when load fails and no cache/fallback
+ */
 export function useTLEData(options: UseTLEDataOptions = {}): UseTLEDataResult {
   const refreshMs = (options.refreshHours ?? DEFAULT_REFRESH_HOURS) * 3600 * 1000
 

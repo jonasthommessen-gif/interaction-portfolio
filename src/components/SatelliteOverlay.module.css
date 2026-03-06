@@ -1,12 +1,34 @@
+.canvasWrapper {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+}
+
 /* Canvas: pointer-events auto so dots can be clicked/tapped to feature a satellite */
 .canvas {
-  position: fixed;
+  position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
-  z-index: 1;
   pointer-events: auto;
   overflow: hidden;
+}
+
+/* Non-blocking message when TLE fetch fails */
+.tleErrorBanner {
+  position: fixed;
+  bottom: 12px;
+  left: 12px;
+  z-index: 2;
+  pointer-events: none;
+  font-family: var(--font-sans);
+  font-size: var(--hud-text);
+  font-weight: 400;
+  letter-spacing: var(--tracking-hud-value);
+  color: rgba(255, 255, 255, 0.6);
+  background: rgba(0, 0, 0, 0.4);
+  padding: 6px 10px;
+  border-radius: 4px;
 }
 
 /* Tooltip — positioned absolutely via inline style */
@@ -28,10 +50,11 @@
 }
 
 .tooltipName {
-  font-family: 'IBM Plex Sans', system-ui, -apple-system, sans-serif;
-  font-size: 10px;
+  font-family: var(--font-sans);
+  font-size: var(--hud-text);
   font-weight: 500;
-  letter-spacing: 0.06em;
+  letter-spacing: var(--tracking-hud-label);
+  text-transform: uppercase;
   color: rgba(255, 255, 255, 0.92);
   text-shadow:
     0 0 8px rgba(0, 0, 0, 0.9),
@@ -41,10 +64,10 @@
 }
 
 .tooltipCategory {
-  font-family: 'IBM Plex Sans', system-ui, -apple-system, sans-serif;
-  font-size: 9px;
+  font-family: var(--font-sans);
+  font-size: var(--hud-text-sm);
   font-weight: 400;
-  letter-spacing: 0.08em;
+  letter-spacing: var(--tracking-hud-value);
   color: rgba(255, 255, 255, 0.52);
   text-shadow:
     0 0 8px rgba(0, 0, 0, 0.9),
@@ -55,10 +78,10 @@
 }
 
 .tooltipDescription {
-  font-family: 'IBM Plex Sans', system-ui, -apple-system, sans-serif;
-  font-size: 8px;
+  font-family: var(--font-sans);
+  font-size: var(--hud-text-xs);
   font-weight: 400;
-  letter-spacing: 0.1em;
+  letter-spacing: var(--tracking-hud-value);
   color: rgba(255, 255, 255, 0.30);
   text-shadow:
     0 0 8px rgba(0, 0, 0, 0.9),

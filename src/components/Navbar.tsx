@@ -3,6 +3,7 @@ import { useLocation } from 'react-router-dom'
 import styles from './Navbar.module.css'
 import { NavPill } from './NavPill'
 import { RiveLogoButton } from './RiveLogoButton'
+import { useFocusTrap } from '../hooks/useFocusTrap'
 import { useMediaQuery } from '../hooks/useMediaQuery'
 import { useNavbarInvert } from '../contexts/NavbarInvertContext'
 
@@ -14,6 +15,13 @@ export function Navbar() {
   const [isMobileNavExpanded, setIsMobileNavExpanded] = useState(false)
   const location = useLocation()
   const navRef = useRef<HTMLElement>(null)
+  const menuButtonRef = useRef<HTMLButtonElement>(null)
+  const wasExpandedRef = useRef(false)
+
+  const isHome = location.pathname === '/'
+  const effectiveExpanded = (isMobile && isHome) || isMobileNavExpanded
+
+  useFocusTrap(navRef, isMobile && effectiveExpanded)
 
   useEffect(() => {
     if (isMobile) return
@@ -24,10 +32,11 @@ export function Navbar() {
     setIsMobileNavExpanded(false)
   }, [location.pathname])
 
-  // Tap outside expanded nav to contract (mobile)
+  // Tap outside expanded nav to contract (mobile); do not close when on home
   useEffect(() => {
     if (!isMobile || !isMobileNavExpanded) return
     const handlePointer = (e: MouseEvent | TouchEvent) => {
+      if (location.pathname === '/') return
       const target = e.target as Node
       if (navRef.current && !navRef.current.contains(target)) {
         setIsMobileNavExpanded(false)
@@ -42,20 +51,36 @@ export function Navbar() {
       document.removeEventListener('mousedown', handlePointer)
       document.removeEventListener('touchstart', handlePointer)
     }
-  }, [isMobile, isMobileNavExpanded])
+  }, [isMobile, isMobileNavExpanded, location.pathname])
 
-  const showCollapsed = isMobile && !isMobileNavExpanded
+  // Return focus to Open menu button when collapsing (button re-mounts on collapse)
+  useEffect(() => {
+    if (wasExpandedRef.current && !isMobileNavExpanded) {
+      menuButtonRef.current?.focus()
+      wasExpandedRef.current = false
+    }
+    if (isMobileNavExpanded) wasExpandedRef.current = true
+  }, [isMobileNavExpanded])
+
+  const showCollapsed = isMobile && !effectiveExpanded
 
   return (
     <header
       className={styles.header}
-      data-expanded={isMobile ? isMobileNavExpanded : undefined}
+      data-expanded={isMobile ? effectiveExpanded : undefined}
     >
       <div className={`container ${styles.inner}`}>
-        <nav ref={navRef} className={styles.nav} aria-label="Primary" data-expanded={isMobile ? isMobileNavExpanded : undefined}>
+        <nav
+          ref={navRef}
+          className={styles.nav}
+          aria-label="Primary"
+          data-expanded={isMobile ? effectiveExpanded : undefined}
+          data-home-nav={isMobile && isHome ? 'true' : undefined}
+        >
           <div className={styles.navInner}>
             {showCollapsed ? (
               <button
+                ref={menuButtonRef}
                 type="button"
                 className={styles.logoOnlyBtn}
                 onClick={() => setIsMobileNavExpanded(true)}

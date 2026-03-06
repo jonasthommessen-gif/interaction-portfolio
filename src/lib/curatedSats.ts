@@ -76,16 +76,10 @@ export const STARLINK_PRIORITY_NORAD_IDS: ReadonlySet<number> = new Set(
 )
 
 /**
- * Build the CelesTrak GP fetch URL for the curated satellite list.
- */
-export function buildCuratedTLEUrl(): string {
-  const ids = CURATED_SATS.map(s => s.noradId).join(',')
-  return `https://celestrak.org/NORAD/elements/gp.php?CATNR=${ids}&FORMAT=TLE`
-}
-
-/**
  * Look up the category label for a satellite by its name or NORAD ID string.
  * Falls back to 'Satellite' if not found.
+ * @param name - Satellite name from TLE (e.g. 'ISS (ZARYA)', 'STARLINK-1007')
+ * @returns Category label (e.g. 'Space Station', 'Starlink satellite')
  */
 export function getCategoryForName(name: string): string {
   // TLE names from CelesTrak often match our label or contain the NORAD ID

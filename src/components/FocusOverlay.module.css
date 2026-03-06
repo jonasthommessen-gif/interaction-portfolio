@@ -35,7 +35,7 @@
   width: 48px;
   height: 48px;
 
-  font-size: 28px;
+  font-size: var(--text-3xl);
   line-height: 1;
   cursor: pointer;
   display: flex;
@@ -140,7 +140,7 @@
   width: 40px;
   height: 40px;
 
-  font-size: 24px;
+  font-size: var(--text-2xl);
   line-height: 1;
   cursor: pointer;
   display: flex;
@@ -209,16 +209,16 @@
 .title {
   margin: 0 0 10px;
   font-family: var(--font-serif, Georgia, serif);
-  font-size: 22px;
+  font-size: var(--text-2xl);
   font-weight: 600;
-  letter-spacing: -0.01em;
+  letter-spacing: var(--tracking-tight);
   line-height: 1.15;
   color: #111;
 }
 
 .description {
   margin: 0 0 16px;
-  font-size: 14px;
+  font-size: var(--text-sm);
   line-height: 1.6;
   color: rgba(0, 0, 0, 0.65);
 }
@@ -239,7 +239,7 @@
   background: #1a2e1a;
   color: rgba(255, 255, 255, 0.9);
 
-  font-size: 12px;
+  font-size: var(--text-xs);
   letter-spacing: 0.01em;
   font-weight: 500;
 }
@@ -252,7 +252,7 @@
   left: 24px;
   z-index: 120;
 
-  font-size: 13px;
+  font-size: var(--text-sm);
   color: rgba(255, 255, 255, 0.55);
   letter-spacing: 0.01em;
   pointer-events: none;

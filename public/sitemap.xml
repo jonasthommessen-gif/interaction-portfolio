@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>https://jonasthommessen.com/</loc><changefreq>weekly</changefreq></url>
+  <url><loc>https://jonasthommessen.com/projects</loc><changefreq>weekly</changefreq></url>
+  <url><loc>https://jonasthommessen.com/about</loc><changefreq>monthly</changefreq></url>
+  <url><loc>https://jonasthommessen.com/archive</loc><changefreq>weekly</changefreq></url>
+  <url><loc>https://jonasthommessen.com/projects/kinetic-cards</loc><changefreq>monthly</changefreq></url>
+  <url><loc>https://jonasthommessen.com/projects/micro-interactions</loc><changefreq>monthly</changefreq></url>
+  <url><loc>https://jonasthommessen.com/projects/case-study-template</loc><changefreq>monthly</changefreq></url>
+  <url><loc>https://jonasthommessen.com/projects/responsive-mosaic</loc><changefreq>monthly</changefreq></url>
+  <url><loc>https://jonasthommessen.com/projects/frictionless-navigation</loc><changefreq>monthly</changefreq></url>
+  <url><loc>https://jonasthommessen.com/projects/visual-language</loc><changefreq>monthly</changefreq></url>
+</urlset>

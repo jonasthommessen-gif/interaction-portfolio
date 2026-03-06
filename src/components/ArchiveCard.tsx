@@ -94,6 +94,8 @@ export function ArchiveCard({
         className={styles.image}
         src={project.cover}
         alt={project.title}
+        width={800}
+        height={600}
         loading="lazy"
         draggable={false}
       />

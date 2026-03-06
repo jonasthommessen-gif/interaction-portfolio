@@ -107,7 +107,13 @@ export function LoadingScreen({ ready }: LoadingScreenProps) {
   if (!visible) return null
 
   return (
-    <div className={`${styles.overlay} ${fading ? styles.fadeOut : ''}`}>
+    <div
+      className={`${styles.overlay} ${fading ? styles.fadeOut : ''}`}
+      aria-busy={!ready}
+    >
+      <span className="srOnly" role="status" aria-live="polite">
+        {ready ? 'App is ready' : 'Loading'}
+      </span>
       <div className={styles.logoWrap}>
         <RiveComponent className={styles.riveCanvas} />
       </div>

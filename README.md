@@ -1,5 +1,12 @@
 # React + TypeScript + Vite
 
+## Architecture
+
+- **Entry**: `index.html` loads `src/main.tsx`, which mounts `App` (with ErrorBoundary and React Router) on `#root`.
+- **Routes**: SPA with lazy-loaded pages (Home, Projects, Project detail, Archive, About, 404). Layout (`AppLayout`) provides Navbar, loading gate, and TLE-based readiness.
+- **Data**: Static content in `src/content/` (projects, archive). Satellite TLE data from CelesTrak API via `useTLEData` (cached, 6h refresh; static fallback when fetch fails).
+- **Tests**: `npm run test` (watch), `npm run test:run`, `npm run test:coverage`. Unit tests for `satelliteMath`, `projects`, `curatedSats`, and `satelliteOverlayUtils`.
+
 ## Asset conventions (recommended)
 
 ### Rive
@@ -16,6 +23,10 @@
 
 For very large videos, consider hosting them (Vercel Blob / S3 / Cloudinary) and
 referencing URLs so deploys stay fast.
+
+## Security
+
+- Run `npm audit` periodically and apply `npm audit fix` where safe. For breaking changes, plan upgrades before updating.
 
 ## Vercel (SPA routing)
 

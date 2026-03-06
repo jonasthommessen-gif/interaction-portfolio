@@ -24,63 +24,39 @@ import {
 } from '../lib/satelliteMath'
 import type { BBox, TrailPoint } from '../lib/satelliteMath'
 import { SCANDINAVIA_BBOX } from '../lib/satelliteMath'
+import {
+  CANVAS_EXPAND_FRAC,
+  DOT_RADIUS,
+  ENTRY_PAD,
+  HIT_RADIUS,
+  ISS_EXACT_NAME,
+  LERP_FACTOR,
+  TRAIL_LINE_WIDTH,
+  TRAIL_MAX_ALPHA,
+  TRAIL_RECOMPUTE_MS,
+  TRAIL_SMOOTHING_CONFIG,
+  TARGET_FPS,
+  canvasToClient,
+  clientToCanvas,
+  computeDirectionFromTrail,
+  drawGlyphImage,
+  drawGrid,
+  expandBBox,
+  getCanvasTransform,
+  getSatDescription,
+  getVisibleRectAndTransform,
+} from '../lib/satelliteOverlayUtils'
 import styles from './SatelliteOverlay.module.css'
-
-// ─── Config ───────────────────────────────────────────────────────────────────
-
-const ENTRY_PAD = 8
-/** Fraction of bbox size to expand on each side for trail computation (unseen margin). */
-const CANVAS_EXPAND_FRAC = 0.1
-const TARGET_FPS = 30
-const TRAIL_RECOMPUTE_MS = 500
-const DOT_RADIUS = 4
-const TRAIL_MAX_ALPHA = 0.72
-const TRAIL_LINE_WIDTH = 1.7
-const HIT_RADIUS = 14
-const LERP_FACTOR = 0.28
-
-const TRAIL_SMOOTHING_CONFIG = {
-  splineTension: 0.5,
-  samplesPerSegment: 8,
-} as const
-
-// Grid config
-const GRID_LAT_STEP = 10   // degrees between horizontal lines
-const GRID_LON_STEP = 15   // degrees between vertical lines
-const GRID_LINE_ALPHA = 0.045
-const GRID_LABEL_ALPHA = 0.18
-const GRID_LABEL_FONT = '8px "IBM Plex Sans", system-ui, sans-serif'
-// Minimum pixel distance from canvas edge before we skip a label
-const GRID_LABEL_EDGE_MARGIN = 28
-
-// ISS exact name (ZARYA = first ISS module, the catalog name for the whole station)
-const ISS_EXACT_NAME = 'ISS (ZARYA)'
-/**
- * Returns a short human-readable description for a satellite name,
- * to be shown as a third line in the hover tooltip.
- *
- * CelesTrak naming conventions:
- *   ISS (ZARYA)          — the actual station
- *   ISS DEB (OBJECT A)   — debris with "DEB" in name
- *   ISS OBJECT XZ        — debris without "DEB" (older catalog style)
- *   CSS (TIANHE-1)       — Chinese Space Station modules
- */
-function getSatDescription(name: string): string | null {
-  const n = name.toUpperCase()
-  if (name === ISS_EXACT_NAME) return 'INTERNATIONAL SPACE STATION'
-  // ISS debris: "ISS DEB ...", "ISS OBJECT ...", "ISS R/B ..."
-  if (/^ISS\s+(DEB|OBJECT|R\/B)/i.test(name)) return 'DEBRIS / RELEASED FROM ISS'
-  // Chinese Space Station modules
-  if (/^CSS\b/i.test(name) || n.includes('TIANHE') || n.includes('WENTIAN') || n.includes('MENGTIAN') || n.includes('SHENZHOU') || n.includes('TIANGONG')) return 'CHINESE SPACE STATION'
-  if (n.startsWith('STARLINK')) return 'SPACEX STARLINK CONSTELLATION'
-  if (n.startsWith('ONEWEB')) return 'ONEWEB BROADBAND CONSTELLATION'
-  // Generic debris / rocket bodies
-  if (/\bDEB\b|\bDEBRIS\b|\bR\/B\b|\bROCKET BODY\b/.test(n)) return 'TRACKED DEBRIS OBJECT'
-  return null
-}
 
 // ─── Props ────────────────────────────────────────────────────────────────────
 
+/**
+ * Props for the full-screen satellite map overlay.
+ * @property bbox - Map region (lat/lon bounds); defaults to Scandinavia
+ * @property onFeaturedSat - Callback with featured satellite, object count, and ISS next-pass countdown
+ * @property hideTracks - When true, do not draw trails or dots (e.g. for mobile)
+ * @property recomputeTrailsOnResize - When true, recompute trails after canvas resize (desktop)
+ */
 export interface SatelliteOverlayProps {
   bbox?: BBox
   trailMinutes?: number
@@ -132,166 +108,6 @@ interface TooltipState {
   nearRight: boolean
 }
 
-function getCanvasTransform(canvas: HTMLCanvasElement) {
-  const rect = canvas.getBoundingClientRect()
-  const scaleX = canvas.width / rect.width
-  const scaleY = canvas.height / rect.height
-  return { rect, scaleX, scaleY }
-}
-
-/** Expand bbox by a fraction of its size on each side. */
-function expandBBox(bbox: BBox, frac: number): BBox {
-  const latRange = bbox.latMax - bbox.latMin
-  const lonRange = bbox.lonMax - bbox.lonMin
-  const padLat = latRange * frac
-  const padLon = lonRange * frac
-  return {
-    latMin: bbox.latMin - padLat,
-    latMax: bbox.latMax + padLat,
-    lonMin: bbox.lonMin - padLon,
-    lonMax: bbox.lonMax + padLon,
-  }
-}
-
-/** Visible rect (strict bbox in expanded pixel space) and transform to map it to (0,0,W,H). */
-function getVisibleRectAndTransform(
-  bbox: BBox,
-  bboxExpanded: BBox,
-  W: number,
-  H: number,
-): { visibleLeft: number; visibleTop: number; visibleRight: number; visibleBottom: number; scaleX: number; scaleY: number; tx: number; ty: number } {
-  const lonRangeExp = bboxExpanded.lonMax - bboxExpanded.lonMin
-  const latRangeExp = bboxExpanded.latMax - bboxExpanded.latMin
-  const visibleLeft = ((bbox.lonMin - bboxExpanded.lonMin) / lonRangeExp) * W
-  const visibleRight = ((bbox.lonMax - bboxExpanded.lonMin) / lonRangeExp) * W
-  const visibleTop = ((bboxExpanded.latMax - bbox.latMax) / latRangeExp) * H
-  const visibleBottom = ((bboxExpanded.latMax - bbox.latMin) / latRangeExp) * H
-  const visibleWidth = visibleRight - visibleLeft
-  const visibleHeight = visibleBottom - visibleTop
-  const scaleX = W / visibleWidth
-  const scaleY = H / visibleHeight
-  const tx = -visibleLeft * scaleX
-  const ty = -visibleTop * scaleY
-  return { visibleLeft, visibleTop, visibleRight, visibleBottom, scaleX, scaleY, tx, ty }
-}
-
-function clientToCanvas(
-  canvas: HTMLCanvasElement,
-  clientX: number,
-  clientY: number,
-): { x: number; y: number } {
-  const { rect, scaleX, scaleY } = getCanvasTransform(canvas)
-  return {
-    x: (clientX - rect.left) * scaleX,
-    y: (clientY - rect.top) * scaleY,
-  }
-}
-
-function canvasToClient(
-  canvas: HTMLCanvasElement,
-  canvasX: number,
-  canvasY: number,
-): { x: number; y: number } {
-  const { rect, scaleX, scaleY } = getCanvasTransform(canvas)
-  return {
-    x: rect.left + canvasX / scaleX,
-    y: rect.top + canvasY / scaleY,
-  }
-}
-
-function computeDirectionFromTrail(trail: TrailPoint[], headIdx: number): { vx: number; vy: number } | null {
-  // Walk backwards from the head to find a valid previous point for direction.
-  for (let k = 1; k <= 5; k++) {
-    const idx = headIdx - k
-    if (idx < 0) break
-    const tail = trail[idx]!
-    const head = trail[headIdx]!
-    if (isNaN(tail.x) || isNaN(tail.y) || isNaN(head.x) || isNaN(head.y)) continue
-    const vx = head.x - tail.x
-    const vy = head.y - tail.y
-    const len = Math.hypot(vx, vy)
-    if (len === 0) continue
-    return { vx: vx / len, vy: vy / len }
-  }
-  return null
-}
-
-function drawGlyphImage(
-  ctx: CanvasRenderingContext2D,
-  img: HTMLImageElement,
-  x: number,
-  y: number,
-  rotationRad: number,
-  centerXInImage: number,
-  centerYInImage: number,
-) {
-  const scale = DOT_RADIUS / 2 // SVG dot radius is 2; keep canvas dot at radius 4
-  ctx.save()
-  ctx.translate(x, y)
-  if (rotationRad !== 0) {
-    ctx.rotate(rotationRad)
-  }
-  ctx.scale(scale, scale)
-  ctx.drawImage(img, -centerXInImage, -centerYInImage)
-  ctx.restore()
-}
-
-// ─── Grid drawing ─────────────────────────────────────────────────────────────
-
-function drawGrid(
-  ctx: CanvasRenderingContext2D,
-  bbox: BBox,
-  W: number,
-  H: number,
-) {
-  ctx.save()
-
-  // Horizontal lines (latitude)
-  const latStart = Math.ceil(bbox.latMin / GRID_LAT_STEP) * GRID_LAT_STEP
-  for (let lat = latStart; lat <= bbox.latMax; lat += GRID_LAT_STEP) {
-    const y = ((bbox.latMax - lat) / (bbox.latMax - bbox.latMin)) * H
-    ctx.beginPath()
-    ctx.moveTo(0, y)
-    ctx.lineTo(W, y)
-    ctx.strokeStyle = `rgba(255,255,255,${GRID_LINE_ALPHA})`
-    ctx.lineWidth = 0.5
-    ctx.stroke()
-
-    // Skip label if too close to top or bottom edge
-    if (y > GRID_LABEL_EDGE_MARGIN && y < H - GRID_LABEL_EDGE_MARGIN) {
-      ctx.fillStyle = `rgba(255,255,255,${GRID_LABEL_ALPHA})`
-      ctx.font = GRID_LABEL_FONT
-      ctx.textAlign = 'left'
-      ctx.textBaseline = 'bottom'
-      ctx.fillText(`${lat}°N`, 6, y - 2)
-    }
-  }
-
-  // Vertical lines (longitude)
-  const lonStart = Math.ceil(bbox.lonMin / GRID_LON_STEP) * GRID_LON_STEP
-  for (let lon = lonStart; lon <= bbox.lonMax; lon += GRID_LON_STEP) {
-    const x = ((lon - bbox.lonMin) / (bbox.lonMax - bbox.lonMin)) * W
-    ctx.beginPath()
-    ctx.moveTo(x, 0)
-    ctx.lineTo(x, H)
-    ctx.strokeStyle = `rgba(255,255,255,${GRID_LINE_ALPHA})`
-    ctx.lineWidth = 0.5
-    ctx.stroke()
-
-    // Skip label if too close to left or right edge
-    if (x > GRID_LABEL_EDGE_MARGIN && x < W - GRID_LABEL_EDGE_MARGIN) {
-      const label = lon === 0 ? '0°' : lon > 0 ? `${lon}°E` : `${Math.abs(lon)}°W`
-      ctx.fillStyle = `rgba(255,255,255,${GRID_LABEL_ALPHA})`
-      ctx.font = GRID_LABEL_FONT
-      ctx.textAlign = 'center'
-      ctx.textBaseline = 'top'
-      ctx.fillText(label, x, H - 14)
-    }
-  }
-
-  ctx.restore()
-}
-
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export function SatelliteOverlay({
@@ -314,7 +130,7 @@ export function SatelliteOverlay({
   recomputeTrailsOnResizeRef.current = recomputeTrailsOnResize
   const recomputeTrailsRef = useRef<() => void>(() => {})
 
-  const { sats } = useTLEData({ tleUrl, refreshHours })
+  const { sats, error: tleError } = useTLEData({ tleUrl, refreshHours })
 
   const satsRef = useRef<ParsedSatWithMeta[]>(sats)
   satsRef.current = sats
@@ -850,7 +666,18 @@ export function SatelliteOverlay({
 
   return (
     <>
-      <canvas ref={canvasRef} className={styles.canvas} aria-hidden="true" />
+      <div className={styles.canvasWrapper} aria-label="Satellite positions over map">
+        <canvas ref={canvasRef} className={styles.canvas} aria-hidden="true" />
+      </div>
+      {tleError && (
+        <div
+          className={styles.tleErrorBanner}
+          role="status"
+          aria-live="polite"
+        >
+          Satellite data temporarily unavailable
+        </div>
+      )}
       {tooltip.visible && (
         <div
           className={styles.tooltip}

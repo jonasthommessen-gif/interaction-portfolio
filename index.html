@@ -5,6 +5,9 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
+    <!-- Preload Rive asset for faster loading screen (LCP) -->
+    <link rel="preload" href="/rive/White.logo.mascot.riv" as="fetch" />
+
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -14,6 +17,12 @@
     />
 
     <title>Jonas Thommessen</title>
+    <meta name="description" content="Portfolio of Jonas Thommessen — UX, UI, systems thinking, prototyping, and motion design." />
+    <!-- Open Graph (default; updated client-side for per-page) -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Jonas Thommessen" />
+    <meta property="og:description" content="Portfolio of Jonas Thommessen — UX, UI, systems thinking, prototyping, and motion design." />
+    <meta property="og:url" content="https://jonasthommessen.com/" />
   </head>
   <body>
     <div id="root"></div>

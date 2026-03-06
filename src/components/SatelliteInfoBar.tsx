@@ -10,7 +10,7 @@
  * ─────────────────────────────────────────────────────────────────────────────
  */
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { OverlayInfo } from './SatelliteOverlay'
 import { useMediaQuery } from '../hooks/useMediaQuery'
 import styles from './SatelliteInfoBar.module.css'
@@ -49,34 +49,77 @@ function useOsloClock(): string {
   return time
 }
 
+const NORWAY_TOOLTIP_MOBILE =
+  "This frame follows satellites over Norway: from about 58°N (southern Norway) up to 71°N (past North Cape), and from the Norwegian Sea at about 5°E east to the border with Finland and Russia near 31°E. The view is updated in real time."
+
 export function SatelliteInfoBar({ info, isMobile: isMobileProp }: SatelliteInfoBarProps) {
   const osloTime = useOsloClock()
   const isMobileQuery = useMediaQuery('(max-width: 820px)')
   const isMobile = isMobileProp ?? isMobileQuery
+  const [norwayTooltipOpen, setNorwayTooltipOpen] = useState(false)
+  const norwayRegionRef = useRef<HTMLButtonElement>(null)
+
+  useEffect(() => {
+    if (!norwayTooltipOpen) return
+    const handlePointer = (e: MouseEvent | TouchEvent) => {
+      const target = e.target as Node
+      if (norwayRegionRef.current && !norwayRegionRef.current.contains(target)) {
+        setNorwayTooltipOpen(false)
+      }
+    }
+    const rafId = requestAnimationFrame(() => {
+      document.addEventListener('mousedown', handlePointer)
+      document.addEventListener('touchstart', handlePointer, { passive: true })
+    })
+    return () => {
+      cancelAnimationFrame(rafId)
+      document.removeEventListener('mousedown', handlePointer)
+      document.removeEventListener('touchstart', handlePointer)
+    }
+  }, [norwayTooltipOpen])
 
   if (isMobile) {
     return (
-      <div className={styles.bar} aria-hidden="true" data-mobile>
-        <div className={styles.mobileRow}>
-          <span className={styles.regionName}>NORWAY</span>
-          <span className={styles.trackingLabel}>TRACKED</span>
+      <section className={styles.bar} aria-label="Satellite tracking info" data-mobile>
+        <div className={styles.mobileRegionWrap}>
+          <button
+            ref={norwayRegionRef}
+            type="button"
+            className={styles.mobileRegionTap}
+            onClick={() => setNorwayTooltipOpen((prev) => !prev)}
+            aria-expanded={norwayTooltipOpen}
+            aria-label="Region: Norway"
+            aria-describedby={norwayTooltipOpen ? 'norway-tooltip-mobile' : undefined}
+          >
+            <span className={styles.regionName}>NORWAY</span>
+            <span className={styles.regionCoords}>58°N – 71°N · 5°E – 31°E</span>
+          </button>
+          {norwayTooltipOpen && (
+            <div
+              id="norway-tooltip-mobile"
+              className={styles.mobileNorwayTooltip}
+              role="tooltip"
+            >
+              {NORWAY_TOOLTIP_MOBILE}
+            </div>
+          )}
         </div>
-        <div className={styles.mobileRow}>
-          <span className={styles.regionCoords}>58°N – 71°N · 5°W – 31°E</span>
+        <div className={styles.mobileRightCol}>
+          <span className={styles.trackingLabel}>TRACKED</span>
           <span className={styles.trackingCount}>{info?.objectCount ?? 0} SATELLITES</span>
         </div>
-      </div>
+      </section>
     )
   }
 
   return (
-    <div className={styles.bar} aria-hidden="true">
+    <section className={styles.bar} aria-label="Satellite tracking info">
       {/* LEFT — region context */}
       <div className={styles.left}>
         <span className={`${styles.regionName} ${styles.tooltipTarget}`}>
           SCANDINAVIA / N.EUROPE
           <span className={styles.inlineTooltip}>
-            This frame follows satellites from about Denmark&apos;s latitude up past northern Norway,&nbsp;but not all the way to the North Pole — roughly the skies above Scandinavia and nearby seas.
+            This frame follows satellites from about Denmark&apos;s latitude up past northern Norway,&nbsp;but not all the way to the North Pole — roughly the skies above Scandinavia and nearby seas. The view is updated in real time.
           </span>
         </span>
         <span className={styles.regionCoords}>50°N – 80°N&nbsp;&nbsp;·&nbsp;&nbsp;15°W – 45°E</span>
@@ -86,7 +129,7 @@ export function SatelliteInfoBar({ info, isMobile: isMobileProp }: SatelliteInfo
       <div className={styles.center}>
         {info?.featured ? (
           <>
-            <span className={styles.category}>{info.featured.category.toUpperCase()}</span>
+            <span className={styles.category}>{info.featured.category}</span>
             <span className={styles.sep}>·</span>
             {info.featuredIsPriority ? (
               <span className={`${styles.satName} ${styles.tooltipTarget}`}>
@@ -144,6 +187,6 @@ export function SatelliteInfoBar({ info, isMobile: isMobileProp }: SatelliteInfo
           </div>
         )}
       </div>
-    </div>
+    </section>
   )
 }
