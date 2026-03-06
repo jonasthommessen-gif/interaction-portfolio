@@ -1,0 +1,211 @@
+.page {
+  padding: 0.5rem 0;
+}
+
+.header {
+  margin-bottom: 1.25rem;
+}
+
+.heading {
+  margin: 0 0 0.5rem;
+  font-size: var(--text-lg);
+  font-weight: 600;
+}
+
+.back {
+  font-size: var(--text-sm);
+  color: var(--muted);
+  text-decoration: none;
+}
+
+.back:hover {
+  color: var(--fg);
+}
+
+.message {
+  margin: 0 0 0.5rem;
+  font-size: var(--text-sm);
+  color: var(--muted);
+}
+
+.form {
+  max-width: 32rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.row {
+  display: flex;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.label {
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--fg);
+}
+
+.input,
+.textarea {
+  padding: 0.5rem 0.75rem;
+  font-size: var(--text-sm);
+  font-family: inherit;
+  color: var(--fg);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--frost-border);
+  border-radius: 6px;
+}
+
+.textarea {
+  resize: vertical;
+  min-height: 4rem;
+}
+
+.input:focus,
+.textarea:focus {
+  outline: 2px solid var(--fg);
+  outline-offset: 2px;
+}
+
+.fileHint {
+  font-size: var(--text-sm);
+  color: var(--muted);
+  margin-top: 0.25rem;
+}
+
+.checkbox {
+  width: 1.25rem;
+  height: 1.25rem;
+  accent-color: var(--fg);
+}
+
+.error {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: #f87171;
+}
+
+.submit {
+  align-self: flex-start;
+  padding: 0.4rem 0.75rem;
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--fg);
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--frost-border);
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.submit:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.submit:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.sectionsBlock {
+  margin-top: 2.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--frost-border);
+}
+
+.sectionsHeading {
+  margin: 0 0 1rem;
+  font-size: var(--text-lg);
+  font-weight: 600;
+}
+
+.sectionList {
+  list-style: none;
+  margin: 0 0 1.5rem;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.sectionItem {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  padding: 0.75rem;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--frost-border);
+  border-radius: 6px;
+}
+
+.sectionLabel {
+  font-weight: 500;
+}
+
+.sectionLayout {
+  font-size: var(--text-sm);
+  color: var(--muted);
+}
+
+.sectionBtn,
+.sectionBtnDanger {
+  margin-left: auto;
+  padding: 0.3rem 0.6rem;
+  font-size: var(--text-sm);
+  border-radius: 4px;
+  cursor: pointer;
+  border: 1px solid var(--frost-border);
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--fg);
+}
+
+.sectionBtn:hover,
+.sectionBtnDanger:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.sectionBtnDanger {
+  color: #f87171;
+  border-color: rgba(248, 113, 113, 0.4);
+}
+
+.sectionEditForm {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.sectionEditActions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.cancelBtn {
+  padding: 0.4rem 0.75rem;
+  font-size: var(--text-sm);
+  color: var(--muted);
+  background: transparent;
+  border: 1px solid var(--frost-border);
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.cancelBtn:hover {
+  color: var(--fg);
+}
+
+.addSectionForm {
+  max-width: 32rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}

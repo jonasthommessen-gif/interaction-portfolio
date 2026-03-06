@@ -1,45 +1,27 @@
-import { Suspense, useMemo } from 'react'
+import { Suspense, useEffect, useMemo, useState } from 'react'
 import { NavLink, useParams } from 'react-router-dom'
-import { getProjectBySlug } from '../content/projects'
+import { SectionBlock } from '../components/SectionBlock'
+import { fetchProjectBySlug } from '../lib/cms'
+import type { Project } from '../types/cms'
 import { NotFoundPage } from './NotFoundPage'
 import styles from './ProjectDetailPage.module.css'
 
-type SectionId =
-  | 'showreel'
-  | 'overview'
-  | 'context'
-  | 'research'
-  | 'synthesis'
-  | 'ideation'
-  | 'design-solution'
-  | 'testing'
-  | 'final-outcome'
-  | 'reflection'
-
-type Section = {
-  id: SectionId
-  label: string
-}
-
-const SECTIONS: Section[] = [
-  { id: 'showreel', label: 'Intro' },
-  { id: 'overview', label: 'Overview' },
-  { id: 'context', label: 'Context' },
-  { id: 'research', label: 'Research' },
-  { id: 'synthesis', label: 'Synthesis' },
-  { id: 'ideation', label: 'Ideation' },
-  { id: 'design-solution', label: 'Design Solution' },
-  { id: 'testing', label: 'Testing' },
-  { id: 'final-outcome', label: 'Final Outcome' },
-  { id: 'reflection', label: 'Reflection' },
-]
-
 export function ProjectDetailPage() {
   const { slug } = useParams()
+  const [project, setProject] = useState<Project | null | undefined>(null)
 
-  const project = slug ? getProjectBySlug(slug) : undefined
+  useEffect(() => {
+    if (!slug) {
+      setProject(undefined)
+      return
+    }
+    setProject(null)
+    fetchProjectBySlug(slug)
+      .then(setProject)
+      .catch(() => setProject(undefined))
+  }, [slug])
 
-  if (slug && !project) {
+  if (slug && project === undefined) {
     return (
       <Suspense fallback={null}>
         <NotFoundPage />
@@ -50,20 +32,23 @@ export function ProjectDetailPage() {
   const title = useMemo(() => {
     if (project) return project.title
     if (!slug) return 'Project'
-    // Simple prettifier fallback
     return slug
       .split('-')
       .map((part) => part.slice(0, 1).toUpperCase() + part.slice(1))
       .join(' ')
   }, [project, slug])
 
+  const sections = project?.sections?.length
+    ? project.sections.map((s) => ({ id: s.id, label: s.label, layout: s.layout, content: s.content }))
+    : []
+
   const sectionLinks = (
     <>
-      {SECTIONS.map((section) => (
+      {sections.map((section) => (
         <a
           key={section.id}
           className={styles.sectionLink}
-          href={`#${section.id}`}
+          href={`#section-${section.id}`}
         >
           {section.label}
         </a>
@@ -71,50 +56,77 @@ export function ProjectDetailPage() {
     </>
   )
 
+  if (project === null) {
+    return (
+      <main className={`page ${styles.page}`}>
+        <div className={`container ${styles.grid}`}>
+          <p className={styles.placeholder}>Loading project…</p>
+        </div>
+      </main>
+    )
+  }
+
   return (
     <main className={`page ${styles.page}`}>
       <div className={`container ${styles.grid}`}>
         <aside className={styles.sidebar} aria-label="Project navigation">
           <div className={styles.sidebarInner}>
+            <h1 className={styles.title}>{title}</h1>
+
+            {project?.description ? (
+              <p className={styles.description}>{project.description}</p>
+            ) : null}
+
             <div className={styles.sidebarHeader}>
-              <p className={styles.kicker}>Case study</p>
-              <h1 className={styles.title}>{title}</h1>
               {project ? (
-                <div className={styles.categoryRow} aria-label="Project categories">
-                  {project.categories.slice(0, 3).map((c) => (
-                    <span key={c} className={styles.categoryPill}>
-                      {c}
+                <p className={styles.categoryRow} aria-label="Project categories">
+                  {project.categories.slice(0, 3).map((c, i) => (
+                    <span key={c}>
+                      {i > 0 && <span className={styles.categoryDot} aria-hidden> · </span>}
+                      <span className={styles.categoryWord}>{c}</span>
                     </span>
                   ))}
-                </div>
+                </p>
               ) : null}
               <NavLink className={styles.backLink} to="/projects">
                 ← Back to Projects
               </NavLink>
             </div>
 
-            <nav className={styles.sectionNav} aria-label="Sections">
-              {sectionLinks}
-            </nav>
+            <div className={styles.separatorWithGlyph} aria-hidden>
+              <div className={styles.separatorLineFull} />
+              <div className={styles.intersectionGlyph}>
+                <img src="/Other/Intsection.glyph.svg" alt="" width="47" height="46" />
+              </div>
+            </div>
+
+            {sections.length > 0 && (
+              <nav className={styles.sectionNav} aria-label="Sections">
+                {sectionLinks}
+              </nav>
+            )}
           </div>
         </aside>
 
         <div className={styles.content}>
-          {SECTIONS.map((section) => (
-            <section key={section.id} id={section.id} className={styles.section}>
-              <h2 className={styles.sectionTitle}>{section.label}</h2>
-              <p className={styles.placeholder}>
-                Placeholder content. Add this project’s {section.label.toLowerCase()}
-                here.
-              </p>
-            </section>
-          ))}
+          {sections.length > 0 ? (
+            sections.map((section) => (
+              <section key={section.id} id={`section-${section.id}`} className={styles.section}>
+                <h2 className={styles.sectionTitle}>{section.label}</h2>
+                <SectionBlock layout={section.layout} content={section.content} />
+              </section>
+            ))
+          ) : (
+            <p className={styles.placeholder}>No sections yet. Add sections in the admin.</p>
+          )}
         </div>
       </div>
 
-      <nav className={styles.sectionNavBottom} aria-label="Sections">
-        {sectionLinks}
-      </nav>
+      {sections.length > 0 && (
+        <nav className={styles.sectionNavBottom} aria-label="Sections">
+          {sectionLinks}
+        </nav>
+      )}
     </main>
   )
 }

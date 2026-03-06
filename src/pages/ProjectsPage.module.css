@@ -3,6 +3,11 @@
   max-width: 72ch;
 }
 
+.skeleton {
+  color: var(--muted);
+  max-width: 72ch;
+}
+
 .mosaic {
   --gap: 18px;
   --radius: 28px;

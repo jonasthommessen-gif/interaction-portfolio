@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import { archiveProjects } from '../content/archiveProjects'
-import type { ArchiveProject } from '../content/archiveProjects'
+import type { ArchiveProject } from '../types/cms'
 import { useNavbarInvert } from '../contexts/NavbarInvertContext'
 import { useFocusTrap } from '../hooks/useFocusTrap'
 import { useMediaQuery } from '../hooks/useMediaQuery'
@@ -14,6 +14,8 @@ interface FeedOverlayProps {
   /** Whether the entry was from a gallery card (true) or the Feed button (false) */
   fromGallery: boolean
   onClose: () => void
+  /** Archive list (from CMS). When not provided, uses static archive. */
+  projects?: ArchiveProject[]
 }
 
 // ─── FeedItem ─────────────────────────────────────────────────────────────────
@@ -224,7 +226,7 @@ function FeedItem({
 
 // ─── FeedOverlay ──────────────────────────────────────────────────────────────
 
-export function FeedOverlay({ entryProjectId, fromGallery, onClose }: FeedOverlayProps) {
+export function FeedOverlay({ entryProjectId, fromGallery, onClose, projects }: FeedOverlayProps) {
   const panelRef = useRef<HTMLDivElement>(null)
   const backdropRef = useRef<HTMLDivElement>(null)
   const feedRef = useRef<HTMLDivElement>(null)
@@ -251,12 +253,13 @@ export function FeedOverlay({ entryProjectId, fromGallery, onClose }: FeedOverla
   }, [currentEntryImageUrl, setInvertLogo])
 
   // Build ordered project list starting from entry project
+  const sourceList = projects ?? archiveProjects as ArchiveProject[]
   const orderedProjects: ArchiveProject[] = (() => {
-    const idx = archiveProjects.findIndex((p) => p.id === entryProjectId)
-    if (idx === -1) return archiveProjects
+    const idx = sourceList.findIndex((p) => p.id === entryProjectId)
+    if (idx === -1) return sourceList
     return [
-      ...archiveProjects.slice(idx),
-      ...archiveProjects.slice(0, idx),
+      ...sourceList.slice(idx),
+      ...sourceList.slice(0, idx),
     ]
   })()
 

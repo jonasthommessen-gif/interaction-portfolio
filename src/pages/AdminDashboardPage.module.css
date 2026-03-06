@@ -1,0 +1,47 @@
+.dashboard {
+  padding: 0.5rem 0;
+}
+
+.heading {
+  margin: 0 0 1rem;
+  font-size: var(--text-lg);
+  font-weight: 600;
+}
+
+.cards {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.card {
+  display: block;
+  width: 100%;
+  max-width: 280px;
+  padding: 1.25rem;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--frost-border);
+  border-radius: 10px;
+  text-decoration: none;
+  color: inherit;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.card:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.cardTitle {
+  display: block;
+  font-size: var(--text-lg);
+  font-weight: 600;
+  margin-bottom: 0.35rem;
+}
+
+.cardDesc {
+  display: block;
+  font-size: var(--text-sm);
+  color: var(--muted);
+  line-height: 1.4;
+}

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { projects } from '../content/projects'
+import { fetchVisibleProjects } from '../lib/cms'
+import type { Project } from '../types/cms'
 import styles from './ProjectsPage.module.css'
 
 type RGB = readonly [number, number, number]
@@ -112,8 +113,17 @@ function getImageAverageRgb(src: string): Promise<RGB | null> {
 }
 
 export function ProjectsPage() {
+  const [projects, setProjects] = useState<Project[]>([])
+  const [loading, setLoading] = useState(true)
   const [activeSlug, setActiveSlug] = useState<string | null>(null)
   const [pillThemes, setPillThemes] = useState<Record<string, PillTheme>>({})
+
+  useEffect(() => {
+    fetchVisibleProjects()
+      .then(setProjects)
+      .catch(() => setProjects([]))
+      .finally(() => setLoading(false))
+  }, [])
 
   const columns = 3
   const rows = Math.ceil(projects.length / columns)
@@ -121,7 +131,7 @@ export function ProjectsPage() {
   const activeIndex = useMemo(() => {
     if (!activeSlug) return -1
     return projects.findIndex((p) => p.slug === activeSlug)
-  }, [activeSlug])
+  }, [activeSlug, projects])
 
   const activeRow = activeIndex >= 0 ? Math.floor(activeIndex / columns) : null
   const activeCol = activeIndex >= 0 ? activeIndex % columns : null
@@ -165,7 +175,18 @@ export function ProjectsPage() {
     return () => {
       cancelled = true
     }
-  }, [])
+  }, [projects])
+
+  if (loading) {
+    return (
+      <main className="page">
+        <div className="container">
+          <h1 className="title">Projects</h1>
+          <p className={styles.skeleton}>Loading projects…</p>
+        </div>
+      </main>
+    )
+  }
 
   return (
     <main className="page">

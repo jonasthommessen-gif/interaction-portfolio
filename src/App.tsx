@@ -8,6 +8,13 @@ const ProjectsPage = lazy(() => import('./pages/ProjectsPage').then(m => ({ defa
 const ProjectDetailPage = lazy(() => import('./pages/ProjectDetailPage').then(m => ({ default: m.ProjectDetailPage })))
 const ArchivePage = lazy(() => import('./pages/ArchivePage').then(m => ({ default: m.ArchivePage })))
 const AboutPage = lazy(() => import('./pages/AboutPage').then(m => ({ default: m.AboutPage })))
+const AdminLayout = lazy(() => import('./components/AdminLayout').then(m => ({ default: m.AdminLayout })))
+const AdminDashboardPage = lazy(() => import('./pages/AdminDashboardPage').then(m => ({ default: m.AdminDashboardPage })))
+const AdminProjectsPage = lazy(() => import('./pages/AdminProjectsPage').then(m => ({ default: m.AdminProjectsPage })))
+const AdminProjectEditPage = lazy(() => import('./pages/AdminProjectEditPage').then(m => ({ default: m.AdminProjectEditPage })))
+const AdminProjectNewPage = lazy(() => import('./pages/AdminProjectNewPage').then(m => ({ default: m.AdminProjectNewPage })))
+const AdminArchivePage = lazy(() => import('./pages/AdminArchivePage').then(m => ({ default: m.AdminArchivePage })))
+const AdminArchiveNewPage = lazy(() => import('./pages/AdminArchiveNewPage').then(m => ({ default: m.AdminArchiveNewPage })))
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage').then(m => ({ default: m.NotFoundPage })))
 
 /** Minimal fallback so main content area does not collapse during route load (reduces CLS). */
@@ -26,6 +33,14 @@ export default function App() {
           <Route path="/projects/:slug" element={<Suspense fallback={<RouteFallback />}><ProjectDetailPage /></Suspense>} />
           <Route path="/archive" element={<Suspense fallback={<RouteFallback />}><ArchivePage /></Suspense>} />
           <Route path="/about" element={<Suspense fallback={<RouteFallback />}><AboutPage /></Suspense>} />
+          <Route path="/admin" element={<Suspense fallback={<RouteFallback />}><AdminLayout /></Suspense>}>
+            <Route index element={<AdminDashboardPage />} />
+            <Route path="projects" element={<Suspense fallback={<RouteFallback />}><AdminProjectsPage /></Suspense>} />
+            <Route path="projects/new" element={<Suspense fallback={<RouteFallback />}><AdminProjectNewPage /></Suspense>} />
+            <Route path="projects/edit/:slug" element={<Suspense fallback={<RouteFallback />}><AdminProjectEditPage /></Suspense>} />
+            <Route path="archive" element={<Suspense fallback={<RouteFallback />}><AdminArchivePage /></Suspense>} />
+            <Route path="archive/new" element={<Suspense fallback={<RouteFallback />}><AdminArchiveNewPage /></Suspense>} />
+          </Route>
 
           <Route path="*" element={<Suspense fallback={<RouteFallback />}><NotFoundPage /></Suspense>} />
         </Route>

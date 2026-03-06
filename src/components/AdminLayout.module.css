@@ -1,0 +1,100 @@
+.page {
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-sans);
+  padding: calc(var(--nav-height, 72px) + 1rem) 2rem 2rem 2rem;
+}
+
+.message {
+  margin: 0 0 0.5rem;
+  font-size: var(--text-base);
+}
+
+.hint {
+  margin: 0 0 1rem;
+  font-size: var(--text-sm);
+  color: var(--muted);
+}
+
+.linkButton {
+  padding: 0.5rem 1rem;
+  font-size: var(--text-sm);
+  font-family: inherit;
+  color: var(--fg);
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--frost-border);
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.linkButton:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.25rem 0;
+  border-bottom: 1px solid var(--frost-border);
+  margin-bottom: 1.5rem;
+}
+
+.title {
+  margin: 0;
+  font-size: var(--text-xl);
+  font-weight: 600;
+}
+
+.nav {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.navLink,
+.navLinkActive {
+  padding: 0.4rem 0.75rem;
+  font-size: var(--text-sm);
+  font-family: inherit;
+  text-decoration: none;
+  color: var(--muted);
+  border-radius: 6px;
+}
+
+.navLink:hover {
+  color: var(--fg);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.navLinkActive {
+  color: var(--fg);
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.email {
+  margin-left: auto;
+  font-size: var(--text-sm);
+  color: var(--muted);
+}
+
+.signOut {
+  padding: 0.4rem 0.75rem;
+  font-size: var(--text-sm);
+  font-family: inherit;
+  color: var(--muted);
+  background: none;
+  border: 1px solid var(--frost-border);
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.signOut:hover {
+  color: var(--fg);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.content {
+  max-width: 900px;
+}

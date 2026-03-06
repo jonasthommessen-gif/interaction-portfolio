@@ -1,0 +1,75 @@
+.page {
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-sans);
+  padding: 2rem;
+}
+
+.message {
+  margin: 0 0 0.5rem;
+  font-size: var(--text-base);
+}
+
+.hint {
+  margin: 0 0 1rem;
+  font-size: var(--text-sm);
+  color: var(--muted);
+}
+
+.linkButton {
+  padding: 0.5rem 1rem;
+  font-size: var(--text-sm);
+  font-family: inherit;
+  color: var(--fg);
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--frost-border);
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.linkButton:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.title {
+  margin: 0;
+  font-size: var(--text-xl);
+  font-weight: 600;
+}
+
+.email {
+  font-size: var(--text-sm);
+  color: var(--muted);
+}
+
+.signOut {
+  margin-left: auto;
+  padding: 0.4rem 0.75rem;
+  font-size: var(--text-sm);
+  font-family: inherit;
+  color: var(--muted);
+  background: none;
+  border: 1px solid var(--frost-border);
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.signOut:hover {
+  color: var(--fg);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.placeholder {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--muted);
+}

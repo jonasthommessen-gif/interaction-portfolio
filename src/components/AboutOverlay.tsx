@@ -1,6 +1,9 @@
 import { Fragment, useState, useRef, useEffect, useLayoutEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import styles from './AboutOverlay.module.css'
 import { useMediaQuery } from '../hooks/useMediaQuery'
+import { AdminTrigger } from './AdminTrigger'
+import { AdminLoginModal } from './AdminLoginModal'
 
 const FLOATING_KEYWORDS = ['Systems thinking', 'UX', 'UI', 'Products', 'Prototyping', 'Motion'] as const
 
@@ -150,7 +153,9 @@ const MOBILE_BREAKPOINT = '(max-width: 820px)'
 
 export function AboutOverlay() {
   const [portraitError, setPortraitError] = useState(false)
+  const [showAdminLogin, setShowAdminLogin] = useState(false)
   const isMobile = useMediaQuery(MOBILE_BREAKPOINT)
+  const navigate = useNavigate()
 
   return (
     <>
@@ -166,7 +171,11 @@ export function AboutOverlay() {
                   <img src="/Other/Name.glyph.svg" alt="" width="47" height="46" aria-hidden />
                 </span>
                 <span className={styles.nameGap} />
-                <h1 className={styles.name}>JONAS THOMMESSEN</h1>
+                <h1 className={styles.name}>
+                  <AdminTrigger onTrigger={() => setShowAdminLogin(true)}>
+                    JONAS THOMMESSEN
+                  </AdminTrigger>
+                </h1>
                 <span className={styles.nameGap} />
                 <span className={styles.lineHeadGlyph}>
                   <img src="/Other/Name.glyph.svg" alt="" width="47" height="46" aria-hidden />
@@ -293,6 +302,15 @@ export function AboutOverlay() {
           </ul>
         </div>
       </aside>
+      {showAdminLogin && (
+        <AdminLoginModal
+          onClose={() => setShowAdminLogin(false)}
+          onSuccess={() => {
+            setShowAdminLogin(false)
+            navigate('/admin')
+          }}
+        />
+      )}
     </>
   )
 }

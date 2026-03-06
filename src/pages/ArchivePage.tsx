@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { AnimatePresence, useMotionValue } from 'framer-motion'
-import { archiveProjects } from '../content/archiveProjects'
+import { fetchArchiveProjects } from '../lib/cms'
+import type { ArchiveProject } from '../types/cms'
 import { ArchiveCard } from '../components/ArchiveCard'
 import type { DepthLayer } from '../components/ArchiveCard'
 import { FeedOverlay } from '../components/FeedOverlay'
@@ -15,12 +16,8 @@ function getInitialArchiveState(): { viewMode: 'gallery' | 'feed'; feedEntryId: 
 }
 
 // ─── Constants ────────────────────────────────────────────────────────────────
-
-const PROJECTS = archiveProjects
-const TOTAL = PROJECTS.length
 const LOOP_WIDTH = 4000
 const FRICTION = 0.94
-
 /** Idle auto-scroll: starts after 10s of no interaction */
 const IDLE_TIMEOUT_MS = 10_000
 /** Auto-scroll speed in px/frame (~0.3px at 60fps) */
@@ -55,24 +52,24 @@ function seededRandom(seed: number): () => number {
 }
 
 /** Minimum horizontal gap between cards as a fraction of the loop (avoids overlap) */
-const MIN_X_GAP_FRACTION = 0.8 / TOTAL
-
-function buildLayouts(): CardLayout[] {
+function buildLayouts(total: number): CardLayout[] {
+  if (total <= 0) return []
+  const MIN_X_GAP_FRACTION = 0.8 / total
   const rng = seededRandom(42)
   const layouts: CardLayout[] = []
   const depthPattern: DepthLayer[] = [
     1, 3, 2, 1, 2, 3, 2, 1, 3, 1, 2, 3, 1, 3, 2, 1, 2, 3, 1, 2, 3, 1, 2,
   ]
-  for (let i = 0; i < TOTAL; i++) {
+  for (let i = 0; i < total; i++) {
     const depth = depthPattern[i % depthPattern.length]
     const scale = depth === 1 ? 1.0 : depth === 2 ? 0.88 : 0.76
     const baseW = 200 + Math.floor(rng() * 60) - 30
     const baseH = 240 + Math.floor(rng() * 70) - 35
     const yRange = depth === 1 ? 340 : depth === 2 ? 420 : 500
     const yOffset = (rng() - 0.5) * yRange
-    const slotWidth = 1.0 / TOTAL
+    const slotWidth = 1.0 / total
     const jitter = (rng() - 0.5) * slotWidth * 0.5
-    const xFraction = i / TOTAL + jitter
+    const xFraction = i / total + jitter
     layouts.push({
       xFraction: ((xFraction % 1) + 1) % 1,
       yOffset,
@@ -107,7 +104,6 @@ function buildLayouts(): CardLayout[] {
   return layouts
 }
 
-const CARD_LAYOUTS = buildLayouts()
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
@@ -115,6 +111,18 @@ export function ArchivePage() {
   const isMobile = useMediaQuery(MOBILE_BREAKPOINT)
   const { setInvertLogo } = useNavbarInvert()
   const initial = useMemo(getInitialArchiveState, [])
+
+  const [projects, setProjects] = useState<ArchiveProject[]>([])
+  const [loading, setLoading] = useState(true)
+  useEffect(() => {
+    fetchArchiveProjects()
+      .then(setProjects)
+      .catch(() => setProjects([]))
+      .finally(() => setLoading(false))
+  }, [])
+
+  const TOTAL = projects.length
+  const CARD_LAYOUTS = useMemo(() => buildLayouts(TOTAL), [TOTAL])
 
   const [hoveredTitle, setHoveredTitle] = useState<string | null>(null)
   const [viewMode, setViewMode] = useState<'gallery' | 'feed'>(initial.viewMode)
@@ -331,9 +339,17 @@ export function ArchivePage() {
     return Array.from({ length: TOTAL }, (_, i) => i).sort(
       (a, b) => CARD_LAYOUTS[b].depth - CARD_LAYOUTS[a].depth,
     )
-  }, [])
+  }, [TOTAL, CARD_LAYOUTS])
 
   const viewportWidth = typeof window !== 'undefined' ? window.innerWidth : 1440
+
+  if (loading) {
+    return (
+      <main className={styles.page}>
+        <p className={styles.statusLeft}>Loading archive…</p>
+      </main>
+    )
+  }
 
   return (
     <main
@@ -358,7 +374,7 @@ export function ArchivePage() {
             className={viewMode === 'feed' ? styles.toggleBtnActive : styles.toggleBtn}
             onClick={() => {
               setViewMode('feed')
-              setFeedEntryId(PROJECTS[0].id)
+              setFeedEntryId(projects[0]?.id ?? null)
               setFeedFromGallery(false)
             }}
           >
@@ -371,7 +387,7 @@ export function ArchivePage() {
       {isMobile && viewMode === 'gallery' ? (
         <div className={styles.mobileGridWrap}>
           <div className={styles.mobileGrid}>
-            {PROJECTS.map((project) => (
+            {projects.map((project) => (
               <div key={project.id} className={styles.mobileGridCell}>
                 <ArchiveCard
                   project={project}
@@ -396,6 +412,8 @@ export function ArchivePage() {
           onTouchEnd={handleTouchEnd}
         >
           <ScrollCanvas
+            projects={projects}
+            cardLayouts={CARD_LAYOUTS}
             offsetMV={offsetMV}
             sortedIndices={sortedIndices}
             isFeedOpen={isFeedOpen}
@@ -420,6 +438,7 @@ export function ArchivePage() {
             entryProjectId={feedEntryId}
             fromGallery={feedFromGallery}
             onClose={closeFeed}
+            projects={projects}
           />
         )}
       </AnimatePresence>
@@ -430,6 +449,8 @@ export function ArchivePage() {
 // ─── ScrollCanvas ─────────────────────────────────────────────────────────────
 
 function ScrollCanvas({
+  projects,
+  cardLayouts,
   offsetMV,
   sortedIndices,
   isFeedOpen,
@@ -437,6 +458,8 @@ function ScrollCanvas({
   onCardClick,
   viewportWidth,
 }: {
+  projects: ArchiveProject[]
+  cardLayouts: CardLayout[]
   offsetMV: ReturnType<typeof useMotionValue<number>>
   sortedIndices: number[]
   isFeedOpen: boolean
@@ -452,8 +475,8 @@ function ScrollCanvas({
   useEffect(() => {
     const updatePositions = (offset: number) => {
       sortedIndices.forEach((projectIndex) => {
-        const project = PROJECTS[projectIndex]
-        const layout = CARD_LAYOUTS[projectIndex]
+        const project = projects[projectIndex]
+        const layout = cardLayouts[projectIndex]
         const el = slotRefs.current.get(project.id)
         if (!el) return
 
@@ -479,13 +502,13 @@ function ScrollCanvas({
     updatePositions(offsetMV.get())
     const unsub = offsetMV.on('change', updatePositions)
     return unsub
-  }, [offsetMV, sortedIndices, halfVW])
+  }, [offsetMV, sortedIndices, halfVW, projects, cardLayouts])
 
   return (
     <div className={styles.canvas}>
       {sortedIndices.map((projectIndex) => {
-        const project = PROJECTS[projectIndex]
-        const layout = CARD_LAYOUTS[projectIndex]
+        const project = projects[projectIndex]
+        const layout = cardLayouts[projectIndex]
         const zIndex = layout.depth === 1 ? 30 : layout.depth === 2 ? 20 : 10
 
         return (
