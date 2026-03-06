@@ -25,6 +25,12 @@ export function RiveLogoButton({
     src: RIVE_SRC,
     stateMachines: STATE_MACHINE,
     autoplay: true,
+    onLoad: () => {
+      if (import.meta.env.DEV) console.debug('[RiveLogoButton] Rive animation loaded')
+    },
+    onLoadError: (err) => {
+      console.error('[RiveLogoButton] Rive load error', err)
+    },
   })
 
   const normalize = useMemo(

@@ -41,6 +41,12 @@ export function LoadingScreen({ ready }: LoadingScreenProps) {
     src: RIVE_SRC,
     stateMachines: STATE_MACHINE,
     autoplay: true,
+    onLoad: () => {
+      if (import.meta.env.DEV) console.debug('[LoadingScreen] Rive animation loaded')
+    },
+    onLoadError: (err) => {
+      console.error('[LoadingScreen] Rive load error', err)
+    },
   })
 
   const normalize = useMemo(
