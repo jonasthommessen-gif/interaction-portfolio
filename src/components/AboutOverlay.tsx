@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useLayoutEffect } from 'react'
+import { Fragment, useState, useRef, useEffect, useLayoutEffect } from 'react'
 import styles from './AboutOverlay.module.css'
 import { useMediaQuery } from '../hooks/useMediaQuery'
 
@@ -203,18 +203,18 @@ export function AboutOverlay() {
                   <div className={styles.keywordsCarouselTrack}>
                     <div className={styles.keywordsCarouselSegment}>
                       {FLOATING_KEYWORDS.map((word, i) => (
-                        <span key={`a-${word}`}>
-                          {i > 0 && ' · '}
-                          {word}
-                        </span>
+                        <Fragment key={`a-${word}`}>
+                          {i > 0 && <span className={styles.carouselDot} aria-hidden>·</span>}
+                          <span>{word}</span>
+                        </Fragment>
                       ))}
                     </div>
                     <div className={styles.keywordsCarouselSegment} aria-hidden>
                       {FLOATING_KEYWORDS.map((word, i) => (
-                        <span key={`b-${word}`}>
-                          {i > 0 && ' · '}
-                          {word}
-                        </span>
+                        <Fragment key={`b-${word}`}>
+                          {i > 0 && <span className={styles.carouselDot} aria-hidden>·</span>}
+                          <span>{word}</span>
+                        </Fragment>
                       ))}
                     </div>
                   </div>

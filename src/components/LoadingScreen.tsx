@@ -17,7 +17,7 @@ import {
 } from '@rive-app/react-canvas'
 import styles from './LoadingScreen.module.css'
 
-const RIVE_SRC = '/rive/White.logo.mascot.riv'
+const RIVE_SRC = `${import.meta.env.BASE_URL}rive/White.logo.mascot.riv`
 const STATE_MACHINE = 'Logo_State Machine'
 const LOADING_ANIMATION_INTERVAL_MS = 2500
 

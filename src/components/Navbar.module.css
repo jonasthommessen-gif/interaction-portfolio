@@ -93,7 +93,7 @@
 
 /* Desktop: ensure first pill (logo) always has room so overflow:hidden never clips */
 @media (min-width: 821px) {
-  .navInner > :first-child {
+  .navInner .pill:first-child {
     min-height: 128px;
   }
 }
@@ -201,7 +201,7 @@
     padding: 0;
   }
 
-  .nav[data-expanded='true'] .navInner > * {
+  .nav[data-expanded='true'] .navInner .pill {
     justify-content: flex-start;
     padding: 12px 14px;
     height: auto;
@@ -211,7 +211,7 @@
     letter-spacing: 0.12em;
   }
 
-  .nav[data-expanded='true'] .navInner > :first-child {
+  .nav[data-expanded='true'] .navInner .pill:first-child {
     justify-content: center;
   }
 
@@ -229,14 +229,14 @@
     display: none;
   }
 
-  .nav[data-expanded='true'][data-home-nav='true'] .navInner > * {
+  .nav[data-expanded='true'][data-home-nav='true'] .navInner .pill {
     min-height: 56px;
     padding: 8px 14px;
     border-radius: 999px;
   }
 
   /* First pill (logo) needs room for 128px logo; otherwise overflow:hidden clips it */
-  .nav[data-expanded='true'][data-home-nav='true'] .navInner > :first-child {
+  .nav[data-expanded='true'][data-home-nav='true'] .navInner .pill:first-child {
     min-height: 128px;
   }
 }

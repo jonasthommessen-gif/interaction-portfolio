@@ -448,6 +448,13 @@
   white-space: nowrap;
 }
 
+/* Dot centered in gap between keywords (not in front of a word) */
+.carouselDot {
+  flex-shrink: 0;
+  font-size: inherit;
+  color: inherit;
+}
+
 /* ─── Mobile: single-column stack ───────────────────────────────────────────── */
 @media (max-width: 820px) {
   .leftColumn {
@@ -460,6 +467,12 @@
   /* Single keyword row only; hide Panel 3 (duplicate keywords + large gap cell) */
   .leftColumn .snapPanel:nth-child(3) {
     display: none;
+  }
+
+  /* Carousel vertically centered between the two separators */
+  .separatorGapCell.separatorGapCellBetweenSeparators {
+    display: flex;
+    align-items: center;
   }
 
   .rightPanel {

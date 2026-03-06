@@ -7,7 +7,7 @@ import {
 import { useIdleTimer } from '../hooks/useIdleTimer'
 import styles from './RiveLogoButton.module.css'
 
-const RIVE_SRC = '/rive/White.logo.mascot.riv'
+const RIVE_SRC = `${import.meta.env.BASE_URL}rive/White.logo.mascot.riv`
 const STATE_MACHINE = 'Logo_State Machine'
 const RARE_IDLE_INDEX_INPUT = 'RareidleIndex'
 
