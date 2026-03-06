@@ -40,7 +40,7 @@ export function AdminArchiveNewPage() {
       if (url) uploaded.push({ type, src: url })
     }
     const cover_src = uploaded.length ? uploaded[0].src : ''
-    const { id, error: createErr } = await createArchivePost(
+    const { error: createErr } = await createArchivePost(
       {
         title: title.trim(),
         description: description.trim(),
