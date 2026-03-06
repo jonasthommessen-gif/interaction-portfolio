@@ -475,6 +475,11 @@
     align-items: center;
   }
 
+  /* Even spacing above and below keywords: remove extra margin under the carousel */
+  .separatorGapCellBetweenSeparators + .separatorLineWrapper {
+    margin-top: 0;
+  }
+
   .rightPanel {
     position: relative;
     left: 0;

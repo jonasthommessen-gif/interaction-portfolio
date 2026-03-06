@@ -7,7 +7,6 @@
   z-index: 50;
   display: grid;
   align-items: center;
-
   /* Don't block interactions behind the nav capsule */
   pointer-events: none;
 }
@@ -91,10 +90,14 @@
   pointer-events: none;
 }
 
-/* Desktop: ensure first pill (logo) always has room so overflow:hidden never clips */
+/* Desktop: bar height = source of truth (72px); capsule fits exactly (pill + border = 72px) */
 @media (min-width: 821px) {
-  .navInner .pill:first-child {
-    min-height: 128px;
+  .nav {
+    padding-top: 0;
+    padding-bottom: 0;
+  }
+  .navInner > :first-child {
+    min-height: 68px;
   }
 }
 
@@ -201,17 +204,17 @@
     padding: 0;
   }
 
-  .nav[data-expanded='true'] .navInner .pill {
+  .nav[data-expanded='true'] .navInner > * {
     justify-content: flex-start;
     padding: 12px 14px;
     height: auto;
-    min-height: 128px;
+    min-height: 56px;
     border-radius: 14px;
     font-size: var(--text-base);
     letter-spacing: 0.12em;
   }
 
-  .nav[data-expanded='true'] .navInner .pill:first-child {
+  .nav[data-expanded='true'] .navInner > :first-child {
     justify-content: center;
   }
 
@@ -229,14 +232,14 @@
     display: none;
   }
 
-  .nav[data-expanded='true'][data-home-nav='true'] .navInner .pill {
+  .nav[data-expanded='true'][data-home-nav='true'] .navInner > * {
     min-height: 56px;
     padding: 8px 14px;
     border-radius: 999px;
   }
 
-  /* First pill (logo) needs room for 128px logo; otherwise overflow:hidden clips it */
-  .nav[data-expanded='true'][data-home-nav='true'] .navInner .pill:first-child {
-    min-height: 128px;
+  /* First pill (logo): same as others so bar stays at source-of-truth height (56px) */
+  .nav[data-expanded='true'][data-home-nav='true'] .navInner > :first-child {
+    min-height: 56px;
   }
 }

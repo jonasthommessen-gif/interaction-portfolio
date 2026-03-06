@@ -29,7 +29,7 @@
 To keep the UI consistent, use the CSS custom properties defined in `src/index.css` instead of hardcoding values:
 
 - **Typography**: `--font-sans`, `--font-serif`; type scale `--text-xs` through `--heading-1`; optional `--leading-*`, `--tracking-*` (see Typography section below)
-- **Layout**: `--container-max` (1120px), `--nav-height` (72px; 56px on mobile), `--nav-offset` (16px)
+- **Layout**: `--container-max` (1120px), `--nav-height` (72px; 56px on mobile), `--nav-offset` (16px). **Nav bar height is the source of truth:** do not change `--nav-height` or alter the effective height of the nav bar (e.g. via pill min-heights, header styles, or padding) unless the project owner explicitly approves it; other changes must not increase the bar height.
 - **Colors**: `--bg`, `--fg`, `--muted` (body and secondary text; AA contrast on `--bg`)
 - **Frosted surfaces**: `--frost-bg`, `--frost-border`, `--frost-shadow`, `--blur`
 - **Pills / buttons**: `--pill-bg`, `--pill-fg`, `--pill-hover-bg`, `--pill-active-bg`, `--pill-radius`
