@@ -21,6 +21,11 @@ export function ProjectDetailPage() {
       .catch(() => setProject(undefined))
   }, [slug])
 
+  useEffect(() => {
+    document.body.classList.add('project-detail-page')
+    return () => document.body.classList.remove('project-detail-page')
+  }, [])
+
   if (slug && project === undefined) {
     return (
       <Suspense fallback={null}>
@@ -71,6 +76,10 @@ export function ProjectDetailPage() {
       <div className={`container ${styles.grid}`}>
         <aside className={styles.sidebar} aria-label="Project navigation">
           <div className={styles.sidebarInner}>
+            <NavLink className={styles.backLink} to="/projects" aria-label="Back to Projects">
+              ←
+            </NavLink>
+
             <h1 className={styles.title}>{title}</h1>
 
             {project?.description ? (
@@ -78,26 +87,17 @@ export function ProjectDetailPage() {
             ) : null}
 
             <div className={styles.sidebarHeader}>
-              {project ? (
-                <p className={styles.categoryRow} aria-label="Project categories">
-                  {project.categories.slice(0, 3).map((c, i) => (
-                    <span key={c}>
-                      {i > 0 && <span className={styles.categoryDot} aria-hidden> · </span>}
-                      <span className={styles.categoryWord}>{c}</span>
-                    </span>
+              {project && project.categories.length > 0 ? (
+                <div className={styles.categoryList} aria-label="Project categories">
+                  {project.categories.slice(0, 3).map((c) => (
+                    <div key={c} className={styles.categoryItem}>· {c}</div>
                   ))}
-                </p>
+                </div>
               ) : null}
-              <NavLink className={styles.backLink} to="/projects">
-                ← Back to Projects
-              </NavLink>
             </div>
 
-            <div className={styles.separatorWithGlyph} aria-hidden>
-              <div className={styles.separatorLineFull} />
-              <div className={styles.intersectionGlyph}>
-                <img src="/Other/Intsection.glyph.svg" alt="" width="47" height="46" />
-              </div>
+            <div className={styles.separator} aria-hidden>
+              <div className={styles.separatorLine} />
             </div>
 
             {sections.length > 0 && (

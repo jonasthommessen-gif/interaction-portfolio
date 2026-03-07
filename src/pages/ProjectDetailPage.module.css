@@ -19,17 +19,18 @@
 .sidebar {
   position: relative;
   overflow: visible;
+  min-width: 0;
 }
 
-/* Full-height vertical line to viewport top/bottom on desktop; bypass container/grid padding */
+/* Full-height vertical line from viewport top to bottom on desktop (fixed so it never clips) */
 @media (min-width: 980px) {
   .sidebar::after {
     content: '';
-    position: absolute;
-    top: calc(-1 * (var(--nav-height) + var(--nav-offset) + 10px + 24px));
-    right: -12px;
+    position: fixed;
+    top: 0;
+    left: calc(12px + var(--sidebar-width));
     width: 1px;
-    height: calc(100dvh + (var(--nav-height) + var(--nav-offset) + 10px + 24px));
+    height: 100dvh;
     background: var(--project-lineColor);
     pointer-events: none;
   }
@@ -38,59 +39,19 @@
 .sidebarInner {
   position: sticky;
   top: calc(var(--nav-height) + var(--nav-offset) + 16px);
-  padding: 24px 0 16px 0;
+  padding: 0 12px 16px 0;
   background: transparent;
-}
-
-.title {
-  margin: 0 0 12px 0;
-  font-family: var(--font-sans);
-  font-size: clamp(14px, 2vmin, 20px);
-  font-weight: 400;
-  letter-spacing: 0.08em;
-  line-height: 1.25;
-  color: var(--fg);
-  text-transform: uppercase;
-}
-
-.description {
-  margin: 0 0 12px 0;
-  font-size: var(--text-sm);
-  color: var(--muted);
-  line-height: 1.4;
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-.sidebarHeader {
-  padding-bottom: 12px;
-  margin-bottom: 12px;
-  margin-top: 0;
-}
-
-/* Categories: inline with dot separators (match About keywords) */
-.categoryRow {
-  margin: 6px 0 10px 0;
-  font-size: var(--text-sm);
-  color: var(--muted);
-}
-
-.categoryDot {
-  user-select: none;
-}
-
-.categoryWord {
-  color: var(--muted);
+  overflow-x: hidden;
 }
 
 .backLink {
   display: inline-block;
-  font-size: var(--text-sm);
+  margin-bottom: 12px;
+  font-size: var(--text-lg);
   color: var(--muted);
   text-decoration: none;
   transition: color 160ms var(--ease-out);
+  line-height: 1;
 }
 
 .backLink:hover {
@@ -102,58 +63,79 @@
   outline-offset: 2px;
 }
 
-/* Full-bleed horizontal separator with intersection glyph at right (edge-to-edge, grid-like) */
-.separatorWithGlyph {
-  position: relative;
-  width: 100%;
+.title {
   margin: 0 0 12px 0;
+  font-family: var(--font-sans);
+  font-size: clamp(14px, 2vmin, 20px);
+  font-weight: 400;
+  letter-spacing: 0.08em;
+  line-height: 1.25;
+  color: var(--fg);
+  text-transform: uppercase;
+  overflow-wrap: break-word;
 }
 
-.separatorLineFull {
+.description {
+  margin: 0 0 12px 0;
+  font-size: var(--text-sm);
+  color: var(--muted);
+  line-height: 1.4;
+  overflow-wrap: break-word;
+}
+
+.sidebarHeader {
+  padding-bottom: 12px;
+  margin-bottom: 12px;
+  margin-top: 0;
+}
+
+/* Categories: vertical list, one per line with leading dot */
+.categoryList {
+  margin: 6px 0 10px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.categoryItem {
+  font-size: var(--text-sm);
+  color: var(--muted);
+  overflow-wrap: break-word;
+}
+
+/* Edge-to-edge horizontal separator between intro and section list (full width of sidebar, left to right) */
+.separator {
+  width: calc(100% + 24px);
+  margin: 0 -12px 12px -12px;
+}
+
+.separatorLine {
   height: 1px;
   width: 100%;
   background: var(--project-lineColor);
-}
-
-.intersectionGlyph {
-  position: absolute;
-  right: 0;
-  top: 50%;
-  transform: translate(50%, -50%);
-  width: 47px;
-  height: 46px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  pointer-events: none;
-}
-
-.intersectionGlyph img {
-  display: block;
-  width: 47px;
-  height: 46px;
-  object-fit: contain;
 }
 
 .sectionNav {
   display: flex;
   flex-direction: column;
   gap: 0;
+  min-width: 0;
 }
 
 .sectionLink {
   display: block;
   padding: 8px 0;
   font-size: var(--text-sm);
+  font-weight: 400;
   color: var(--muted);
   text-decoration: none;
   border-bottom: 1px solid var(--project-lineColor);
-  transition: background 160ms var(--ease-out), color 160ms var(--ease-out);
+  transition: font-weight 160ms var(--ease-out), color 160ms var(--ease-out);
 }
 
 .sectionLink:hover {
+  font-weight: 700;
   color: var(--fg);
-  background: rgba(255, 255, 255, 0.04);
 }
 
 .sectionLink:focus-visible {
@@ -183,6 +165,8 @@
     padding-bottom: max(12px, env(safe-area-inset-bottom));
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
     position: fixed;
     bottom: 0;
     left: 0;
@@ -203,6 +187,10 @@
 
   .sectionNavBottom .sectionLink:hover {
     background: rgba(255, 255, 255, 0.08);
+  }
+
+  .sectionNavBottom::-webkit-scrollbar {
+    display: none;
   }
 
   .grid {
@@ -235,7 +223,7 @@
 
 @media (min-width: 980px) {
   .grid {
-    /* Use a full-width, fixed-sidebar layout on desktop */
+    /* Full-width layout; sidebar is fixed and separate from content */
     --sidebar-width: clamp(220px, 18vw, 280px);
 
     width: 100%;
@@ -245,16 +233,23 @@
     grid-template-columns: var(--sidebar-width) minmax(0, 1fr);
     gap: 24px;
     padding-inline: 12px 24px;
+    padding-block: 24px 80px;
     align-items: start;
   }
 
+  /* Sidebar sits to the side of the nav so it can start at the top; content keeps top margin */
+  .sidebar {
+    margin-top: -24px;
+  }
+
+  /* Sidebar is fixed, own layer; no scroll (content clipped if it overflows) */
   .sidebarInner {
     position: fixed;
-    top: calc(var(--nav-height) + var(--nav-offset) + 16px);
+    top: 10px;
     left: 12px;
     width: var(--sidebar-width);
-    max-height: calc(100dvh - var(--nav-height) - var(--nav-offset) - 32px);
-    overflow: auto;
+    max-height: calc(100dvh - 10px);
+    overflow: hidden;
   }
 }
 

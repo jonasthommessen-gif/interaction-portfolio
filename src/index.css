@@ -88,6 +88,16 @@ body {
   overflow-x: hidden;
 }
 
+/* Hide main scrollbar on project detail page only (sidebar/content still scroll) */
+body.project-detail-page {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+body.project-detail-page::-webkit-scrollbar {
+  display: none;
+}
+
 a {
   color: inherit;
   text-decoration: none;

@@ -179,8 +179,14 @@
     padding: 5px 14px;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
     transition: width 0.3s var(--ease-out), max-width 0.3s var(--ease-out),
       background 0.25s var(--ease-out), border-color 0.25s var(--ease-out);
+  }
+
+  .nav::-webkit-scrollbar {
+    display: none;
   }
 
   .nav[data-expanded='true'] {
