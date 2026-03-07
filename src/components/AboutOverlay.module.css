@@ -190,6 +190,40 @@
   color: white;
 }
 
+/* Desktop only: shown in place of .title */
+.titleDesktop {
+  display: none;
+  margin: 0 0 1.5rem 0;
+  font-size: clamp(14px, 2.2vmin, 20px);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1.25;
+  color: white;
+}
+
+/* Desktop only: simple top separator (no glyphs, no name), headline swap, hide location */
+@media (min-width: 821px) {
+  .topSeparator .lineHeadGlyph,
+  .topSeparator .nameGap,
+  .topSeparator .name {
+    display: none;
+  }
+  .topSeparatorLine .lineSegment:first-of-type,
+  .topSeparatorLine .lineSegment:last-of-type {
+    margin-left: 0;
+    margin-right: 0;
+  }
+  .title {
+    display: none;
+  }
+  .titleDesktop {
+    display: block;
+  }
+  .location {
+    display: none;
+  }
+}
+
 .bioText {
   max-width: 520px;
   font-size: clamp(14px, 2.2vmin, 20px);

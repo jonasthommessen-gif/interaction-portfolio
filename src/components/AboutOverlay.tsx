@@ -186,6 +186,7 @@ export function AboutOverlay() {
             <div className={styles.separatorGapBlock}>
               <div className={styles.textBlockCentered}>
                 <h2 className={styles.title}>Interaction & product designer</h2>
+                <h2 className={styles.titleDesktop}>Hi, I&apos;m Jonas Thommessen, an interaction and product designer based in Norway.</h2>
                 <div className={styles.bioText}>
                   <p>
                     I work across strategy and interaction design, focusing on making complexity navigable.
@@ -193,7 +194,7 @@ export function AboutOverlay() {
                   <p>
                     Interfaces don&apos;t exist on their own. They&apos;re shaped by context, limitations, and the way people make sense of what they see. My practice is about clarifying those relationships, making information frictionless to navigate and decisions easier to understand.
                   </p>
-                  <p>Based in Norway</p>
+                  <p className={styles.location}>Based in Norway</p>
                 </div>
               </div>
             </div>
