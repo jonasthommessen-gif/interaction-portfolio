@@ -66,9 +66,10 @@
 
 .feedItem {
   /* Each item snaps to fill the feed container */
+  position: relative;
   flex-shrink: 0;
   height: 100%;
-  padding: 20px 20px 40px;
+  padding: 20px 20px 12px;
   display: flex;
   flex-direction: column;
   gap: 0;
@@ -197,11 +198,11 @@
   right: 10px;
 }
 
-/* Dot indicators — below the image frame */
+/* Dot indicators — below the image frame (Instagram-style: grey only, no wrapper) */
 .dotsWrap {
   display: flex;
   justify-content: center;
-  padding: 10px 0;
+  padding: 6px 0 4px;
   flex-shrink: 0;
 }
 
@@ -209,18 +210,14 @@
   display: inline-flex;
   gap: 6px;
   align-items: center;
-  padding: 6px 10px;
-  border-radius: 999px;
-  background: rgba(0, 0, 0, 0.2);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  padding: 0;
 }
 
 .dot {
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.45);
+  background: rgba(0, 0, 0, 0.25);
   border: none;
   cursor: pointer;
   padding: 0;
@@ -228,14 +225,14 @@
 }
 
 .dotActive {
-  background: rgba(255, 255, 255, 0.95);
-  transform: scale(1.25);
+  background: rgba(0, 0, 0, 0.65);
+  transform: scale(1.15);
 }
 
 /* ─── Text shelf ────────────────────────────────────────────────────────────── */
 
 .textShelf {
-  padding: 18px 4px 24px;
+  padding: 10px 4px 18px;
   color: #0b0c10;
   flex: 1;
 }
@@ -254,7 +251,106 @@
   margin: 0 0 14px;
   font-size: var(--text-sm);
   line-height: var(--leading-relaxed);
-  color: rgba(0, 0, 0, 0.6);
+  color: #111;
+}
+
+.descriptionWrap {
+  margin: 0 0 14px;
+}
+
+.descriptionClamp {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  margin: 0;
+  font-size: var(--text-sm);
+  line-height: var(--leading-relaxed);
+  color: #111;
+}
+
+.moreLink {
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: none;
+  font-size: var(--text-sm);
+  font-family: inherit;
+  font-weight: 600;
+  color: rgba(0, 0, 0, 0.5);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.moreLink:hover {
+  text-decoration: underline;
+}
+
+.moreLink:focus-visible {
+  outline: 2px solid rgba(0, 0, 0, 0.4);
+  outline-offset: 2px;
+}
+
+/* Full-description overlay (inside feed item) */
+.descriptionOverlayBackdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  background: rgba(0, 0, 0, 0.15);
+  cursor: pointer;
+}
+
+.descriptionOverlayCard {
+  position: absolute;
+  bottom: 20px;
+  left: 20px;
+  right: 20px;
+  max-height: 78%;
+  z-index: 21;
+  background: #fff;
+  border-radius: 25px;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.25);
+  overflow-y: auto;
+  padding: 24px;
+  padding-bottom: 90px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.descriptionOverlayCard .descriptionFull {
+  margin: 0;
+  font-size: var(--text-sm);
+  line-height: var(--leading-relaxed);
+  color: #111;
+}
+
+.descriptionOverlayClose {
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 72px;
+  height: 72px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  font-size: 2.5rem;
+  line-height: 1;
+  font-family: inherit;
+  color: rgba(0, 0, 0, 0.65);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.descriptionOverlayClose:hover {
+  color: rgba(0, 0, 0, 0.9);
+}
+
+.descriptionOverlayClose:focus-visible {
+  outline: 2px solid rgba(0, 0, 0, 0.4);
+  outline-offset: 2px;
 }
 
 .categories {

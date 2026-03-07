@@ -213,8 +213,7 @@
     inset: 0;
     overflow: auto;
     -webkit-overflow-scrolling: touch;
-    padding: 16px;
-    padding-bottom: 80px;
+    padding: calc(100px + var(--nav-offset)) 16px 80px 16px;
   }
 
   .mobileGrid {

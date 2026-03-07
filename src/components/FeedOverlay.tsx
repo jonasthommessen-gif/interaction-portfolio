@@ -8,6 +8,8 @@ import { useMediaQuery } from '../hooks/useMediaQuery'
 import { getImageAverageLuminance, isImageBright } from '../utils/imageLuminance'
 import styles from './FeedOverlay.module.css'
 
+const DESCRIPTION_MORE_THRESHOLD = 120
+
 interface FeedOverlayProps {
   /** The project to scroll to initially */
   entryProjectId: string
@@ -40,6 +42,12 @@ function FeedItem({
 
   const [carouselIndex, setCarouselIndex] = useState(0)
   const scrollRef = useRef<HTMLDivElement>(null)
+  const [showDescriptionOverlay, setShowDescriptionOverlay] = useState(false)
+  const moreButtonRef = useRef<HTMLButtonElement>(null)
+  const overlayCardRef = useRef<HTMLDivElement>(null)
+  useFocusTrap(overlayCardRef, showDescriptionOverlay)
+
+  const showMoreLink = (project.description?.length ?? 0) > DESCRIPTION_MORE_THRESHOLD
 
   // Animation step for the entry item only
   // step 1: image floating in, step 2: white card rising, step 3: shelf settled
@@ -267,7 +275,23 @@ function FeedItem({
         transition={{ duration: 0.35, ease: 'easeOut' }}
       >
         <h2 className={styles.title}>{project.title}</h2>
-        <p className={styles.description}>{project.description}</p>
+        {showMoreLink ? (
+          <div className={styles.descriptionWrap}>
+            <p className={styles.descriptionClamp}>{project.description}</p>
+            <button
+              type="button"
+              ref={moreButtonRef}
+              className={styles.moreLink}
+              onClick={() => setShowDescriptionOverlay(true)}
+              aria-expanded={showDescriptionOverlay}
+              aria-label="Show full description"
+            >
+              more
+            </button>
+          </div>
+        ) : (
+          <p className={styles.description}>{project.description}</p>
+        )}
         {project.categories?.length > 0 && (
           <p className={styles.categories}>
             {project.categories.join(' · ')}
@@ -279,6 +303,44 @@ function FeedItem({
           ))}
         </div>
       </motion.div>
+
+      {/* ── Full description overlay (white card, bottom-aligned, grows up) ── */}
+      <AnimatePresence>
+        {showDescriptionOverlay && (
+          <>
+            <motion.div
+              className={styles.descriptionOverlayBackdrop}
+              onClick={() => setShowDescriptionOverlay(false)}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              aria-hidden
+            />
+            <motion.div
+              ref={overlayCardRef}
+              className={styles.descriptionOverlayCard}
+              role="dialog"
+              aria-label="Full description"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 20 }}
+              transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <p className={styles.descriptionFull}>{project.description}</p>
+              <button
+                type="button"
+                className={styles.descriptionOverlayClose}
+                onClick={() => setShowDescriptionOverlay(false)}
+                aria-label="Close description"
+              >
+                ×
+              </button>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </div>
   )
 }
