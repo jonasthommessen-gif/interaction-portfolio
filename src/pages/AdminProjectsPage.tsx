@@ -415,7 +415,7 @@ export function AdminProjectsPage() {
                     <span className={styles.title}>{p.title}</span>
                     <span className={styles.slug}>{p.slug}</span>
                     <Link to={`/admin/projects/edit/${p.slug}`} className={styles.enter}>
-                      Enter
+                      Edit
                     </Link>
                     {editMode && (
                       <div className={styles.itemActions}>
@@ -500,7 +500,7 @@ export function AdminProjectsPage() {
                     <span className={styles.title}>{p.title}</span>
                     <span className={styles.slug}>{p.slug}</span>
                     <Link to={`/admin/projects/edit/${p.slug}`} className={styles.enter}>
-                      Enter
+                      Edit
                     </Link>
                     {editMode && (
                       <div className={styles.itemActions}>

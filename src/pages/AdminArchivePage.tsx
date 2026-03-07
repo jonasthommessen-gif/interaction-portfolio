@@ -232,7 +232,7 @@ export function AdminArchivePage() {
                     </span>
                     <span className={styles.title}>{p.title}</span>
                     <span className={styles.meta}>{p.tags?.slice(0, 2).join(', ')}</span>
-                    <Link to="/archive" className={styles.enter}>Enter</Link>
+                    <Link to={p.id ? `/admin/archive/edit/${p.id}` : '/archive'} className={styles.enter}>{p.id ? 'Edit' : 'View'}</Link>
                     {editMode && (
                       <div className={styles.itemActions}>
                         <span
@@ -306,7 +306,7 @@ export function AdminArchivePage() {
                     </span>
                     <span className={styles.title}>{p.title}</span>
                     <span className={styles.meta}>{p.tags?.slice(0, 2).join(', ')}</span>
-                    <Link to="/archive" className={styles.enter}>Enter</Link>
+                    <Link to={p.id ? `/admin/archive/edit/${p.id}` : '/archive'} className={styles.enter}>{p.id ? 'Edit' : 'View'}</Link>
                     {editMode && (
                       <div className={styles.itemActions}>
                         <span

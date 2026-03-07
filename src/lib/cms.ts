@@ -400,10 +400,36 @@ export async function fetchArchiveProjects(): Promise<ArchiveProject[]> {
   ) as ArchiveProject[]
 }
 
+/** Admin: fetch a single archive post by id (for edit page). Returns null if not found. */
+export async function fetchArchivePostById(id: string): Promise<ArchiveProject | null> {
+  if (!supabase) return null
+  const { data: post, error: postError } = await supabase
+    .from('archive_posts')
+    .select('*')
+    .eq('id', id)
+    .single()
+  if (postError || !post) return null
+  const { data: mediaRows } = await supabase
+    .from('archive_media')
+    .select('*')
+    .eq('archive_id', id)
+    .order('order', { ascending: true })
+  const media = (mediaRows ?? []) as ArchiveMediaRow[]
+  return archiveRowsToArchivePost(post as ArchivePostRow, media)
+}
+
 /** Admin: update archive post by id. */
 export async function updateArchivePost(
   id: string,
-  patch: { visible?: boolean; order?: number }
+  patch: {
+    title?: string
+    description?: string
+    tags?: string[]
+    categories?: string[]
+    cover_src?: string
+    visible?: boolean
+    order?: number
+  }
 ): Promise<{ error: string | null }> {
   if (!supabase) return { error: 'Database not configured' }
   const { error } = await supabase
@@ -416,6 +442,33 @@ export async function updateArchivePost(
   if (error) {
     console.warn('CMS update archive post:', error)
     return { error: error.message }
+  }
+  return { error: null }
+}
+
+/** Admin: replace all media for an archive post (deletes existing, inserts new list). */
+export async function replaceArchivePostMedia(
+  id: string,
+  media: { type: 'image' | 'video'; src: string; alt?: string }[]
+): Promise<{ error: string | null }> {
+  if (!supabase) return { error: 'Database not configured' }
+  const { error: delError } = await supabase.from('archive_media').delete().eq('archive_id', id)
+  if (delError) {
+    console.warn('CMS delete archive media:', delError)
+    return { error: delError.message }
+  }
+  if (media.length === 0) return { error: null }
+  const rows = media.map((m, i) => ({
+    archive_id: id,
+    order: i,
+    type: m.type,
+    src: m.src,
+    alt: m.alt ?? null,
+  }))
+  const { error: insertError } = await supabase.from('archive_media').insert(rows)
+  if (insertError) {
+    console.warn('CMS insert archive media:', insertError)
+    return { error: insertError.message }
   }
   return { error: null }
 }
