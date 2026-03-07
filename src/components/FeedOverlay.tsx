@@ -155,8 +155,10 @@ function FeedItem({
                         <video
                           className={styles.carouselImage}
                           src={item.src}
-                          controls
+                          muted
+                          loop
                           playsInline
+                          autoPlay
                           style={mediaStyle}
                           aria-label={`${project.title} — video ${i + 1}`}
                         />
@@ -182,8 +184,10 @@ function FeedItem({
                     key={`${project.id}-${carouselIndex}`}
                     className={styles.carouselImage}
                     src={effectiveItem.src}
-                    controls
+                    muted
+                    loop
                     playsInline
+                    autoPlay
                     style={{
                       objectFit: ((effectiveItem as { objectFit?: string }).objectFit as React.CSSProperties['objectFit']) ?? 'cover',
                       objectPosition: (effectiveItem as { objectPosition?: string }).objectPosition ?? '50% 50%',
@@ -264,6 +268,11 @@ function FeedItem({
       >
         <h2 className={styles.title}>{project.title}</h2>
         <p className={styles.description}>{project.description}</p>
+        {project.categories?.length > 0 && (
+          <p className={styles.categories}>
+            {project.categories.join(' · ')}
+          </p>
+        )}
         <div className={styles.tags}>
           {project.tags.map((tag) => (
             <span key={tag} className={styles.tag}>{tag}</span>

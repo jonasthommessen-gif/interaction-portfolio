@@ -257,6 +257,14 @@
   color: rgba(0, 0, 0, 0.6);
 }
 
+.categories {
+  margin: 0 0 14px;
+  font-size: var(--text-sm);
+  line-height: 1.4;
+  color: rgba(0, 0, 0, 0.5);
+  font-weight: 400;
+}
+
 .tags {
   display: flex;
   flex-wrap: wrap;
