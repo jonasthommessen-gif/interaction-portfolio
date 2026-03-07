@@ -45,6 +45,10 @@ export function AdminProjectEditPage() {
   const [stage, setStage] = useState<'structure' | 'content'>('structure')
   const [savingContentSectionId, setSavingContentSectionId] = useState<string | null>(null)
   const [contentSectionError, setContentSectionError] = useState<string | null>(null)
+  const [coverType, setCoverType] = useState<'image' | 'video'>('image')
+  const [coverSrc, setCoverSrc] = useState('')
+  const [coverPoster, setCoverPoster] = useState<string | null>(null)
+  const [coverAlt, setCoverAlt] = useState('')
 
   const loadSections = useCallback((projectId: string) => {
     setSectionsLoading(true)
@@ -69,6 +73,10 @@ export function AdminProjectEditPage() {
           setCategories(Array.isArray(data.categories) ? data.categories.join(', ') : '')
           setVisible(data.visible)
           setOrder(data.order)
+          setCoverType(data.cover_type)
+          setCoverSrc(data.cover_src ?? '')
+          setCoverPoster(data.cover_poster ?? null)
+          setCoverAlt(data.cover_alt ?? '')
           loadSections(data.id)
         }
       })
@@ -91,6 +99,10 @@ export function AdminProjectEditPage() {
       categories: categoryList.length ? categoryList : undefined,
       visible,
       order: Number.isFinite(Number(order)) ? Number(order) : undefined,
+      cover_type: coverType,
+      cover_src: coverSrc || undefined,
+      cover_poster: coverPoster,
+      cover_alt: coverAlt || undefined,
     })
     setSaving(false)
     if (error) {
@@ -305,6 +317,27 @@ export function AdminProjectEditPage() {
           {saving ? 'Saving…' : 'Save'}
         </button>
       </form>
+
+      <section className={styles.cardPictureBlock} aria-labelledby="card-picture-heading">
+        <h3 id="card-picture-heading" className={styles.sectionsHeading}>Project card picture</h3>
+        <p className={styles.cardPictureHint}>Image or video shown on the project card on the projects page.</p>
+        <SectionMediaUpload
+          value={coverSrc ? { type: coverType, src: coverSrc, alt: coverAlt, poster: coverType === 'video' ? (coverPoster ?? undefined) : undefined } : undefined}
+          onChange={(media) => {
+            if (!media) {
+              setCoverSrc('')
+              setCoverAlt('')
+              setCoverPoster(null)
+            } else {
+              setCoverType(media.type)
+              setCoverSrc(media.src)
+              setCoverAlt(media.alt ?? '')
+              setCoverPoster(media.poster ?? null)
+            }
+          }}
+          uploadFolder={row?.id ? `projects/${row.id}` : 'projects'}
+        />
+      </section>
 
       <section className={styles.sectionsBlock} aria-labelledby="sections-heading">
         <h3 id="sections-heading" className={styles.sectionsHeading}>Sections</h3>

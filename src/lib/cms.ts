@@ -182,6 +182,10 @@ export async function updateProject(
     categories?: string[]
     visible?: boolean
     order?: number
+    cover_type?: 'image' | 'video'
+    cover_src?: string
+    cover_poster?: string | null
+    cover_alt?: string
   }
 ): Promise<{ error: string | null }> {
   if (!supabase) return { error: 'Database not configured' }
