@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { motion, useAnimationControls } from 'framer-motion'
 import type { ArchiveProject } from '../types/cms'
+import { VideoInView } from './VideoInView'
 import styles from './ArchiveCard.module.css'
 
 export type DepthLayer = 1 | 2 | 3
@@ -95,16 +96,11 @@ export function ArchiveCard({
       onHoverEnd={() => onHover(null)}
     >
       {project.media?.[0]?.src === project.cover && project.media[0].type === 'video' ? (
-        <video
-          className={styles.image}
+        <VideoInView
           src={project.cover}
-          muted
-          playsInline
-          loop
+          className={styles.image}
           width={800}
           height={600}
-          draggable={false}
-          aria-hidden
         />
       ) : (
         <img

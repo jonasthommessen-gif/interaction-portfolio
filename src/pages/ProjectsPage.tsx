@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { fetchVisibleProjects } from '../lib/cms'
 import type { Project } from '../types/cms'
+import { VideoInView } from '../components/VideoInView'
 import styles from './ProjectsPage.module.css'
 
 type RGB = readonly [number, number, number]
@@ -266,14 +267,10 @@ export function ProjectsPage() {
                       aria-label={`Open project: ${project.title}`}
                     >
                       {project.cover.type === 'video' ? (
-                        <video
-                          className={styles.media}
+                        <VideoInView
                           src={project.cover.src}
-                          muted
-                          loop
-                          playsInline
-                          preload="auto"
-                          autoPlay={isActive}
+                          poster={project.cover.poster}
+                          className={styles.media}
                         />
                       ) : (
                         <img
