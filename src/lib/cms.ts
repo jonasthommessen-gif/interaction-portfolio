@@ -294,7 +294,13 @@ function archiveRowsToArchivePost(post: ArchivePostRow, media: ArchiveMediaRow[]
     visible: post.visible ?? true,
     order: post.order ?? 0,
     images: sorted.filter((m) => m.type === 'image').map((m) => m.src),
-    media: sorted.map((m) => ({ type: m.type, src: m.src, alt: m.alt ?? undefined })),
+    media: sorted.map((m) => ({
+      type: m.type,
+      src: m.src,
+      alt: m.alt ?? undefined,
+      objectFit: m.object_fit ?? undefined,
+      objectPosition: m.object_position ?? undefined,
+    })),
   }
 }
 
@@ -332,7 +338,7 @@ export async function createArchivePost(
     categories?: string[]
     cover_src: string
   },
-  media: { type: 'image' | 'video'; src: string; alt?: string }[]
+  media: { type: 'image' | 'video'; src: string; alt?: string; objectFit?: string; objectPosition?: string }[]
 ): Promise<{ id?: string; error: string | null }> {
   if (!supabase) return { error: 'Database not configured' }
   const { data: maxRow } = await supabase
@@ -368,6 +374,8 @@ export async function createArchivePost(
       type: m.type,
       src: m.src,
       alt: m.alt ?? null,
+      object_fit: m.objectFit ?? null,
+      object_position: m.objectPosition ?? null,
     }))
     const { error: mediaError } = await supabase.from('archive_media').insert(rows)
     if (mediaError) {
@@ -449,7 +457,7 @@ export async function updateArchivePost(
 /** Admin: replace all media for an archive post (deletes existing, inserts new list). */
 export async function replaceArchivePostMedia(
   id: string,
-  media: { type: 'image' | 'video'; src: string; alt?: string }[]
+  media: { type: 'image' | 'video'; src: string; alt?: string; objectFit?: string; objectPosition?: string }[]
 ): Promise<{ error: string | null }> {
   if (!supabase) return { error: 'Database not configured' }
   const { error: delError } = await supabase.from('archive_media').delete().eq('archive_id', id)
@@ -464,6 +472,8 @@ export async function replaceArchivePostMedia(
     type: m.type,
     src: m.src,
     alt: m.alt ?? null,
+    object_fit: m.objectFit ?? null,
+    object_position: m.objectPosition ?? null,
   }))
   const { error: insertError } = await supabase.from('archive_media').insert(rows)
   if (insertError) {

@@ -30,6 +30,7 @@ The hidden admin login (trigger on About page) and `/admin` use Supabase Auth. T
 | 2 | [002_projects_description.sql](../supabase/migrations/002_projects_description.sql) | Adds `description` to `projects` (used in project sidebar). Required for project description in admin. |
 | 3 | [003_seed_projects.sql](../supabase/migrations/003_seed_projects.sql) | *(Optional.)* Seeds the projects table so the admin list is editable without using “Import projects into database”. |
 | 4 | [004_archive_visible_order.sql](../supabase/migrations/004_archive_visible_order.sql) | Adds `visible` and `order` to `archive_posts`. **Required** for reorder and visibility on the Admin Archive page. |
+| 5 | [005_archive_media_display.sql](../supabase/migrations/005_archive_media_display.sql) | Adds `object_fit` and `object_position` to `archive_media` for feed crop/position (Adjust in New/Edit archive post). |
 
 **Production (e.g. Vercel):** Set the same env vars in your host’s environment (`VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`). Rebuild/redeploy after adding or changing them; Vite bakes env at build time, so production won’t see new values until you redeploy.
 

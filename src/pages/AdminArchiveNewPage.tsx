@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { createArchivePost, uploadPortfolioMedia } from '../lib/cms'
+import { AdjustCropModal } from '../components/AdjustCropModal'
 import styles from './AdminProjectEditPage.module.css'
 
-type MediaItem = { id: string; file: File }
+type MediaItem = { id: string; file: File; objectPosition?: string }
 
 function MediaThumb({ file }: { file: File }) {
   const [url, setUrl] = useState<string | null>(null)
@@ -32,6 +33,20 @@ export function AdminArchiveNewPage() {
   const [error, setError] = useState<string | null>(null)
   const [draggedId, setDraggedId] = useState<string | null>(null)
   const [dragOverKey, setDragOverKey] = useState<string | null>(null)
+  const [adjustItemId, setAdjustItemId] = useState<string | null>(null)
+  const [adjustPreviewUrl, setAdjustPreviewUrl] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!adjustItemId) {
+      setAdjustPreviewUrl(null)
+      return
+    }
+    const item = mediaItems.find((m) => m.id === adjustItemId)
+    if (!item) return
+    const url = URL.createObjectURL(item.file)
+    setAdjustPreviewUrl(url)
+    return () => URL.revokeObjectURL(url)
+  }, [adjustItemId, mediaItems])
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const list = e.target.files ? Array.from(e.target.files) : []
@@ -88,6 +103,14 @@ export function AdminArchiveNewPage() {
 
   const handleRemove = (id: string) => {
     setMediaItems((prev) => prev.filter((m) => m.id !== id))
+    if (adjustItemId === id) setAdjustItemId(null)
+  }
+
+  const handleSavePosition = (id: string, objectPosition: string) => {
+    setMediaItems((prev) =>
+      prev.map((m) => (m.id === id ? { ...m, objectPosition } : m))
+    )
+    setAdjustItemId(null)
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -99,17 +122,16 @@ export function AdminArchiveNewPage() {
     setSaving(true)
     setError(null)
     const categoryList = categories.split(/[,;]/).map((s) => s.trim()).filter(Boolean)
-    const orderedFiles = mediaItems.map((m) => m.file)
-    const uploaded: { type: 'image' | 'video'; src: string; alt?: string }[] = []
-    for (const file of orderedFiles) {
-      const type = file.type.startsWith('video/') ? 'video' as const : 'image' as const
-      const { url, error: err } = await uploadPortfolioMedia(file)
+    const uploaded: { type: 'image' | 'video'; src: string; alt?: string; objectFit?: string; objectPosition?: string }[] = []
+    for (const item of mediaItems) {
+      const type = item.file.type.startsWith('video/') ? 'video' as const : 'image' as const
+      const { url, error: err } = await uploadPortfolioMedia(item.file)
       if (err) {
         setError(`Upload failed: ${err}`)
         setSaving(false)
         return
       }
-      if (url) uploaded.push({ type, src: url })
+      if (url) uploaded.push({ type, src: url, objectPosition: item.objectPosition })
     }
     const cover_src = uploaded.length ? uploaded[0].src : ''
     const { error: createErr } = await createArchivePost(
@@ -209,6 +231,15 @@ export function AdminArchiveNewPage() {
                     <span className={styles.mediaDragHandle} title="Drag to reorder" aria-hidden>⋮⋮</span>
                     <button
                       type="button"
+                      className={styles.mediaAdjustBtn}
+                      onClick={() => setAdjustItemId(item.id)}
+                      title="Adjust position in feed"
+                      disabled={saving}
+                    >
+                      Adjust
+                    </button>
+                    <button
+                      type="button"
                       className={styles.mediaRemoveBtn}
                       onClick={() => handleRemove(item.id)}
                       title="Remove"
@@ -227,6 +258,21 @@ export function AdminArchiveNewPage() {
           {saving ? 'Creating…' : 'Create post'}
         </button>
       </form>
+      {adjustItemId && adjustPreviewUrl && (() => {
+        const item = mediaItems.find((m) => m.id === adjustItemId)
+        if (!item) return null
+        const type = item.file.type.startsWith('video/') ? 'video' as const : 'image' as const
+        return (
+          <AdjustCropModal
+            open={true}
+            onClose={() => setAdjustItemId(null)}
+            onSave={(objectPosition) => handleSavePosition(item.id, objectPosition)}
+            src={adjustPreviewUrl}
+            type={type}
+            initialObjectPosition={item.objectPosition}
+          />
+        )
+      })()}
     </div>
   )
 }

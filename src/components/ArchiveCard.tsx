@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { motion, useAnimationControls } from 'framer-motion'
-import type { ArchiveProject } from '../content/archiveProjects'
+import type { ArchiveProject } from '../types/cms'
 import styles from './ArchiveCard.module.css'
 
 export type DepthLayer = 1 | 2 | 3
@@ -94,15 +94,29 @@ export function ArchiveCard({
       onHoverStart={() => !anyFocused && onHover(project.title)}
       onHoverEnd={() => onHover(null)}
     >
-      <img
-        className={styles.image}
-        src={project.cover}
-        alt={project.title}
-        width={800}
-        height={600}
-        loading="lazy"
-        draggable={false}
-      />
+      {project.media?.[0]?.src === project.cover && project.media[0].type === 'video' ? (
+        <video
+          className={styles.image}
+          src={project.cover}
+          muted
+          playsInline
+          loop
+          width={800}
+          height={600}
+          draggable={false}
+          aria-hidden
+        />
+      ) : (
+        <img
+          className={styles.image}
+          src={project.cover}
+          alt={project.title}
+          width={800}
+          height={600}
+          loading="lazy"
+          draggable={false}
+        />
+      )}
       <div className={styles.overlay} />
     </motion.div>
   )

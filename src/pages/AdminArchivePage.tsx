@@ -224,7 +224,11 @@ export function AdminArchivePage() {
                     onDrop={editMode ? (e) => handleDrop(e, p, visiblePosts) : undefined}
                   >
                     <span className={styles.thumb}>
-                      <img src={p.cover} alt="" width={48} height={48} />
+                      {p.media?.[0]?.src === p.cover && p.media[0].type === 'video' ? (
+                        <video src={p.cover} muted width={48} height={48} aria-hidden />
+                      ) : (
+                        <img src={p.cover} alt="" width={48} height={48} />
+                      )}
                     </span>
                     <span className={styles.order}>{i + 1}</span>
                     <span className={styles.visible} data-visible={p.visible}>
@@ -298,7 +302,11 @@ export function AdminArchivePage() {
                     onDrop={editMode ? (e) => handleDrop(e, p, hiddenPosts) : undefined}
                   >
                     <span className={styles.thumb}>
-                      <img src={p.cover} alt="" width={48} height={48} />
+                      {p.media?.[0]?.src === p.cover && p.media[0].type === 'video' ? (
+                        <video src={p.cover} muted width={48} height={48} aria-hidden />
+                      ) : (
+                        <img src={p.cover} alt="" width={48} height={48} />
+                      )}
                     </span>
                     <span className={styles.order}>{visiblePosts.length + i + 1}</span>
                     <span className={styles.visible} data-visible={p.visible}>

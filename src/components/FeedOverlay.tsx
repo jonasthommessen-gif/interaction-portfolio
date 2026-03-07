@@ -30,9 +30,14 @@ function FeedItem({
   project: ArchiveProject
   isEntry: boolean
   fromGallery: boolean
-  onEntryImageChange?: (url: string) => void
+  onEntryImageChange?: (url: string | null) => void
   isMobile?: boolean
 }) {
+  // Use media when present (CMS), else fall back to images (static)
+  const mediaItems = project.media?.length
+    ? project.media
+    : project.images.map((src) => ({ type: 'image' as const, src }))
+
   const [carouselIndex, setCarouselIndex] = useState(0)
   const scrollRef = useRef<HTMLDivElement>(null)
 
@@ -57,9 +62,9 @@ function FeedItem({
     const w = el.clientWidth
     if (w <= 0) return
     const i = Math.round(el.scrollLeft / w)
-    const clamped = Math.max(0, Math.min(i, project.images.length - 1))
+    const clamped = Math.max(0, Math.min(i, mediaItems.length - 1))
     setMobileVisibleIndex(clamped)
-  }, [isMobile, project.images.length])
+  }, [isMobile, mediaItems.length])
 
   useEffect(() => {
     if (!isMobile) return
@@ -76,19 +81,23 @@ function FeedItem({
   }, [isMobile, updateVisibleIndex])
 
   const effectiveIndex = isMobile ? mobileVisibleIndex : carouselIndex
+  const effectiveItem = mediaItems[effectiveIndex]
   useEffect(() => {
-    if (isEntry && onEntryImageChange && project.images[effectiveIndex]) {
-      onEntryImageChange(project.images[effectiveIndex])
+    if (!isEntry || !onEntryImageChange) return
+    if (effectiveItem?.type === 'image') {
+      onEntryImageChange(effectiveItem.src)
+    } else {
+      onEntryImageChange(null)
     }
-  }, [isEntry, onEntryImageChange, project.images, effectiveIndex])
+  }, [isEntry, onEntryImageChange, effectiveItem])
 
   const handlePrev = useCallback(() => {
-    setCarouselIndex((i) => (i - 1 + project.images.length) % project.images.length)
-  }, [project.images.length])
+    setCarouselIndex((i) => (i - 1 + mediaItems.length) % mediaItems.length)
+  }, [mediaItems.length])
 
   const handleNext = useCallback(() => {
-    setCarouselIndex((i) => (i + 1) % project.images.length)
-  }, [project.images.length])
+    setCarouselIndex((i) => (i + 1) % mediaItems.length)
+  }, [mediaItems.length])
 
   const handleMobileDotClick = useCallback(
     (index: number) => {
@@ -100,7 +109,7 @@ function FeedItem({
     []
   )
 
-  const hasMultiple = project.images.length > 1
+  const hasMultiple = mediaItems.length > 1
 
   // For the entry item, animate the image floating in from off-screen or from gallery
   const imageInitial = isEntry
@@ -133,34 +142,75 @@ function FeedItem({
             <>
               <div
                 className={styles.carouselScrollTrack}
-                style={{ '--slide-count': project.images.length } as React.CSSProperties}
+                style={{ '--slide-count': mediaItems.length } as React.CSSProperties}
               >
-                {project.images.map((src, i) => (
-                  <div key={i} className={styles.carouselSlide}>
-                    <img
-                      className={styles.carouselImage}
-                      src={src}
-                      alt={`${project.title} — image ${i + 1}`}
-                      draggable={false}
-                    />
-                  </div>
-                ))}
+                {mediaItems.map((item, i) => {
+                  const mediaStyle: React.CSSProperties = {
+                    objectFit: ((item as { objectFit?: string }).objectFit as React.CSSProperties['objectFit']) ?? 'cover',
+                    objectPosition: (item as { objectPosition?: string }).objectPosition ?? '50% 50%',
+                  }
+                  return (
+                    <div key={i} className={styles.carouselSlide}>
+                      {item.type === 'video' ? (
+                        <video
+                          className={styles.carouselImage}
+                          src={item.src}
+                          controls
+                          playsInline
+                          style={mediaStyle}
+                          aria-label={`${project.title} — video ${i + 1}`}
+                        />
+                      ) : (
+                        <img
+                          className={styles.carouselImage}
+                          src={item.src}
+                          alt={`${project.title} — image ${i + 1}`}
+                          style={mediaStyle}
+                          draggable={false}
+                        />
+                      )}
+                    </div>
+                  )
+                })}
               </div>
             </>
           ) : (
             <>
               <AnimatePresence mode="sync">
-                <motion.img
-                  key={`${project.id}-${carouselIndex}`}
-                  className={styles.carouselImage}
-                  src={project.images[carouselIndex]}
-                  alt={`${project.title} — image ${carouselIndex + 1}`}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.28 }}
-                  draggable={false}
-                />
+                {effectiveItem?.type === 'video' ? (
+                  <motion.video
+                    key={`${project.id}-${carouselIndex}`}
+                    className={styles.carouselImage}
+                    src={effectiveItem.src}
+                    controls
+                    playsInline
+                    style={{
+                      objectFit: ((effectiveItem as { objectFit?: string }).objectFit as React.CSSProperties['objectFit']) ?? 'cover',
+                      objectPosition: (effectiveItem as { objectPosition?: string }).objectPosition ?? '50% 50%',
+                    } as React.CSSProperties}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.28 }}
+                    aria-label={`${project.title} — video ${carouselIndex + 1}`}
+                  />
+                ) : (
+                  <motion.img
+                    key={`${project.id}-${carouselIndex}`}
+                    className={styles.carouselImage}
+                    src={effectiveItem?.src}
+                    alt={`${project.title} — image ${carouselIndex + 1}`}
+                    style={{
+                      objectFit: ((effectiveItem as { objectFit?: string }).objectFit as React.CSSProperties['objectFit']) ?? 'cover',
+                      objectPosition: (effectiveItem as { objectPosition?: string }).objectPosition ?? '50% 50%',
+                    } as React.CSSProperties}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.28 }}
+                    draggable={false}
+                  />
+                )}
               </AnimatePresence>
 
               {hasMultiple && (
@@ -193,12 +243,12 @@ function FeedItem({
       {hasMultiple && (
         <div className={styles.dotsWrap}>
           <div className={styles.dots}>
-            {project.images.map((_, i) => (
+            {mediaItems.map((_, i) => (
               <button
                 key={i}
                 className={`${styles.dot} ${i === (isMobile ? mobileVisibleIndex : carouselIndex) ? styles.dotActive : ''}`}
                 onClick={() => (isMobile ? handleMobileDotClick(i) : setCarouselIndex(i))}
-                aria-label={`Image ${i + 1}`}
+                aria-label={`Slide ${i + 1}`}
               />
             ))}
           </div>

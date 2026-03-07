@@ -6,11 +6,12 @@ import {
   updateArchivePost,
   uploadPortfolioMedia,
 } from '../lib/cms'
+import { AdjustCropModal } from '../components/AdjustCropModal'
 import styles from './AdminProjectEditPage.module.css'
 
 type MediaSlot =
-  | { id: string; kind: 'existing'; type: 'image' | 'video'; src: string }
-  | { id: string; kind: 'new'; file: File }
+  | { id: string; kind: 'existing'; type: 'image' | 'video'; src: string; objectPosition?: string }
+  | { id: string; kind: 'new'; file: File; objectPosition?: string }
 
 function MediaThumbFile({ file }: { file: File }) {
   const [url, setUrl] = useState<string | null>(null)
@@ -49,6 +50,24 @@ export function AdminArchiveEditPage() {
   const [error, setError] = useState<string | null>(null)
   const [draggedId, setDraggedId] = useState<string | null>(null)
   const [dragOverKey, setDragOverKey] = useState<string | null>(null)
+  const [adjustSlotId, setAdjustSlotId] = useState<string | null>(null)
+  const [adjustPreviewUrl, setAdjustPreviewUrl] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!adjustSlotId) {
+      setAdjustPreviewUrl(null)
+      return
+    }
+    const slot = mediaList.find((s) => s.id === adjustSlotId)
+    if (!slot) return
+    if (slot.kind === 'existing') {
+      setAdjustPreviewUrl(slot.src)
+      return
+    }
+    const url = URL.createObjectURL(slot.file)
+    setAdjustPreviewUrl(url)
+    return () => URL.revokeObjectURL(url)
+  }, [adjustSlotId, mediaList])
 
   useEffect(() => {
     if (!id) {
@@ -68,6 +87,7 @@ export function AdminArchiveEditPage() {
               kind: 'existing' as const,
               type: m.type,
               src: m.src,
+              objectPosition: m.objectPosition,
             }))
           )
         } else {
@@ -136,6 +156,14 @@ export function AdminArchiveEditPage() {
 
   const handleRemove = (slotId: string) => {
     setMediaList((prev) => prev.filter((s) => s.id !== slotId))
+    if (adjustSlotId === slotId) setAdjustSlotId(null)
+  }
+
+  const handleSavePosition = (slotId: string, objectPosition: string) => {
+    setMediaList((prev) =>
+      prev.map((s) => (s.id === slotId ? { ...s, objectPosition } : s))
+    )
+    setAdjustSlotId(null)
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -147,10 +175,10 @@ export function AdminArchiveEditPage() {
     setSaving(true)
     setError(null)
     const categoryList = categories.split(/[,;]/).map((s) => s.trim()).filter(Boolean)
-    const mediaOut: { type: 'image' | 'video'; src: string; alt?: string }[] = []
+    const mediaOut: { type: 'image' | 'video'; src: string; alt?: string; objectFit?: string; objectPosition?: string }[] = []
     for (const slot of mediaList) {
       if (slot.kind === 'existing') {
-        mediaOut.push({ type: slot.type, src: slot.src })
+        mediaOut.push({ type: slot.type, src: slot.src, objectPosition: slot.objectPosition })
       } else {
         const type = slot.file.type.startsWith('video/') ? ('video' as const) : ('image' as const)
         const { url, error: err } = await uploadPortfolioMedia(slot.file)
@@ -159,7 +187,7 @@ export function AdminArchiveEditPage() {
           setSaving(false)
           return
         }
-        if (url) mediaOut.push({ type, src: url })
+        if (url) mediaOut.push({ type, src: url, objectPosition: slot.objectPosition })
       }
     }
     const cover_src = mediaOut.length ? mediaOut[0].src : ''
@@ -266,6 +294,15 @@ export function AdminArchiveEditPage() {
                     <span className={styles.mediaDragHandle} title="Drag to reorder" aria-hidden>⋮⋮</span>
                     <button
                       type="button"
+                      className={styles.mediaAdjustBtn}
+                      onClick={() => setAdjustSlotId(slot.id)}
+                      title="Adjust position in feed"
+                      disabled={saving}
+                    >
+                      Adjust
+                    </button>
+                    <button
+                      type="button"
                       className={styles.mediaRemoveBtn}
                       onClick={() => handleRemove(slot.id)}
                       title="Remove"
@@ -284,6 +321,21 @@ export function AdminArchiveEditPage() {
           {saving ? 'Saving…' : 'Save changes'}
         </button>
       </form>
+      {adjustSlotId && adjustPreviewUrl && (() => {
+        const slot = mediaList.find((s) => s.id === adjustSlotId)
+        if (!slot) return null
+        const type = slot.kind === 'existing' ? slot.type : (slot.file.type.startsWith('video/') ? 'video' as const : 'image' as const)
+        return (
+          <AdjustCropModal
+            open={true}
+            onClose={() => setAdjustSlotId(null)}
+            onSave={(objectPosition) => handleSavePosition(slot.id, objectPosition)}
+            src={adjustPreviewUrl}
+            type={type}
+            initialObjectPosition={slot.objectPosition}
+          />
+        )
+      })()}
     </div>
   )
 }

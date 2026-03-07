@@ -161,6 +161,25 @@
   user-select: none;
 }
 
+.mediaAdjustBtn {
+  padding: 0.25rem 0.5rem;
+  font-size: var(--text-sm);
+  color: var(--fg);
+  background: transparent;
+  border: 1px solid var(--border, #ddd);
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.mediaAdjustBtn:hover:not(:disabled) {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.mediaAdjustBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 .mediaRemoveBtn {
   margin-left: auto;
   padding: 0.25rem 0.5rem;

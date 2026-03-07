@@ -75,6 +75,8 @@ export type ArchiveMediaRow = {
   type: 'image' | 'video'
   src: string
   alt: string | null
+  object_fit: string | null
+  object_position: string | null
   created_at: string
 }
 
@@ -111,5 +113,5 @@ export type ArchiveProject = {
   visible: boolean
   order: number
   images: string[]
-  media: { type: 'image' | 'video'; src: string; alt?: string }[]
+  media: { type: 'image' | 'video'; src: string; alt?: string; objectFit?: string; objectPosition?: string }[]
 }
