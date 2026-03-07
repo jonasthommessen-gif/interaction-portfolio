@@ -39,9 +39,13 @@
 .sidebarInner {
   position: sticky;
   top: calc(var(--nav-height) + var(--nav-offset) + 16px);
-  padding: 0 12px 16px 0;
+  padding: 0 0 16px 0;
   background: transparent;
   overflow-x: hidden;
+}
+
+.sidebarIntro {
+  padding: 0 12px 0 0;
 }
 
 .backLink {
@@ -103,10 +107,9 @@
   overflow-wrap: break-word;
 }
 
-/* Edge-to-edge horizontal separator between intro and section list (full width of sidebar, left to right) */
+/* Horizontal separator: keeps layout space; visual line drawn by .separatorLineFixed on desktop */
 .separator {
-  width: calc(100% + 24px);
-  margin: 0 -12px 12px -12px;
+  margin: 0 0 12px 0;
 }
 
 .separatorLine {
@@ -115,11 +118,30 @@
   background: var(--project-lineColor);
 }
 
+/* Desktop: hide in-flow line (fixed line used instead so body overflow-x doesn't clip) */
+@media (min-width: 980px) {
+  .separatorLine {
+    visibility: hidden;
+  }
+}
+
+/* Fixed-position line from viewport left to sidebar right; not clipped by body overflow-x */
+.separatorLineFixed {
+  position: fixed;
+  left: 0;
+  width: calc(12px + var(--sidebar-width, 220px));
+  height: 1px;
+  background: var(--project-lineColor);
+  pointer-events: none;
+  z-index: 0;
+}
+
 .sectionNav {
   display: flex;
   flex-direction: column;
   gap: 0;
   min-width: 0;
+  padding-right: 12px;
 }
 
 .sectionLink {
@@ -222,6 +244,10 @@
 }
 
 @media (min-width: 980px) {
+  .page {
+    --sidebar-width: clamp(220px, 18vw, 280px);
+  }
+
   .grid {
     /* Full-width layout; sidebar is fixed and separate from content */
     --sidebar-width: clamp(220px, 18vw, 280px);
@@ -242,14 +268,15 @@
     margin-top: -24px;
   }
 
-  /* Sidebar is fixed, own layer; no scroll (content clipped if it overflows) */
+  /* Sidebar is fixed, own layer; no scroll. overflow-x: visible so separator can extend to viewport left */
   .sidebarInner {
     position: fixed;
     top: 10px;
     left: 12px;
     width: var(--sidebar-width);
     max-height: calc(100dvh - 10px);
-    overflow: hidden;
+    overflow-x: visible;
+    overflow-y: hidden;
   }
 }
 
