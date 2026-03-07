@@ -9,8 +9,18 @@ import {
   updateProjectSection,
 } from '../lib/cms'
 import type { ProjectRow, ProjectSectionRow } from '../types/cms'
+import type { SectionContent, SectionLayoutKey } from '../types/cms'
 import { SECTION_LAYOUTS } from '../types/cms'
+import { SectionGalleryUpload } from '../components/SectionGalleryUpload'
+import { SectionMediaUpload } from '../components/SectionMediaUpload'
 import styles from './AdminProjectEditPage.module.css'
+
+const LAYOUTS_WITH_SINGLE_MEDIA: SectionLayoutKey[] = [
+  'text-left-media-right',
+  'media-left-text-right',
+  'media-above-text',
+  'full-bleed-media',
+]
 
 export function AdminProjectEditPage() {
   const { slug } = useParams<{ slug: string }>()
@@ -31,8 +41,10 @@ export function AdminProjectEditPage() {
   const [addingSection, setAddingSection] = useState(false)
   const [editingSectionId, setEditingSectionId] = useState<string | null>(null)
   const [editSectionLabel, setEditSectionLabel] = useState('')
-  const [editSectionBody, setEditSectionBody] = useState('')
   const [sectionError, setSectionError] = useState<string | null>(null)
+  const [stage, setStage] = useState<'structure' | 'content'>('structure')
+  const [savingContentSectionId, setSavingContentSectionId] = useState<string | null>(null)
+  const [contentSectionError, setContentSectionError] = useState<string | null>(null)
 
   const loadSections = useCallback((projectId: string) => {
     setSectionsLoading(true)
@@ -111,23 +123,45 @@ export function AdminProjectEditPage() {
   const startEditSection = (s: ProjectSectionRow) => {
     setEditingSectionId(s.id)
     setEditSectionLabel(s.label)
-    setEditSectionBody(s.content?.body ?? '')
     setSectionError(null)
   }
 
-  const handleSaveSection = async (e: React.FormEvent) => {
+  const handleSaveSectionLabel = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!editingSectionId) return
     setSectionError(null)
     const { error } = await updateProjectSection(editingSectionId, {
       label: editSectionLabel.trim(),
-      content: { ...sections.find((x) => x.id === editingSectionId)?.content, body: editSectionBody },
     })
     if (error) {
       setSectionError(error)
       return
     }
     setEditingSectionId(null)
+    if (row?.id) loadSections(row.id)
+  }
+
+  const updateSectionContent = useCallback((sectionId: string, patch: Partial<SectionContent>) => {
+    setSections((prev) =>
+      prev.map((s) =>
+        s.id === sectionId ? { ...s, content: { ...s.content, ...patch } } : s
+      )
+    )
+  }, [])
+
+  const handleSaveSectionContent = async (sectionId: string) => {
+    const section = sections.find((s) => s.id === sectionId)
+    if (!section) return
+    setContentSectionError(null)
+    setSavingContentSectionId(sectionId)
+    const { error } = await updateProjectSection(sectionId, {
+      content: section.content,
+    })
+    setSavingContentSectionId(null)
+    if (error) {
+      setContentSectionError(error)
+      return
+    }
     if (row?.id) loadSections(row.id)
   }
 
@@ -155,6 +189,9 @@ export function AdminProjectEditPage() {
     )
   }
 
+  const hasSections = sections.length > 0
+  const uploadFolder = row?.id ? `projects/${row.id}` : 'projects'
+
   return (
     <div className={styles.page}>
       <div className={styles.header}>
@@ -162,6 +199,39 @@ export function AdminProjectEditPage() {
         <Link to="/admin/projects" className={styles.back}>← Back to Projects</Link>
       </div>
 
+      <div className={styles.stageTabs} role="tablist" aria-label="Edit stages">
+        <button
+          type="button"
+          role="tab"
+          aria-selected={stage === 'structure'}
+          aria-controls="stage-structure"
+          id="tab-structure"
+          className={styles.stageTab}
+          onClick={() => setStage('structure')}
+        >
+          Project & sections
+        </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={stage === 'content'}
+          aria-controls="stage-content"
+          id="tab-content"
+          className={styles.stageTab}
+          onClick={() => setStage('content')}
+          disabled={!hasSections}
+        >
+          Section content
+        </button>
+      </div>
+
+      <div
+        id="stage-structure"
+        role="tabpanel"
+        aria-labelledby="tab-structure"
+        aria-hidden={stage !== 'structure'}
+        className={styles.stagePanel}
+      >
       <form onSubmit={handleSubmit} className={styles.form}>
         <div className={styles.field}>
           <label htmlFor="edit-title" className={styles.label}>Title</label>
@@ -243,7 +313,7 @@ export function AdminProjectEditPage() {
           {sections.map((s) => (
             <li key={s.id} className={styles.sectionItem}>
               {editingSectionId === s.id ? (
-                <form onSubmit={handleSaveSection} className={styles.sectionEditForm}>
+                <form onSubmit={handleSaveSectionLabel} className={styles.sectionEditForm}>
                   <div className={styles.field}>
                     <label className={styles.label}>Section name</label>
                     <input
@@ -252,15 +322,6 @@ export function AdminProjectEditPage() {
                       onChange={(e) => setEditSectionLabel(e.target.value)}
                       className={styles.input}
                       required
-                    />
-                  </div>
-                  <div className={styles.field}>
-                    <label className={styles.label}>Body text</label>
-                    <textarea
-                      value={editSectionBody}
-                      onChange={(e) => setEditSectionBody(e.target.value)}
-                      className={styles.textarea}
-                      rows={4}
                     />
                   </div>
                   <div className={styles.sectionEditActions}>
@@ -274,8 +335,11 @@ export function AdminProjectEditPage() {
                 <>
                   <span className={styles.sectionLabel}>{s.label}</span>
                   <span className={styles.sectionLayout}>{s.layout}</span>
+                  <button type="button" className={styles.sectionBtn} onClick={() => setStage('content')}>
+                    Edit content
+                  </button>
                   <button type="button" className={styles.sectionBtn} onClick={() => startEditSection(s)}>
-                    Edit
+                    Edit name
                   </button>
                   <button type="button" className={styles.sectionBtnDanger} onClick={() => handleDeleteSection(s.id)}>
                     Delete
@@ -319,6 +383,91 @@ export function AdminProjectEditPage() {
           </button>
         </form>
       </section>
+      </div>
+
+      <div
+        id="stage-content"
+        role="tabpanel"
+        aria-labelledby="tab-content"
+        aria-hidden={stage !== 'content'}
+        className={styles.stagePanel}
+      >
+        {hasSections && (
+          <>
+            <p className={styles.contentStageIntro}>
+              Fill in the text and media for each section. The fields below match each section’s layout preset.
+            </p>
+            {contentSectionError && <p className={styles.error}>{contentSectionError}</p>}
+            {sections.map((s) => (
+              <div key={s.id} className={styles.contentSectionCard} id={`content-section-${s.id}`}>
+                <div className={styles.contentSectionHeader}>
+                  <h4 className={styles.contentSectionTitle}>{s.label}</h4>
+                  <span className={styles.contentSectionLayout}>{s.layout}</span>
+                  {row?.slug && (
+                    <Link
+                      to={`/projects/${row.slug}#section-${s.id}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={styles.editContentBtn}
+                    >
+                      Preview
+                    </Link>
+                  )}
+                </div>
+                <div className={styles.contentSectionForm}>
+                  <div className={styles.field}>
+                    <label className={styles.label}>Heading (optional)</label>
+                    <input
+                      type="text"
+                      value={s.content?.heading ?? ''}
+                      onChange={(e) => updateSectionContent(s.id, { heading: e.target.value || undefined })}
+                      className={styles.input}
+                      placeholder="Section heading"
+                    />
+                  </div>
+                  <div className={styles.field}>
+                    <label className={styles.label}>Body text</label>
+                    <textarea
+                      value={s.content?.body ?? ''}
+                      onChange={(e) => updateSectionContent(s.id, { body: e.target.value || undefined })}
+                      className={styles.textarea}
+                      rows={4}
+                      placeholder="Section body content"
+                    />
+                  </div>
+                  {LAYOUTS_WITH_SINGLE_MEDIA.includes(s.layout) && (
+                    <SectionMediaUpload
+                      value={s.content?.media}
+                      onChange={(media) => updateSectionContent(s.id, { media })}
+                      uploadFolder={uploadFolder}
+                    />
+                  )}
+                  {s.layout === 'gallery-strip' && (
+                    <SectionGalleryUpload
+                      value={s.content?.gallery}
+                      onChange={(gallery) => updateSectionContent(s.id, { gallery })}
+                      uploadFolder={uploadFolder}
+                    />
+                  )}
+                  <div className={styles.contentSectionActions}>
+                    <button
+                      type="button"
+                      className={styles.submit}
+                      disabled={savingContentSectionId === s.id}
+                      onClick={() => handleSaveSectionContent(s.id)}
+                    >
+                      {savingContentSectionId === s.id ? 'Saving…' : 'Save section'}
+                    </button>
+                    {savingContentSectionId !== s.id && (
+                      <span className={styles.sectionContentSaved}>Saved content appears on the project page.</span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </>
+        )}
+      </div>
     </div>
   )
 }

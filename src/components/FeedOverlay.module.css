@@ -326,7 +326,7 @@
 .descriptionOverlayClose {
   position: absolute;
   bottom: 10px;
-  right: 10px;
+  left: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -342,6 +342,14 @@
   color: rgba(0, 0, 0, 0.65);
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
+}
+
+/* Desktop: close in bottom-right corner (away from Back to Gallery which is hidden) */
+@media (min-width: 821px) {
+  .descriptionOverlayClose {
+    left: auto;
+    right: 10px;
+  }
 }
 
 .descriptionOverlayClose:hover {

@@ -1,0 +1,114 @@
+.wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.label {
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--fg);
+}
+
+.hasMedia {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.previewWrap {
+  flex-shrink: 0;
+  width: 160px;
+  max-height: 120px;
+  border-radius: 6px;
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.preview {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+.mediaFields {
+  flex: 1;
+  min-width: 200px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.fieldLabel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: var(--text-sm);
+  color: var(--muted);
+}
+
+.input {
+  padding: 0.4rem 0.6rem;
+  font-size: var(--text-sm);
+  font-family: inherit;
+  color: var(--fg);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--frost-border);
+  border-radius: 4px;
+}
+
+.clearBtn {
+  align-self: flex-start;
+  padding: 0.25rem 0.5rem;
+  font-size: var(--text-sm);
+  color: #f87171;
+  background: transparent;
+  border: 1px solid rgba(248, 113, 113, 0.4);
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.clearBtn:hover {
+  background: rgba(248, 113, 113, 0.1);
+}
+
+.uploadZone {
+  padding: 1rem;
+  border: 1px dashed var(--frost-border);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.fileInput {
+  position: absolute;
+  width: 0;
+  height: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.uploadBtn {
+  padding: 0.4rem 0.75rem;
+  font-size: var(--text-sm);
+  color: var(--fg);
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--frost-border);
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.uploadBtn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.uploadBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.error {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: #f87171;
+}

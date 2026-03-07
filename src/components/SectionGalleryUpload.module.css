@@ -1,0 +1,119 @@
+.wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.label {
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--fg);
+}
+
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.item {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+  padding: 0.75rem;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--frost-border);
+  border-radius: 6px;
+}
+
+.thumbWrap {
+  flex-shrink: 0;
+  width: 80px;
+  height: 60px;
+  border-radius: 4px;
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.thumb {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.itemFields {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.input {
+  padding: 0.4rem 0.6rem;
+  font-size: var(--text-sm);
+  font-family: inherit;
+  color: var(--fg);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--frost-border);
+  border-radius: 4px;
+}
+
+.removeBtn {
+  align-self: flex-start;
+  padding: 0.25rem 0.5rem;
+  font-size: var(--text-sm);
+  color: #f87171;
+  background: transparent;
+  border: 1px solid rgba(248, 113, 113, 0.4);
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.removeBtn:hover {
+  background: rgba(248, 113, 113, 0.1);
+}
+
+.addZone {
+  padding: 0.75rem;
+  border: 1px dashed var(--frost-border);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.fileInput {
+  position: absolute;
+  width: 0;
+  height: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.addBtn {
+  padding: 0.4rem 0.75rem;
+  font-size: var(--text-sm);
+  color: var(--fg);
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--frost-border);
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.addBtn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.addBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.error {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: #f87171;
+}
