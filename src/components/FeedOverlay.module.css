@@ -235,7 +235,7 @@
 /* ─── Text shelf ────────────────────────────────────────────────────────────── */
 
 .textShelf {
-  padding: 18px 4px 0;
+  padding: 18px 4px 24px;
   color: #0b0c10;
   flex: 1;
 }
