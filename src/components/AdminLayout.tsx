@@ -63,6 +63,9 @@ export function AdminLayout() {
           <NavLink to="/admin/archive" className={({ isActive }) => (isActive ? styles.navLinkActive : styles.navLink)}>
             Archive
           </NavLink>
+          <NavLink to="/admin/about" className={({ isActive }) => (isActive ? styles.navLinkActive : styles.navLink)}>
+            About
+          </NavLink>
         </nav>
         <span className={styles.email}>{session.user?.email}</span>
         <button type="button" className={styles.signOut} onClick={handleSignOut}>

@@ -7,6 +7,8 @@ type Props = {
   value: SectionContent['media']
   onChange: (media: SectionContent['media']) => void
   uploadFolder: string
+  /** File input accept attribute; default allows image and video. */
+  accept?: string
 }
 
 function Preview({ media }: { media: NonNullable<SectionContent['media']> }) {
@@ -18,7 +20,7 @@ function Preview({ media }: { media: NonNullable<SectionContent['media']> }) {
   return <img src={media.src} alt="" className={styles.preview} />
 }
 
-export function SectionMediaUpload({ value, onChange, uploadFolder }: Props) {
+export function SectionMediaUpload({ value, onChange, uploadFolder, accept = 'image/*,video/*' }: Props) {
   const [uploading, setUploading] = useState(false)
   const [uploadError, setUploadError] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -82,7 +84,7 @@ export function SectionMediaUpload({ value, onChange, uploadFolder }: Props) {
           <input
             ref={fileInputRef}
             type="file"
-            accept="image/*,video/*"
+            accept={accept}
             onChange={handleFileChange}
             className={styles.fileInput}
             disabled={uploading}

@@ -14,6 +14,10 @@ export function AdminDashboardPage() {
           <span className={styles.cardTitle}>Archive</span>
           <span className={styles.cardDesc}>Add and edit archive posts (photos, videos, tags).</span>
         </Link>
+        <Link to="/admin/about" className={styles.card}>
+          <span className={styles.cardTitle}>About</span>
+          <span className={styles.cardDesc}>Edit the About page portrait.</span>
+        </Link>
       </div>
     </div>
   )

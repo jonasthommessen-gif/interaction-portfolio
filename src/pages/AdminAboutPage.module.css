@@ -1,0 +1,65 @@
+.page {
+  padding: 0.5rem 0;
+}
+
+.heading {
+  margin: 0 0 1rem;
+  font-size: var(--text-lg);
+  font-weight: 600;
+}
+
+.message {
+  margin: 0 0 0.5rem;
+  font-size: var(--text-sm);
+  color: var(--muted);
+}
+
+.portraitSection {
+  max-width: 32rem;
+  margin-top: 1rem;
+}
+
+.sectionsHeading {
+  margin: 0 0 0.5rem;
+  font-size: var(--text-lg);
+  font-weight: 600;
+}
+
+.hint {
+  margin: 0 0 1rem;
+  font-size: var(--text-sm);
+  color: var(--muted);
+}
+
+.submit {
+  margin-top: 1rem;
+  padding: 0.4rem 0.75rem;
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--fg);
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--frost-border);
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.submit:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.submit:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.error {
+  margin: 1rem 0 0;
+  font-size: var(--text-sm);
+  color: #f87171;
+}
+
+.success {
+  margin: 1rem 0 0;
+  font-size: var(--text-sm);
+  color: #86efac;
+}

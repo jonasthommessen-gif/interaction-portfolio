@@ -4,6 +4,7 @@ import styles from './AboutOverlay.module.css'
 import { useMediaQuery } from '../hooks/useMediaQuery'
 import { AdminTrigger } from './AdminTrigger'
 import { AdminLoginModal } from './AdminLoginModal'
+import { fetchSiteSettings } from '../lib/cms'
 
 const FLOATING_KEYWORDS = ['Systems thinking', 'UX', 'UI', 'Products', 'Prototyping', 'Motion'] as const
 
@@ -151,11 +152,21 @@ function FloatingKeywords() {
 
 const MOBILE_BREAKPOINT = '(max-width: 820px)'
 
+const DEFAULT_PORTRAIT_SRC = '/images/placeholders/IMG_7240.JPG'
+
 export function AboutOverlay() {
   const [portraitError, setPortraitError] = useState(false)
   const [showAdminLogin, setShowAdminLogin] = useState(false)
+  const [siteSettings, setSiteSettings] = useState<{ about_portrait_src: string | null; about_portrait_alt: string | null } | null>(null)
   const isMobile = useMediaQuery(MOBILE_BREAKPOINT)
   const navigate = useNavigate()
+
+  useEffect(() => {
+    fetchSiteSettings().then(setSiteSettings)
+  }, [])
+
+  const portraitSrc = (siteSettings?.about_portrait_src?.trim() || DEFAULT_PORTRAIT_SRC)
+  const portraitAlt = siteSettings?.about_portrait_alt?.trim() ?? ''
 
   return (
     <>
@@ -269,8 +280,8 @@ export function AboutOverlay() {
           <div className={styles.imageWrap}>
             {!portraitError && (
               <img
-                src="/images/placeholders/IMG_7240.JPG"
-                alt=""
+                src={portraitSrc}
+                alt={portraitAlt}
                 className={styles.portraitImage}
                 onError={() => setPortraitError(true)}
               />

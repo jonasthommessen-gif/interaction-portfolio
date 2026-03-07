@@ -16,6 +16,7 @@ const AdminProjectNewPage = lazy(() => import('./pages/AdminProjectNewPage').the
 const AdminArchivePage = lazy(() => import('./pages/AdminArchivePage').then(m => ({ default: m.AdminArchivePage })))
 const AdminArchiveNewPage = lazy(() => import('./pages/AdminArchiveNewPage').then(m => ({ default: m.AdminArchiveNewPage })))
 const AdminArchiveEditPage = lazy(() => import('./pages/AdminArchiveEditPage').then(m => ({ default: m.AdminArchiveEditPage })))
+const AdminAboutPage = lazy(() => import('./pages/AdminAboutPage').then(m => ({ default: m.AdminAboutPage })))
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage').then(m => ({ default: m.NotFoundPage })))
 
 /** Minimal fallback so main content area does not collapse during route load (reduces CLS). */
@@ -42,6 +43,7 @@ export default function App() {
             <Route path="archive" element={<Suspense fallback={<RouteFallback />}><AdminArchivePage /></Suspense>} />
             <Route path="archive/new" element={<Suspense fallback={<RouteFallback />}><AdminArchiveNewPage /></Suspense>} />
             <Route path="archive/edit/:id" element={<Suspense fallback={<RouteFallback />}><AdminArchiveEditPage /></Suspense>} />
+            <Route path="about" element={<Suspense fallback={<RouteFallback />}><AdminAboutPage /></Suspense>} />
           </Route>
 
           <Route path="*" element={<Suspense fallback={<RouteFallback />}><NotFoundPage /></Suspense>} />

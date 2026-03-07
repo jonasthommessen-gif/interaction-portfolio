@@ -316,6 +316,50 @@ const staticArchiveNormalized: ArchiveProject[] = staticArchive.map((a, i) => ({
   media: (a.images ?? []).map((src) => ({ type: 'image' as const, src })),
 }))
 
+export type SiteSettings = {
+  about_portrait_src: string | null
+  about_portrait_alt: string | null
+}
+
+/** Fetch site settings (single row). Returns null if no Supabase or error. */
+export async function fetchSiteSettings(): Promise<SiteSettings | null> {
+  if (!supabase) return null
+  const { data, error } = await supabase
+    .from('site_settings')
+    .select('about_portrait_src, about_portrait_alt')
+    .eq('id', 1)
+    .maybeSingle()
+  if (error) {
+    console.warn('CMS fetch site settings:', error)
+    return null
+  }
+  if (!data) return null
+  return {
+    about_portrait_src: (data as { about_portrait_src: string | null }).about_portrait_src ?? null,
+    about_portrait_alt: (data as { about_portrait_alt: string | null }).about_portrait_alt ?? null,
+  }
+}
+
+/** Admin: update site settings (single row). */
+export async function updateSiteSettings(patch: {
+  about_portrait_src?: string
+  about_portrait_alt?: string
+}): Promise<{ error: string | null }> {
+  if (!supabase) return { error: 'Database not configured' }
+  const { error } = await supabase
+    .from('site_settings')
+    .update({
+      ...patch,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', 1)
+  if (error) {
+    console.warn('CMS update site settings:', error)
+    return { error: error.message }
+  }
+  return { error: null }
+}
+
 /** Admin: upload a file to portfolio-media and return its public URL. */
 export async function uploadPortfolioMedia(file: File, folder = 'archive'): Promise<{ url?: string; error: string | null }> {
   if (!supabase) return { error: 'Database not configured' }
