@@ -266,34 +266,45 @@ export function ProjectsPage() {
                       onFocus={() => setActiveSlug(project.slug)}
                       aria-label={`Open project: ${project.title}`}
                     >
-                      {project.cover.type === 'video' ? (
-                        <VideoInView
-                          src={project.cover.src}
-                          poster={project.cover.poster}
-                          className={styles.media}
-                        />
-                      ) : (
-                        <img
-                          className={styles.media}
-                          src={project.cover.src}
-                          alt={project.cover.alt}
-                          width={800}
-                          height={600}
-                          loading={isFirstCard ? 'eager' : 'lazy'}
-                          fetchPriority={isFirstCard ? 'high' : undefined}
-                        />
-                      )}
+                      <div className={styles.cardInner}>
+                        {project.cover.type === 'video' ? (
+                          <VideoInView
+                            src={project.cover.src}
+                            poster={project.cover.poster}
+                            className={styles.media}
+                          />
+                        ) : (
+                          <img
+                            className={styles.media}
+                            src={project.cover.src}
+                            alt={project.cover.alt}
+                            width={800}
+                            height={600}
+                            loading={isFirstCard ? 'eager' : 'lazy'}
+                            fetchPriority={isFirstCard ? 'high' : undefined}
+                          />
+                        )}
 
-                      <div className={styles.meta}>
-                        <div className={styles.pills}>
-                          {project.categories.map((c) => (
-                            <span key={c} className={styles.pill}>
-                              {c}
-                            </span>
-                          ))}
+                        <div className={styles.meta}>
+                          <div className={styles.pills}>
+                            {project.categories.map((c) => (
+                              <span key={c} className={styles.pill}>
+                                {c}
+                              </span>
+                            ))}
+                          </div>
+                          <h2 className={styles.title}>{project.title}</h2>
+                          <p className={styles.categoriesLine}>
+                            {project.categories.join(' · ')}
+                          </p>
                         </div>
-                        <h2 className={styles.title}>{project.title}</h2>
-                        <p className={styles.categoriesLine}>
+                      </div>
+
+                      <div className={styles.metaBelow}>
+                        <h2 className={styles.metaBelowTitle}>
+                          {project.title}
+                        </h2>
+                        <p className={styles.metaBelowCategories}>
                           {project.categories.join(' · ')}
                         </p>
                       </div>
