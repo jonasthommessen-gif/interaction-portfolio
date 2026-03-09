@@ -14,13 +14,21 @@ function formatObjectPosition(x: number, y: number): string {
   return `${Math.round(Math.max(0, Math.min(100, x)))}% ${Math.round(Math.max(0, Math.min(100, y)))}%`
 }
 
+const MIN_SCALE = 1
+const MAX_SCALE = 3
+
 interface AdjustCropModalProps {
   open: boolean
   onClose: () => void
-  onSave: (objectPosition: string) => void
+  /** Second arg is scale when > 1 (Instagram-style zoom). Callers that don't support scale can ignore it. */
+  onSave: (objectPosition: string, objectScale?: number) => void
   src: string
   type: 'image' | 'video'
   initialObjectPosition?: string
+  /** When true, show zoom slider and pass scale to onSave (project cover). */
+  enableZoom?: boolean
+  /** Initial zoom (1 = no zoom). Used when enableZoom is true. */
+  initialScale?: number
   /** Aspect ratio of the frame (e.g. '16/10' for project card). Default '16/10'. */
   aspectRatio?: string
   /** Short label above the frame, e.g. "Project card on the site". */
@@ -34,29 +42,35 @@ export function AdjustCropModal({
   src,
   type,
   initialObjectPosition = '50% 50%',
+  enableZoom = false,
+  initialScale = 1,
   aspectRatio = '16/10',
   frameLabel,
 }: AdjustCropModalProps) {
   const frameRef = useRef<HTMLDivElement>(null)
   const [position, setPosition] = useState(() => parseObjectPosition(initialObjectPosition))
+  const [scale, setScale] = useState(() => Math.min(MAX_SCALE, Math.max(MIN_SCALE, initialScale)))
   const [dragging, setDragging] = useState(false)
   const lastClientRef = useRef({ x: 0, y: 0 })
 
   useEffect(() => {
-    if (open) setPosition(parseObjectPosition(initialObjectPosition))
-  }, [open, initialObjectPosition])
+    if (open) {
+      setPosition(parseObjectPosition(initialObjectPosition))
+      setScale(Math.min(MAX_SCALE, Math.max(MIN_SCALE, initialScale)))
+    }
+  }, [open, initialObjectPosition, initialScale])
 
   const handlePointerDown = useCallback((e: React.PointerEvent) => {
     e.preventDefault()
     setDragging(true)
     lastClientRef.current = { x: e.clientX, y: e.clientY }
-    const target = e.target as HTMLElement
-    if (target.setPointerCapture) target.setPointerCapture(e.pointerId)
+    const frame = frameRef.current
+    if (frame?.setPointerCapture) frame.setPointerCapture(e.pointerId)
   }, [])
 
   const handlePointerUp = useCallback((e: React.PointerEvent) => {
-    const target = e.target as HTMLElement
-    if (target.releasePointerCapture) target.releasePointerCapture(e.pointerId)
+    const frame = frameRef.current
+    if (frame?.releasePointerCapture) frame.releasePointerCapture(e.pointerId)
     setDragging(false)
   }, [])
 
@@ -90,9 +104,11 @@ export function AdjustCropModal({
   }, [dragging])
 
   const handleSave = useCallback(() => {
-    onSave(formatObjectPosition(position.x, position.y))
+    const posStr = formatObjectPosition(position.x, position.y)
+    const scaleToSave = enableZoom && scale > 1 ? scale : undefined
+    onSave(posStr, scaleToSave)
     onClose()
-  }, [position, onSave, onClose])
+  }, [position, scale, enableZoom, onSave, onClose])
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
@@ -104,6 +120,13 @@ export function AdjustCropModal({
   if (!open) return null
 
   const positionStr = formatObjectPosition(position.x, position.y)
+  const useTransform = enableZoom && scale > 1
+  const mediaStyle = useTransform
+    ? {
+        transformOrigin: '50% 50%',
+        transform: `scale(${scale}) translate(${(50 - position.x) / scale}%, ${(50 - position.y) / scale}%)`,
+      }
+    : { objectPosition: positionStr }
 
   return (
     <div
@@ -135,18 +158,36 @@ export function AdjustCropModal({
               muted
               playsInline
               className={styles.media}
-              style={{ objectPosition: positionStr }}
+              style={mediaStyle as React.CSSProperties}
             />
           ) : (
             <img
               src={src}
               alt=""
               className={styles.media}
-              style={{ objectPosition: positionStr }}
+              style={mediaStyle as React.CSSProperties}
               draggable={false}
             />
           )}
         </div>
+        {enableZoom && (
+          <div className={styles.zoomRow}>
+            <label className={styles.zoomLabel} htmlFor="adjust-crop-zoom">
+              Zoom
+            </label>
+            <input
+              id="adjust-crop-zoom"
+              type="range"
+              min={MIN_SCALE}
+              max={MAX_SCALE}
+              step={0.1}
+              value={scale}
+              onChange={(e) => setScale(Number(e.target.value))}
+              className={styles.zoomSlider}
+            />
+            <span className={styles.zoomValue}>{scale.toFixed(1)}×</span>
+          </div>
+        )}
         <div className={styles.actions}>
           <button type="button" className={styles.cancelBtn} onClick={onClose}>
             Cancel

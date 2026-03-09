@@ -23,10 +23,11 @@ function toHex(s: string): `#${string}` {
 
 function projectRowToProject(row: ProjectRow, sections: ProjectSectionRow[]): Project {
   const objectPosition = row.cover_object_position ?? undefined
+  const objectScale = row.cover_object_scale != null && row.cover_object_scale > 0 ? row.cover_object_scale : undefined
   const cover =
     row.cover_type === 'video'
-      ? { type: 'video' as const, src: row.cover_src, poster: row.cover_poster ?? undefined, objectPosition }
-      : { type: 'image' as const, src: row.cover_src, alt: row.cover_alt || '', objectPosition }
+      ? { type: 'video' as const, src: row.cover_src, poster: row.cover_poster ?? undefined, objectPosition, objectScale }
+      : { type: 'image' as const, src: row.cover_src, alt: row.cover_alt || '', objectPosition, objectScale }
   const sortedSections = [...sections].sort((a, b) => a.order - b.order)
   return {
     id: row.id,
@@ -188,6 +189,7 @@ export async function updateProject(
     cover_poster?: string | null
     cover_alt?: string
     cover_object_position?: string | null
+    cover_object_scale?: number | null
   }
 ): Promise<{ error: string | null }> {
   if (!supabase) return { error: 'Database not configured' }

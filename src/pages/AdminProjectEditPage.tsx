@@ -50,6 +50,7 @@ export function AdminProjectEditPage() {
   const [coverPoster, setCoverPoster] = useState<string | null>(null)
   const [coverAlt, setCoverAlt] = useState('')
   const [coverObjectPosition, setCoverObjectPosition] = useState('50% 50%')
+  const [coverObjectScale, setCoverObjectScale] = useState(1)
 
   const loadSections = useCallback((projectId: string) => {
     setSectionsLoading(true)
@@ -79,6 +80,7 @@ export function AdminProjectEditPage() {
           setCoverPoster(data.cover_poster ?? null)
           setCoverAlt(data.cover_alt ?? '')
           setCoverObjectPosition(data.cover_object_position ?? '50% 50%')
+          setCoverObjectScale(data.cover_object_scale != null && data.cover_object_scale > 0 ? data.cover_object_scale : 1)
           loadSections(data.id)
         }
       })
@@ -106,6 +108,7 @@ export function AdminProjectEditPage() {
       cover_poster: coverPoster,
       cover_alt: coverAlt || undefined,
       cover_object_position: coverObjectPosition === '50% 50%' ? null : coverObjectPosition,
+      cover_object_scale: coverObjectScale !== 1 ? coverObjectScale : null,
     })
     setSaving(false)
     if (error) {
@@ -325,23 +328,26 @@ export function AdminProjectEditPage() {
         <h3 id="card-picture-heading" className={styles.sectionsHeading}>Project card picture</h3>
         <p className={styles.cardPictureHint}>Image or video shown on the project card on the projects page.</p>
         <SectionMediaUpload
-          value={coverSrc ? { type: coverType, src: coverSrc, alt: coverAlt, poster: coverType === 'video' ? (coverPoster ?? undefined) : undefined, objectPosition: coverObjectPosition } : undefined}
+          value={coverSrc ? { type: coverType, src: coverSrc, alt: coverAlt, poster: coverType === 'video' ? (coverPoster ?? undefined) : undefined, objectPosition: coverObjectPosition, objectScale: coverObjectScale } : undefined}
           onChange={(media) => {
             if (!media) {
               setCoverSrc('')
               setCoverAlt('')
               setCoverPoster(null)
+              setCoverObjectScale(1)
             } else {
               setCoverType(media.type)
               setCoverSrc(media.src)
               setCoverAlt(media.alt ?? '')
               setCoverPoster(media.poster ?? null)
               setCoverObjectPosition(media.objectPosition ?? '50% 50%')
+              setCoverObjectScale(media.objectScale ?? 1)
             }
           }}
           uploadFolder={row?.id ? `projects/${row.id}` : 'projects'}
           cropAspectRatio="16/10"
           cropFrameLabel="Project card on the site"
+          cropEnableZoom
         />
       </section>
 

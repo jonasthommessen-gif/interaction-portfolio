@@ -43,6 +43,15 @@ function pickTextColor(bgHex: string) {
   return lum > 0.58 ? '#0b0c10' : '#ffffff'
 }
 
+function parseObjectPosition(s: string | undefined): [number, number] {
+  if (!s?.trim()) return [50, 50]
+  const parts = s.trim().split(/\s+/)
+  const x = parseFloat(parts[0])
+  const y = parseFloat(parts[1])
+  if (Number.isFinite(x) && Number.isFinite(y)) return [x, y]
+  return [50, 50]
+}
+
 function derivePillBg(fromHex: string, toHex: string) {
   const from = hexToRgb(fromHex)
   const to = hexToRgb(toHex)
@@ -272,7 +281,18 @@ export function ProjectsPage() {
                             src={project.cover.src}
                             poster={project.cover.poster}
                             className={styles.media}
-                            style={{ objectPosition: project.cover.objectPosition ?? '50% 50%' }}
+                            style={(() => {
+                              const scale = project.cover.objectScale ?? 1
+                              const pos = project.cover.objectPosition ?? '50% 50%'
+                              if (scale > 1) {
+                                const [x, y] = parseObjectPosition(pos)
+                                return {
+                                  transformOrigin: '50% 50%',
+                                  transform: `scale(${scale}) translate(${(50 - x) / scale}%, ${(50 - y) / scale}%)`,
+                                }
+                              }
+                              return { objectPosition: pos }
+                            })()}
                           />
                         ) : (
                           <img
@@ -283,7 +303,18 @@ export function ProjectsPage() {
                             height={600}
                             loading={isFirstCard ? 'eager' : 'lazy'}
                             fetchPriority={isFirstCard ? 'high' : undefined}
-                            style={{ objectPosition: project.cover.objectPosition ?? '50% 50%' }}
+                            style={(() => {
+                              const scale = project.cover.objectScale ?? 1
+                              const pos = project.cover.objectPosition ?? '50% 50%'
+                              if (scale > 1) {
+                                const [x, y] = parseObjectPosition(pos)
+                                return {
+                                  transformOrigin: '50% 50%',
+                                  transform: `scale(${scale}) translate(${(50 - x) / scale}%, ${(50 - y) / scale}%)`,
+                                }
+                              }
+                              return { objectPosition: pos }
+                            })()}
                           />
                         )}
 
