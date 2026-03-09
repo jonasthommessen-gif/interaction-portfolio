@@ -33,15 +33,20 @@
   color: var(--muted, #666);
 }
 
-/* 4:5 aspect ratio, same as feed frame */
+/* Aspect ratio set via inline style (e.g. 16/10 for project card) */
 .frame {
-  aspect-ratio: 4 / 5;
   width: 100%;
   background: #111;
   border-radius: 8px;
   overflow: hidden;
   position: relative;
   touch-action: none;
+}
+
+.frameLabel {
+  margin: 0 0 0.5rem;
+  font-size: 0.8125rem;
+  color: var(--muted, #666);
 }
 
 .media {

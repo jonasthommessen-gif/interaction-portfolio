@@ -8,6 +8,12 @@ import { fetchSiteSettings } from '../lib/cms'
 
 const FLOATING_KEYWORDS = ['Systems thinking', 'UX', 'UI', 'Products', 'Prototyping', 'Motion'] as const
 
+type AboutOverlayProps = {
+  showAdminLogin: boolean
+  onOpenAdminLogin: () => void
+  onCloseAdminLogin: () => void
+}
+
 type WordState = { x: number; y: number; vx: number; vy: number }
 
 const FLOAT_SPEED = 24
@@ -154,9 +160,8 @@ const MOBILE_BREAKPOINT = '(max-width: 820px)'
 
 const DEFAULT_PORTRAIT_SRC = '/images/placeholders/IMG_7240.JPG'
 
-export function AboutOverlay() {
+export function AboutOverlay({ showAdminLogin, onOpenAdminLogin, onCloseAdminLogin }: AboutOverlayProps) {
   const [portraitError, setPortraitError] = useState(false)
-  const [showAdminLogin, setShowAdminLogin] = useState(false)
   const [siteSettings, setSiteSettings] = useState<{ about_portrait_src: string | null; about_portrait_alt: string | null } | null>(null)
   const isMobile = useMediaQuery(MOBILE_BREAKPOINT)
   const navigate = useNavigate()
@@ -183,7 +188,7 @@ export function AboutOverlay() {
                 </span>
                 <span className={styles.nameGap} />
                 <h1 className={styles.name}>
-                  <AdminTrigger onTrigger={() => setShowAdminLogin(true)}>
+                  <AdminTrigger onTrigger={onOpenAdminLogin}>
                     JONAS THOMMESSEN
                   </AdminTrigger>
                 </h1>
@@ -316,9 +321,9 @@ export function AboutOverlay() {
       </aside>
       {showAdminLogin && (
         <AdminLoginModal
-          onClose={() => setShowAdminLogin(false)}
+          onClose={onCloseAdminLogin}
           onSuccess={() => {
-            setShowAdminLogin(false)
+            onCloseAdminLogin()
             navigate('/admin')
           }}
         />

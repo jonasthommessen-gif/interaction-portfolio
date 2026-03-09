@@ -21,6 +21,10 @@ interface AdjustCropModalProps {
   src: string
   type: 'image' | 'video'
   initialObjectPosition?: string
+  /** Aspect ratio of the frame (e.g. '16/10' for project card). Default '16/10'. */
+  aspectRatio?: string
+  /** Short label above the frame, e.g. "Project card on the site". */
+  frameLabel?: string
 }
 
 export function AdjustCropModal({
@@ -30,6 +34,8 @@ export function AdjustCropModal({
   src,
   type,
   initialObjectPosition = '50% 50%',
+  aspectRatio = '16/10',
+  frameLabel,
 }: AdjustCropModalProps) {
   const frameRef = useRef<HTMLDivElement>(null)
   const [position, setPosition] = useState(() => parseObjectPosition(initialObjectPosition))
@@ -44,6 +50,14 @@ export function AdjustCropModal({
     e.preventDefault()
     setDragging(true)
     lastClientRef.current = { x: e.clientX, y: e.clientY }
+    const target = e.target as HTMLElement
+    if (target.setPointerCapture) target.setPointerCapture(e.pointerId)
+  }, [])
+
+  const handlePointerUp = useCallback((e: React.PointerEvent) => {
+    const target = e.target as HTMLElement
+    if (target.releasePointerCapture) target.releasePointerCapture(e.pointerId)
+    setDragging(false)
   }, [])
 
   useEffect(() => {
@@ -67,9 +81,11 @@ export function AdjustCropModal({
     const handleUp = () => setDragging(false)
     window.addEventListener('pointermove', handleMove)
     window.addEventListener('pointerup', handleUp)
+    window.addEventListener('pointercancel', handleUp)
     return () => {
       window.removeEventListener('pointermove', handleMove)
       window.removeEventListener('pointerup', handleUp)
+      window.removeEventListener('pointercancel', handleUp)
     }
   }, [dragging])
 
@@ -104,11 +120,14 @@ export function AdjustCropModal({
         <p className={styles.hint}>
           Drag the image or video inside the frame to choose how it will be cropped in the feed.
         </p>
+        {frameLabel && <p className={styles.frameLabel}>{frameLabel}</p>}
         <div
           ref={frameRef}
           className={styles.frame}
           onPointerDown={handlePointerDown}
-          style={{ cursor: dragging ? 'grabbing' : 'grab' }}
+          onPointerUp={handlePointerUp}
+          onPointerCancel={handlePointerUp}
+          style={{ cursor: dragging ? 'grabbing' : 'grab', aspectRatio }}
         >
           {type === 'video' ? (
             <video

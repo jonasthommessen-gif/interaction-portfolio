@@ -10,6 +10,10 @@ type Props = {
   uploadFolder: string
   /** File input accept attribute; default allows image and video. */
   accept?: string
+  /** Aspect ratio for the adjust-crop frame (e.g. '16/10' for project card). */
+  cropAspectRatio?: string
+  /** Label shown above the crop frame (e.g. "Project card on the site"). */
+  cropFrameLabel?: string
 }
 
 function Preview({ media }: { media: NonNullable<SectionContent['media']> }) {
@@ -21,7 +25,7 @@ function Preview({ media }: { media: NonNullable<SectionContent['media']> }) {
   return <img src={media.src} alt="" className={styles.preview} />
 }
 
-export function SectionMediaUpload({ value, onChange, uploadFolder, accept = 'image/*,video/*' }: Props) {
+export function SectionMediaUpload({ value, onChange, uploadFolder, accept = 'image/*,video/*', cropAspectRatio, cropFrameLabel }: Props) {
   const [uploading, setUploading] = useState(false)
   const [uploadError, setUploadError] = useState<string | null>(null)
   const [adjustCropOpen, setAdjustCropOpen] = useState(false)
@@ -116,6 +120,8 @@ export function SectionMediaUpload({ value, onChange, uploadFolder, accept = 'im
           src={value.src}
           type={value.type}
           initialObjectPosition={value.objectPosition ?? '50% 50%'}
+          aspectRatio={cropAspectRatio}
+          frameLabel={cropFrameLabel}
         />
       )}
     </div>

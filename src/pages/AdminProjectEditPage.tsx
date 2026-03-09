@@ -11,7 +11,6 @@ import {
 import type { ProjectRow, ProjectSectionRow } from '../types/cms'
 import type { SectionContent, SectionLayoutKey } from '../types/cms'
 import { SECTION_LAYOUTS } from '../types/cms'
-import { AdjustCropModal } from '../components/AdjustCropModal'
 import { SectionGalleryUpload } from '../components/SectionGalleryUpload'
 import { SectionMediaUpload } from '../components/SectionMediaUpload'
 import styles from './AdminProjectEditPage.module.css'
@@ -51,7 +50,6 @@ export function AdminProjectEditPage() {
   const [coverPoster, setCoverPoster] = useState<string | null>(null)
   const [coverAlt, setCoverAlt] = useState('')
   const [coverObjectPosition, setCoverObjectPosition] = useState('50% 50%')
-  const [adjustCoverOpen, setAdjustCoverOpen] = useState(false)
 
   const loadSections = useCallback((projectId: string) => {
     setSectionsLoading(true)
@@ -327,7 +325,7 @@ export function AdminProjectEditPage() {
         <h3 id="card-picture-heading" className={styles.sectionsHeading}>Project card picture</h3>
         <p className={styles.cardPictureHint}>Image or video shown on the project card on the projects page.</p>
         <SectionMediaUpload
-          value={coverSrc ? { type: coverType, src: coverSrc, alt: coverAlt, poster: coverType === 'video' ? (coverPoster ?? undefined) : undefined } : undefined}
+          value={coverSrc ? { type: coverType, src: coverSrc, alt: coverAlt, poster: coverType === 'video' ? (coverPoster ?? undefined) : undefined, objectPosition: coverObjectPosition } : undefined}
           onChange={(media) => {
             if (!media) {
               setCoverSrc('')
@@ -338,34 +336,13 @@ export function AdminProjectEditPage() {
               setCoverSrc(media.src)
               setCoverAlt(media.alt ?? '')
               setCoverPoster(media.poster ?? null)
+              setCoverObjectPosition(media.objectPosition ?? '50% 50%')
             }
           }}
           uploadFolder={row?.id ? `projects/${row.id}` : 'projects'}
+          cropAspectRatio="16/10"
+          cropFrameLabel="Project card on the site"
         />
-        {coverSrc && (
-          <div className={styles.cardPictureActions}>
-            <button
-              type="button"
-              className={styles.adjustCropBtn}
-              onClick={() => setAdjustCoverOpen(true)}
-            >
-              Adjust crop / position
-            </button>
-          </div>
-        )}
-        {adjustCoverOpen && coverSrc && (
-          <AdjustCropModal
-            open={true}
-            onClose={() => setAdjustCoverOpen(false)}
-            onSave={(objectPosition) => {
-              setCoverObjectPosition(objectPosition)
-              setAdjustCoverOpen(false)
-            }}
-            src={coverSrc}
-            type={coverType}
-            initialObjectPosition={coverObjectPosition}
-          />
-        )}
       </section>
 
       <section className={styles.sectionsBlock} aria-labelledby="sections-heading">
