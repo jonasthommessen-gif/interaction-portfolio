@@ -9,7 +9,7 @@ export function AboutPage() {
   return (
     <main className={styles.page}>
       <GrainBackground />
-      <AboutGridOverlay onAdminTrigger={() => setShowAdminLogin(true)} />
+      <AboutGridOverlay />
       <AboutOverlay showAdminLogin={showAdminLogin} onOpenAdminLogin={() => setShowAdminLogin(true)} onCloseAdminLogin={() => setShowAdminLogin(false)} />
     </main>
   )

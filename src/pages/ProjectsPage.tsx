@@ -52,6 +52,25 @@ function parseObjectPosition(s: string | undefined): [number, number] {
   return [50, 50]
 }
 
+function coverMediaStyle(cover: Project['cover']): React.CSSProperties {
+  const scale = cover.objectScale ?? 1
+  const rotation = cover.objectRotation ?? 0
+  const pos = cover.objectPosition ?? '50% 50%'
+  const [x, y] = parseObjectPosition(pos)
+  if (scale > 1 || rotation !== 0) {
+    const rot = rotation !== 0 ? `rotate(${rotation}deg) ` : ''
+    const scalePart = scale > 1 ? `scale(${scale}) ` : ''
+    const div = scale > 1 ? scale : 1
+    const tx = (50 - x) / div
+    const ty = (50 - y) / div
+    return {
+      transformOrigin: '50% 50%',
+      transform: `${rot}${scalePart}translate(${tx}%, ${ty}%)`.trim(),
+    }
+  }
+  return { objectPosition: pos }
+}
+
 function derivePillBg(fromHex: string, toHex: string) {
   const from = hexToRgb(fromHex)
   const to = hexToRgb(toHex)
@@ -281,18 +300,7 @@ export function ProjectsPage() {
                             src={project.cover.src}
                             poster={project.cover.poster}
                             className={styles.media}
-                            style={(() => {
-                              const scale = project.cover.objectScale ?? 1
-                              const pos = project.cover.objectPosition ?? '50% 50%'
-                              if (scale > 1) {
-                                const [x, y] = parseObjectPosition(pos)
-                                return {
-                                  transformOrigin: '50% 50%',
-                                  transform: `scale(${scale}) translate(${(50 - x) / scale}%, ${(50 - y) / scale}%)`,
-                                }
-                              }
-                              return { objectPosition: pos }
-                            })()}
+                            style={coverMediaStyle(project.cover)}
                           />
                         ) : (
                           <img
@@ -303,18 +311,7 @@ export function ProjectsPage() {
                             height={600}
                             loading={isFirstCard ? 'eager' : 'lazy'}
                             fetchPriority={isFirstCard ? 'high' : undefined}
-                            style={(() => {
-                              const scale = project.cover.objectScale ?? 1
-                              const pos = project.cover.objectPosition ?? '50% 50%'
-                              if (scale > 1) {
-                                const [x, y] = parseObjectPosition(pos)
-                                return {
-                                  transformOrigin: '50% 50%',
-                                  transform: `scale(${scale}) translate(${(50 - x) / scale}%, ${(50 - y) / scale}%)`,
-                                }
-                              }
-                              return { objectPosition: pos }
-                            })()}
+                            style={coverMediaStyle(project.cover)}
                           />
                         )}
 

@@ -14,14 +14,20 @@ function formatObjectPosition(x: number, y: number): string {
   return `${Math.round(Math.max(0, Math.min(100, x)))}% ${Math.round(Math.max(0, Math.min(100, y)))}%`
 }
 
+function normalizeRotation(deg: number): number {
+  let r = deg % 360
+  if (r < 0) r += 360
+  return r
+}
+
 const MIN_SCALE = 1
 const MAX_SCALE = 3
 
 interface AdjustCropModalProps {
   open: boolean
   onClose: () => void
-  /** Second arg is scale when > 1 (Instagram-style zoom). Callers that don't support scale can ignore it. */
-  onSave: (objectPosition: string, objectScale?: number) => void
+  /** Second arg is scale when > 1; third arg is rotation in degrees when !== 0. Callers that don't support them can ignore. */
+  onSave: (objectPosition: string, objectScale?: number, objectRotation?: number) => void
   src: string
   type: 'image' | 'video'
   initialObjectPosition?: string
@@ -29,6 +35,10 @@ interface AdjustCropModalProps {
   enableZoom?: boolean
   /** Initial zoom (1 = no zoom). Used when enableZoom is true. */
   initialScale?: number
+  /** When true, show rotate buttons and pass rotation to onSave (project cover). */
+  enableRotation?: boolean
+  /** Initial rotation in degrees (0 = none). Used when enableRotation is true. */
+  initialRotation?: number
   /** Aspect ratio of the frame (e.g. '16/10' for project card). Default '16/10'. */
   aspectRatio?: string
   /** Short label above the frame, e.g. "Project card on the site". */
@@ -44,12 +54,15 @@ export function AdjustCropModal({
   initialObjectPosition = '50% 50%',
   enableZoom = false,
   initialScale = 1,
+  enableRotation = false,
+  initialRotation = 0,
   aspectRatio = '16/10',
   frameLabel,
 }: AdjustCropModalProps) {
   const frameRef = useRef<HTMLDivElement>(null)
   const [position, setPosition] = useState(() => parseObjectPosition(initialObjectPosition))
   const [scale, setScale] = useState(() => Math.min(MAX_SCALE, Math.max(MIN_SCALE, initialScale)))
+  const [rotation, setRotation] = useState(() => normalizeRotation(initialRotation))
   const [dragging, setDragging] = useState(false)
   const lastClientRef = useRef({ x: 0, y: 0 })
 
@@ -57,8 +70,9 @@ export function AdjustCropModal({
     if (open) {
       setPosition(parseObjectPosition(initialObjectPosition))
       setScale(Math.min(MAX_SCALE, Math.max(MIN_SCALE, initialScale)))
+      setRotation(normalizeRotation(initialRotation))
     }
-  }, [open, initialObjectPosition, initialScale])
+  }, [open, initialObjectPosition, initialScale, initialRotation])
 
   const handlePointerDown = useCallback((e: React.PointerEvent) => {
     e.preventDefault()
@@ -106,9 +120,10 @@ export function AdjustCropModal({
   const handleSave = useCallback(() => {
     const posStr = formatObjectPosition(position.x, position.y)
     const scaleToSave = enableZoom && scale > 1 ? scale : undefined
-    onSave(posStr, scaleToSave)
+    const rotationToSave = enableRotation && rotation !== 0 ? rotation : undefined
+    onSave(posStr, scaleToSave, rotationToSave)
     onClose()
-  }, [position, scale, enableZoom, onSave, onClose])
+  }, [position, scale, rotation, enableZoom, enableRotation, onSave, onClose])
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
@@ -120,12 +135,20 @@ export function AdjustCropModal({
   if (!open) return null
 
   const positionStr = formatObjectPosition(position.x, position.y)
-  const useTransform = enableZoom && scale > 1
+  const useTransform = (enableZoom && scale > 1) || (enableRotation && rotation !== 0)
   const mediaStyle = useTransform
-    ? {
-        transformOrigin: '50% 50%',
-        transform: `scale(${scale}) translate(${(50 - position.x) / scale}%, ${(50 - position.y) / scale}%)`,
-      }
+    ? (() => {
+        const rot = enableRotation && rotation !== 0 ? `rotate(${rotation}deg) ` : ''
+        const scalePart = enableZoom && scale > 1 ? `scale(${scale}) ` : ''
+        const translatePart =
+          enableZoom && scale > 1
+            ? `translate(${(50 - position.x) / scale}%, ${(50 - position.y) / scale}%)`
+            : `translate(${50 - position.x}%, ${50 - position.y}%)`
+        return {
+          transformOrigin: '50% 50%',
+          transform: `${rot}${scalePart}${translatePart}`.trim(),
+        }
+      })()
     : { objectPosition: positionStr }
 
   return (
@@ -186,6 +209,28 @@ export function AdjustCropModal({
               className={styles.zoomSlider}
             />
             <span className={styles.zoomValue}>{scale.toFixed(1)}×</span>
+          </div>
+        )}
+        {enableRotation && (
+          <div className={styles.rotateRow}>
+            <span className={styles.rotateLabel}>Rotate</span>
+            <button
+              type="button"
+              className={styles.rotateBtn}
+              onClick={() => setRotation((r) => normalizeRotation(r - 90))}
+              aria-label="Rotate left 90°"
+            >
+              ↶ 90°
+            </button>
+            <button
+              type="button"
+              className={styles.rotateBtn}
+              onClick={() => setRotation((r) => normalizeRotation(r + 90))}
+              aria-label="Rotate right 90°"
+            >
+              90° ↷
+            </button>
+            <span className={styles.rotateValue}>{rotation}°</span>
           </div>
         )}
         <div className={styles.actions}>

@@ -16,6 +16,8 @@ type Props = {
   cropFrameLabel?: string
   /** When true, show zoom slider in crop modal and pass objectScale in onChange (e.g. project cover). */
   cropEnableZoom?: boolean
+  /** When true, show rotate buttons in crop modal and pass objectRotation in onChange (e.g. project cover). */
+  cropEnableRotation?: boolean
 }
 
 function Preview({ media }: { media: NonNullable<SectionContent['media']> }) {
@@ -27,7 +29,7 @@ function Preview({ media }: { media: NonNullable<SectionContent['media']> }) {
   return <img src={media.src} alt="" className={styles.preview} />
 }
 
-export function SectionMediaUpload({ value, onChange, uploadFolder, accept = 'image/*,video/*', cropAspectRatio, cropFrameLabel, cropEnableZoom }: Props) {
+export function SectionMediaUpload({ value, onChange, uploadFolder, accept = 'image/*,video/*', cropAspectRatio, cropFrameLabel, cropEnableZoom, cropEnableRotation }: Props) {
   const [uploading, setUploading] = useState(false)
   const [uploadError, setUploadError] = useState<string | null>(null)
   const [adjustCropOpen, setAdjustCropOpen] = useState(false)
@@ -115,8 +117,8 @@ export function SectionMediaUpload({ value, onChange, uploadFolder, accept = 'im
         <AdjustCropModal
           open={true}
           onClose={() => setAdjustCropOpen(false)}
-          onSave={(objectPosition, objectScale) => {
-            onChange({ ...value, objectPosition, objectScale })
+          onSave={(objectPosition, objectScale, objectRotation) => {
+            onChange({ ...value, objectPosition, objectScale, objectRotation })
             setAdjustCropOpen(false)
           }}
           src={value.src}
@@ -124,6 +126,8 @@ export function SectionMediaUpload({ value, onChange, uploadFolder, accept = 'im
           initialObjectPosition={value.objectPosition ?? '50% 50%'}
           enableZoom={cropEnableZoom}
           initialScale={value.objectScale ?? 1}
+          enableRotation={cropEnableRotation}
+          initialRotation={value.objectRotation ?? 0}
           aspectRatio={cropAspectRatio}
           frameLabel={cropFrameLabel}
         />

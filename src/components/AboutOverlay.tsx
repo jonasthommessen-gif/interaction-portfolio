@@ -202,7 +202,7 @@ export function AboutOverlay({ showAdminLogin, onOpenAdminLogin, onCloseAdminLog
             <div className={styles.separatorGapBlock}>
               <div className={styles.textBlockCentered}>
                 <h2 className={styles.title}>Interaction & product designer</h2>
-                <h2 className={styles.titleDesktop}>Hi, I&apos;m Jonas Thommessen, an interaction and product designer based in Norway.</h2>
+                <h2 className={styles.titleDesktop}><AdminTrigger onTrigger={onOpenAdminLogin}>Hi,</AdminTrigger> I&apos;m Jonas Thommessen, an interaction and product designer based in Norway.</h2>
                 <div className={styles.bioText}>
                   <p>
                     I work across strategy and interaction design, focusing on making complexity navigable.

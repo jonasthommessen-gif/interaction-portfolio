@@ -76,6 +76,40 @@
   text-align: right;
 }
 
+.rotateRow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+.rotateLabel {
+  font-size: 0.875rem;
+  color: var(--fg, #111);
+  flex-shrink: 0;
+}
+
+.rotateBtn {
+  padding: 0.35rem 0.6rem;
+  font-size: 0.8125rem;
+  background: var(--bg, #fff);
+  color: var(--fg, #111);
+  border: 1px solid var(--border, #ddd);
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.rotateBtn:hover {
+  border-color: var(--fg, #111);
+  background: rgba(0, 0, 0, 0.04);
+}
+
+.rotateValue {
+  font-size: 0.875rem;
+  color: var(--muted, #666);
+  margin-left: auto;
+}
+
 .media {
   position: absolute;
   inset: 0;

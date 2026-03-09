@@ -17,13 +17,13 @@ export type SectionLayoutKey = (typeof SECTION_LAYOUTS)[number]
 export type SectionContent = {
   heading?: string
   body?: string
-  media?: { type: 'image' | 'video'; src: string; alt?: string; poster?: string; objectPosition?: string; objectScale?: number }
+  media?: { type: 'image' | 'video'; src: string; alt?: string; poster?: string; objectPosition?: string; objectScale?: number; objectRotation?: number }
   gallery?: { src: string; alt?: string; caption?: string }[]
 }
 
 export type ProjectCoverMedia =
-  | { type: 'video'; src: string; poster?: string; objectPosition?: string; objectScale?: number }
-  | { type: 'image'; src: string; alt: string; objectPosition?: string; objectScale?: number }
+  | { type: 'video'; src: string; poster?: string; objectPosition?: string; objectScale?: number; objectRotation?: number }
+  | { type: 'image'; src: string; alt: string; objectPosition?: string; objectScale?: number; objectRotation?: number }
 
 export type ProjectRow = {
   id: string
@@ -39,6 +39,7 @@ export type ProjectRow = {
   cover_alt: string
   cover_object_position: string | null
   cover_object_scale: number | null
+  cover_object_rotation: number | null
   visible: boolean
   order: number
   created_at: string
