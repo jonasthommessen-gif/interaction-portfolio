@@ -448,4 +448,16 @@
     width: 100vw;
     border-radius: 0;
   }
+
+  /* Remove default focus ring on carousel dots (avoids blue ring on tap) */
+  .dot {
+    outline: none;
+  }
+  .dot:focus {
+    outline: none;
+  }
+  .dot:focus-visible {
+    outline: 1px solid rgba(0, 0, 0, 0.35);
+    outline-offset: 2px;
+  }
 }

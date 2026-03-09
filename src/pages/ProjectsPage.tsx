@@ -194,8 +194,8 @@ export function ProjectsPage() {
       <div className="container">
         <h1 className="title">Projects</h1>
         <p className={styles.intro}>
-          Hover a card to expand it, reveal its categories and title, then click
-          to open the full case study.
+          A selection of larger projects developed through extended research and
+          design work.
         </p>
 
         <div
@@ -293,6 +293,9 @@ export function ProjectsPage() {
                           ))}
                         </div>
                         <h2 className={styles.title}>{project.title}</h2>
+                        <p className={styles.categoriesLine}>
+                          {project.categories.join(' · ')}
+                        </p>
                       </div>
                     </Link>
                   )

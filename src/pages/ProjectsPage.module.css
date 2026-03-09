@@ -136,6 +136,11 @@
   text-shadow: 0 14px 36px rgba(0, 0, 0, 0.75);
 }
 
+/* Mobile: dot-separated categories line (hidden on desktop) */
+.categoriesLine {
+  display: none;
+}
+
 @media (max-width: 820px) {
   .mosaic {
     height: auto;
@@ -154,5 +159,30 @@
     opacity: 1;
     transform: none;
     flex-direction: column-reverse;
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    margin: 0 -16px -16px;
+    padding: 12px 16px 16px;
+    left: 16px;
+    right: 16px;
+    bottom: 0;
+  }
+
+  .meta .title {
+    font-size: var(--text-xl);
+  }
+
+  .meta .pills {
+    display: none;
+  }
+
+  .meta .categoriesLine {
+    display: block;
+    margin: 0;
+    font-size: var(--text-sm);
+    line-height: 1.4;
+    color: rgba(255, 255, 255, 0.8);
+    font-weight: 400;
   }
 }
