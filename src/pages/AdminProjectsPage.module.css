@@ -458,6 +458,8 @@
 /* Reuse Projects page mosaic/row/card layout and styles; override height and hidden state */
 .previewMosaicWrap {
   margin-top: 1rem;
+  max-height: 50vh;
+  overflow: auto;
 }
 
 .previewMosaicWrap > div {

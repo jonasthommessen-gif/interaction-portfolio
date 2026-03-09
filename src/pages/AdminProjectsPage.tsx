@@ -672,33 +672,35 @@ export function AdminProjectsPage() {
                         style={cardStyle}
                         aria-label={`Edit project: ${project.title}`}
                       >
-                        {project.cover.type === 'video' ? (
-                          <video
-                            className={projectStyles.media}
-                            src={project.cover.src}
-                            muted
-                            loop
-                            playsInline
-                            preload="metadata"
-                          />
-                        ) : (
-                          <img
-                            className={projectStyles.media}
-                            src={project.cover.src}
-                            alt={project.cover.type === 'image' ? project.cover.alt || project.title : project.title}
-                            width={800}
-                            height={600}
-                          />
-                        )}
-                        <div className={projectStyles.meta}>
-                          <div className={projectStyles.pills}>
-                            {project.categories.map((c) => (
-                              <span key={c} className={projectStyles.pill}>
-                                {c}
-                              </span>
-                            ))}
+                        <div className={projectStyles.cardInner}>
+                          {project.cover.type === 'video' ? (
+                            <video
+                              className={projectStyles.media}
+                              src={project.cover.src}
+                              muted
+                              loop
+                              playsInline
+                              preload="metadata"
+                            />
+                          ) : (
+                            <img
+                              className={projectStyles.media}
+                              src={project.cover.src}
+                              alt={project.cover.type === 'image' ? project.cover.alt || project.title : project.title}
+                              width={800}
+                              height={600}
+                            />
+                          )}
+                          <div className={projectStyles.meta}>
+                            <div className={projectStyles.pills}>
+                              {project.categories.map((c) => (
+                                <span key={c} className={projectStyles.pill}>
+                                  {c}
+                                </span>
+                              ))}
+                            </div>
+                            <h2 className={projectStyles.title}>{project.title}</h2>
                           </div>
-                          <h2 className={projectStyles.title}>{project.title}</h2>
                         </div>
                         {!project.visible && <span className={styles.hiddenBadge}>Hidden</span>}
                       </Link>
