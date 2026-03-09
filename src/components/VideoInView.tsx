@@ -7,13 +7,14 @@ interface VideoInViewProps {
   /** Optional width/height for layout (e.g. 800, 600) */
   width?: number
   height?: number
+  style?: React.CSSProperties
 }
 
 /**
  * Video that autoplays (muted, loop) when in viewport and pauses when out.
  * Use for gallery/project card covers.
  */
-export function VideoInView({ src, className, poster, width, height }: VideoInViewProps) {
+export function VideoInView({ src, className, poster, width, height, style }: VideoInViewProps) {
   const videoRef = useRef<HTMLVideoElement>(null)
 
   useEffect(() => {
@@ -48,6 +49,7 @@ export function VideoInView({ src, className, poster, width, height }: VideoInVi
       preload="auto"
       width={width}
       height={height}
+      style={style}
       draggable={false}
       aria-hidden
     />

@@ -32,6 +32,16 @@
   border-color: rgba(255, 255, 255, 0.2);
 }
 
+@media (max-width: 768px) {
+  .cards {
+    flex-direction: column;
+  }
+
+  .card {
+    max-width: none;
+  }
+}
+
 .cardTitle {
   display: block;
   font-size: var(--text-lg);

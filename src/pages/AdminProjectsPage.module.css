@@ -484,3 +484,19 @@
   background: rgba(0, 0, 0, 0.6);
   color: rgba(255, 255, 255, 0.9);
 }
+
+@media (max-width: 768px) {
+  .item {
+    flex-wrap: wrap;
+  }
+
+  .itemActions {
+    margin-left: 0;
+    width: 100%;
+    justify-content: flex-end;
+  }
+
+  .list[data-edit-mode='true'] .itemActionsPlaceholder {
+    width: 100%;
+  }
+}

@@ -246,6 +246,24 @@
   color: var(--muted);
 }
 
+.cardPictureActions {
+  margin-top: 0.75rem;
+}
+
+.adjustCropBtn {
+  font-size: var(--text-sm);
+  padding: 0.35rem 0.75rem;
+  border: 1px solid var(--frost-border);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--fg);
+  cursor: pointer;
+}
+
+.adjustCropBtn:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
 .sectionsBlock {
   margin-top: 2.5rem;
   padding-top: 1.5rem;
@@ -450,4 +468,26 @@
 
 .editContentBtn:hover {
   background: rgba(255, 255, 255, 0.1);
+}
+
+@media (max-width: 768px) {
+  .form {
+    max-width: none;
+  }
+
+  .row {
+    flex-direction: column;
+  }
+
+  .cardPictureBlock {
+    max-width: none;
+  }
+
+  .stageTabs {
+    flex-wrap: wrap;
+  }
+
+  .mediaItem {
+    flex-wrap: wrap;
+  }
 }

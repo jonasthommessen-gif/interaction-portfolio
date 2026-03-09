@@ -3,18 +3,24 @@ import styles from './SectionBlock.module.css'
 
 type Props = { layout: SectionLayoutKey; content?: SectionContent }
 
+const defaultObjectPosition = '50% 50%'
+
 function MediaBlock({ media }: { media: SectionContent['media'] }) {
   if (!media?.src) return null
+  const positionStyle = {
+    objectFit: 'cover' as const,
+    objectPosition: media.objectPosition ?? defaultObjectPosition,
+  }
   if (media.type === 'video') {
     return (
       <div className={styles.mediaWrap}>
-        <video src={media.src} poster={media.poster} controls className={styles.media} />
+        <video src={media.src} poster={media.poster} controls className={styles.media} style={positionStyle} />
       </div>
     )
   }
   return (
     <div className={styles.mediaWrap}>
-      <img src={media.src} alt={media.alt ?? ''} className={styles.media} />
+      <img src={media.src} alt={media.alt ?? ''} className={styles.media} style={positionStyle} />
     </div>
   )
 }

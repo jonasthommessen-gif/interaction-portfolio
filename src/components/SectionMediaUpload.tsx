@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react'
 import { uploadPortfolioMedia } from '../lib/cms'
 import type { SectionContent } from '../types/cms'
+import { AdjustCropModal } from './AdjustCropModal'
 import styles from './SectionMediaUpload.module.css'
 
 type Props = {
@@ -23,6 +24,7 @@ function Preview({ media }: { media: NonNullable<SectionContent['media']> }) {
 export function SectionMediaUpload({ value, onChange, uploadFolder, accept = 'image/*,video/*' }: Props) {
   const [uploading, setUploading] = useState(false)
   const [uploadError, setUploadError] = useState<string | null>(null)
+  const [adjustCropOpen, setAdjustCropOpen] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -38,7 +40,7 @@ export function SectionMediaUpload({ value, onChange, uploadFolder, accept = 'im
       setUploadError(error)
       return
     }
-    if (url) onChange({ type, src: url, alt: '', poster: type === 'video' ? undefined : undefined })
+    if (url) onChange({ type, src: url, alt: '', poster: type === 'video' ? undefined : undefined, objectPosition: undefined })
   }
 
   const handleClear = () => onChange(undefined)
@@ -74,6 +76,9 @@ export function SectionMediaUpload({ value, onChange, uploadFolder, accept = 'im
                 />
               </label>
             )}
+            <button type="button" className={styles.adjustCropBtn} onClick={() => setAdjustCropOpen(true)}>
+              Adjust crop / position
+            </button>
             <button type="button" className={styles.clearBtn} onClick={handleClear}>
               Remove media
             </button>
@@ -100,6 +105,19 @@ export function SectionMediaUpload({ value, onChange, uploadFolder, accept = 'im
         </div>
       )}
       {uploadError && <p className={styles.error}>{uploadError}</p>}
+      {adjustCropOpen && value?.src && (
+        <AdjustCropModal
+          open={true}
+          onClose={() => setAdjustCropOpen(false)}
+          onSave={(objectPosition) => {
+            onChange({ ...value, objectPosition })
+            setAdjustCropOpen(false)
+          }}
+          src={value.src}
+          type={value.type}
+          initialObjectPosition={value.objectPosition ?? '50% 50%'}
+        />
+      )}
     </div>
   )
 }

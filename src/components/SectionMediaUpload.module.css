@@ -58,6 +58,21 @@
   border-radius: 4px;
 }
 
+.adjustCropBtn {
+  align-self: flex-start;
+  padding: 0.25rem 0.5rem;
+  font-size: var(--text-sm);
+  color: var(--fg);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--frost-border);
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.adjustCropBtn:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
 .clearBtn {
   align-self: flex-start;
   padding: 0.25rem 0.5rem;

@@ -63,3 +63,9 @@
   font-size: var(--text-sm);
   color: #86efac;
 }
+
+@media (max-width: 768px) {
+  .portraitSection {
+    max-width: none;
+  }
+}

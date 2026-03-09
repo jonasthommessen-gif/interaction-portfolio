@@ -11,6 +11,7 @@ import {
 import type { ProjectRow, ProjectSectionRow } from '../types/cms'
 import type { SectionContent, SectionLayoutKey } from '../types/cms'
 import { SECTION_LAYOUTS } from '../types/cms'
+import { AdjustCropModal } from '../components/AdjustCropModal'
 import { SectionGalleryUpload } from '../components/SectionGalleryUpload'
 import { SectionMediaUpload } from '../components/SectionMediaUpload'
 import styles from './AdminProjectEditPage.module.css'
@@ -49,6 +50,8 @@ export function AdminProjectEditPage() {
   const [coverSrc, setCoverSrc] = useState('')
   const [coverPoster, setCoverPoster] = useState<string | null>(null)
   const [coverAlt, setCoverAlt] = useState('')
+  const [coverObjectPosition, setCoverObjectPosition] = useState('50% 50%')
+  const [adjustCoverOpen, setAdjustCoverOpen] = useState(false)
 
   const loadSections = useCallback((projectId: string) => {
     setSectionsLoading(true)
@@ -77,6 +80,7 @@ export function AdminProjectEditPage() {
           setCoverSrc(data.cover_src ?? '')
           setCoverPoster(data.cover_poster ?? null)
           setCoverAlt(data.cover_alt ?? '')
+          setCoverObjectPosition(data.cover_object_position ?? '50% 50%')
           loadSections(data.id)
         }
       })
@@ -103,6 +107,7 @@ export function AdminProjectEditPage() {
       cover_src: coverSrc || undefined,
       cover_poster: coverPoster,
       cover_alt: coverAlt || undefined,
+      cover_object_position: coverObjectPosition === '50% 50%' ? null : coverObjectPosition,
     })
     setSaving(false)
     if (error) {
@@ -337,6 +342,30 @@ export function AdminProjectEditPage() {
           }}
           uploadFolder={row?.id ? `projects/${row.id}` : 'projects'}
         />
+        {coverSrc && (
+          <div className={styles.cardPictureActions}>
+            <button
+              type="button"
+              className={styles.adjustCropBtn}
+              onClick={() => setAdjustCoverOpen(true)}
+            >
+              Adjust crop / position
+            </button>
+          </div>
+        )}
+        {adjustCoverOpen && coverSrc && (
+          <AdjustCropModal
+            open={true}
+            onClose={() => setAdjustCoverOpen(false)}
+            onSave={(objectPosition) => {
+              setCoverObjectPosition(objectPosition)
+              setAdjustCoverOpen(false)
+            }}
+            src={coverSrc}
+            type={coverType}
+            initialObjectPosition={coverObjectPosition}
+          />
+        )}
       </section>
 
       <section className={styles.sectionsBlock} aria-labelledby="sections-heading">

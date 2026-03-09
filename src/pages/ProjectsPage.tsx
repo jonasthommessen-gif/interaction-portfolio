@@ -272,6 +272,7 @@ export function ProjectsPage() {
                             src={project.cover.src}
                             poster={project.cover.poster}
                             className={styles.media}
+                            style={{ objectPosition: project.cover.objectPosition ?? '50% 50%' }}
                           />
                         ) : (
                           <img
@@ -282,6 +283,7 @@ export function ProjectsPage() {
                             height={600}
                             loading={isFirstCard ? 'eager' : 'lazy'}
                             fetchPriority={isFirstCard ? 'high' : undefined}
+                            style={{ objectPosition: project.cover.objectPosition ?? '50% 50%' }}
                           />
                         )}
 
