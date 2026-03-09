@@ -467,6 +467,14 @@
   min-height: 400px;
 }
 
+/* Desktop: give mosaic an explicit height so flex layout (row/card/cardInner with height: 100%) can render */
+@media (min-width: 821px) {
+  .previewMosaicWrap > div {
+    height: 420px;
+    min-height: 420px;
+  }
+}
+
 .previewMosaicWrap a[data-hidden='true'] {
   opacity: 0.72;
 }

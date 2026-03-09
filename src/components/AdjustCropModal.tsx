@@ -213,23 +213,22 @@ export function AdjustCropModal({
         )}
         {enableRotation && (
           <div className={styles.rotateRow}>
-            <span className={styles.rotateLabel}>Rotate</span>
-            <button
-              type="button"
-              className={styles.rotateBtn}
-              onClick={() => setRotation((r) => normalizeRotation(r - 90))}
-              aria-label="Rotate left 90°"
-            >
-              ↶ 90°
-            </button>
-            <button
-              type="button"
-              className={styles.rotateBtn}
-              onClick={() => setRotation((r) => normalizeRotation(r + 90))}
-              aria-label="Rotate right 90°"
-            >
-              90° ↷
-            </button>
+            <label className={styles.rotateLabel} htmlFor="adjust-crop-rotate">
+              Rotate
+            </label>
+            <input
+              id="adjust-crop-rotate"
+              type="range"
+              min={0}
+              max={360}
+              step={1}
+              value={rotation}
+              onChange={(e) => setRotation(Number(e.target.value))}
+              className={styles.rotateSlider}
+              aria-valuemin={0}
+              aria-valuemax={360}
+              aria-valuenow={rotation}
+            />
             <span className={styles.rotateValue}>{rotation}°</span>
           </div>
         )}
