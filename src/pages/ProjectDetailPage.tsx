@@ -139,10 +139,19 @@ export function ProjectDetailPage() {
 
         <div className={styles.content}>
           {sections.length > 0 ? (
-            sections.map((section) => (
-              <section key={section.id} id={`section-${section.id}`} className={styles.section}>
-                <h2 className={styles.sectionTitle}>{section.label}</h2>
-                <SectionBlock layout={section.layout} content={section.content} />
+            sections.map((section, index) => (
+              <section
+                key={section.id}
+                id={`section-${section.id}`}
+                className={styles.section}
+                aria-label={section.label}
+              >
+                <SectionBlock
+                  layout={section.layout}
+                  content={section.content}
+                  sectionLabel={section.label}
+                  imageLoading={index === 0 ? 'eager' : 'lazy'}
+                />
               </section>
             ))
           ) : (

@@ -8,7 +8,7 @@ import {
   updateProject,
   updateProjectSection,
 } from '../lib/cms'
-import type { ProjectRow, ProjectSectionRow } from '../types/cms'
+import type { ProjectRow, ProjectSectionRow, SectionDisplayOptions } from '../types/cms'
 import type { SectionContent, SectionLayoutKey } from '../types/cms'
 import { SECTION_LAYOUTS } from '../types/cms'
 import { SectionGalleryUpload } from '../components/SectionGalleryUpload'
@@ -21,6 +21,10 @@ const LAYOUTS_WITH_SINGLE_MEDIA: SectionLayoutKey[] = [
   'media-above-text',
   'full-bleed-media',
 ]
+
+function hasTrimmedText(s: string | undefined) {
+  return Boolean(s?.trim())
+}
 
 export function AdminProjectEditPage() {
   const { slug } = useParams<{ slug: string }>()
@@ -44,6 +48,7 @@ export function AdminProjectEditPage() {
   const [sectionError, setSectionError] = useState<string | null>(null)
   const [stage, setStage] = useState<'structure' | 'content'>('structure')
   const [savingContentSectionId, setSavingContentSectionId] = useState<string | null>(null)
+  const [savingLayoutSectionId, setSavingLayoutSectionId] = useState<string | null>(null)
   const [contentSectionError, setContentSectionError] = useState<string | null>(null)
   const [coverType, setCoverType] = useState<'image' | 'video'>('image')
   const [coverSrc, setCoverSrc] = useState('')
@@ -169,6 +174,36 @@ export function AdminProjectEditPage() {
       )
     )
   }, [])
+
+  const patchSectionDisplay = useCallback((sectionId: string, displayPatch: Partial<SectionDisplayOptions>) => {
+    setSections((prev) =>
+      prev.map((s) => {
+        if (s.id !== sectionId) return s
+        return {
+          ...s,
+          content: {
+            ...s.content,
+            display: { ...s.content.display, ...displayPatch },
+          },
+        }
+      })
+    )
+  }, [])
+
+  const handleSectionLayoutChange = async (sectionId: string, layout: SectionLayoutKey) => {
+    if (!row?.id) return
+    const prev = sections.find((s) => s.id === sectionId)
+    if (!prev || prev.layout === layout) return
+    setSections((p) => p.map((s) => (s.id === sectionId ? { ...s, layout } : s)))
+    setSectionError(null)
+    setSavingLayoutSectionId(sectionId)
+    const { error } = await updateProjectSection(sectionId, { layout })
+    setSavingLayoutSectionId(null)
+    if (error) {
+      setSectionError(error)
+      loadSections(row.id)
+    }
+  }
 
   const handleSaveSectionContent = async (sectionId: string) => {
     const section = sections.find((s) => s.id === sectionId)
@@ -385,7 +420,20 @@ export function AdminProjectEditPage() {
               ) : (
                 <>
                   <span className={styles.sectionLabel}>{s.label}</span>
-                  <span className={styles.sectionLayout}>{s.layout}</span>
+                  <label className={styles.sectionLayoutField}>
+                    <span className={styles.visuallyHidden}>Layout</span>
+                    <select
+                      className={styles.sectionLayoutSelect}
+                      value={s.layout}
+                      disabled={savingLayoutSectionId === s.id}
+                      aria-busy={savingLayoutSectionId === s.id}
+                      onChange={(e) => handleSectionLayoutChange(s.id, e.target.value as SectionLayoutKey)}
+                    >
+                      {SECTION_LAYOUTS.map((l) => (
+                        <option key={l} value={l}>{l}</option>
+                      ))}
+                    </select>
+                  </label>
                   <button type="button" className={styles.sectionBtn} onClick={() => setStage('content')}>
                     Edit content
                   </button>
@@ -453,7 +501,20 @@ export function AdminProjectEditPage() {
               <div key={s.id} className={styles.contentSectionCard} id={`content-section-${s.id}`}>
                 <div className={styles.contentSectionHeader}>
                   <h4 className={styles.contentSectionTitle}>{s.label}</h4>
-                  <span className={styles.contentSectionLayout}>{s.layout}</span>
+                  <label className={styles.contentLayoutField}>
+                    <span className={styles.contentLayoutLabel}>Layout</span>
+                    <select
+                      className={styles.contentLayoutSelect}
+                      value={s.layout}
+                      disabled={savingLayoutSectionId === s.id}
+                      aria-busy={savingLayoutSectionId === s.id}
+                      onChange={(e) => handleSectionLayoutChange(s.id, e.target.value as SectionLayoutKey)}
+                    >
+                      {SECTION_LAYOUTS.map((l) => (
+                        <option key={l} value={l}>{l}</option>
+                      ))}
+                    </select>
+                  </label>
                   {row?.slug && (
                     <Link
                       to={`/projects/${row.slug}#section-${s.id}`}
@@ -500,6 +561,51 @@ export function AdminProjectEditPage() {
                       uploadFolder={uploadFolder}
                     />
                   )}
+                  <div className={styles.field}>
+                    <label className={styles.checkboxLabel}>
+                      <input
+                        type="checkbox"
+                        className={styles.checkbox}
+                        checked={s.content?.display?.showSectionTitle === true}
+                        onChange={(e) =>
+                          patchSectionDisplay(s.id, {
+                            showSectionTitle: e.target.checked,
+                            ...(!e.target.checked ? { sectionTitleAboveMedia: false } : {}),
+                          })
+                        }
+                      />
+                      Show section title on project page (next to content, not in sidebar)
+                    </label>
+                  </div>
+                  <div className={styles.field}>
+                    <label className={styles.checkboxLabel}>
+                      <input
+                        type="checkbox"
+                        className={styles.checkbox}
+                        checked={s.content?.display?.sectionTitleAboveMedia === true}
+                        disabled={
+                          !s.content?.display?.showSectionTitle ||
+                          !(
+                            (LAYOUTS_WITH_SINGLE_MEDIA.includes(s.layout) &&
+                              Boolean(s.content?.media?.src) &&
+                              !hasTrimmedText(s.content?.body) &&
+                              !hasTrimmedText(s.content?.heading)) ||
+                            (s.layout === 'gallery-strip' &&
+                              (s.content?.gallery?.length ?? 0) > 0 &&
+                              !hasTrimmedText(s.content?.body) &&
+                              !hasTrimmedText(s.content?.heading))
+                          )
+                        }
+                        onChange={(e) =>
+                          patchSectionDisplay(s.id, { sectionTitleAboveMedia: e.target.checked })
+                        }
+                      />
+                      Place title above media (only when section is media-only and title is shown)
+                    </label>
+                    <p className={styles.displayHint}>
+                      Sidebar section names are unchanged. “Media-only” means no body or optional heading text.
+                    </p>
+                  </div>
                   <div className={styles.contentSectionActions}>
                     <button
                       type="button"

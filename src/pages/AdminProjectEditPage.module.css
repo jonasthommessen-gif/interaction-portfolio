@@ -166,13 +166,13 @@
   font-size: var(--text-sm);
   color: var(--fg);
   background: transparent;
-  border: 1px solid var(--border, #ddd);
+  border: 1px solid var(--frost-border);
   border-radius: 4px;
   cursor: pointer;
 }
 
 .mediaAdjustBtn:hover:not(:disabled) {
-  background: rgba(0, 0, 0, 0.05);
+  background: rgba(255, 255, 255, 0.08);
 }
 
 .mediaAdjustBtn:disabled {
@@ -303,6 +303,77 @@
 .sectionLayout {
   font-size: var(--text-sm);
   color: var(--muted);
+}
+
+.visuallyHidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.sectionLayoutField {
+  display: inline-flex;
+  align-items: center;
+}
+
+.sectionLayoutSelect {
+  max-width: 12rem;
+  padding: 0.25rem 0.5rem;
+  font-size: var(--text-xs, 0.75rem);
+  font-family: inherit;
+  color: var(--fg);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--frost-border);
+  border-radius: 4px;
+}
+
+.contentLayoutField {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.contentLayoutLabel {
+  font-size: var(--text-xs, 0.75rem);
+  color: var(--muted);
+}
+
+.contentLayoutSelect {
+  max-width: 14rem;
+  padding: 0.25rem 0.5rem;
+  font-size: var(--text-sm);
+  font-family: inherit;
+  color: var(--fg);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--frost-border);
+  border-radius: 4px;
+}
+
+.checkboxLabel {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  font-size: var(--text-sm);
+  color: var(--fg);
+  cursor: pointer;
+}
+
+.checkboxLabel .checkbox {
+  margin-top: 0.15rem;
+}
+
+.displayHint {
+  margin: 0.35rem 0 0 0;
+  font-size: var(--text-xs, 0.75rem);
+  color: var(--muted);
+  max-width: 40rem;
+  line-height: 1.4;
 }
 
 .sectionBtn,

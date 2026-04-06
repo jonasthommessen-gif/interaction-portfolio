@@ -13,12 +13,24 @@ export const SECTION_LAYOUTS = [
 
 export type SectionLayoutKey = (typeof SECTION_LAYOUTS)[number]
 
+/** Optional presentation flags stored in section `content` jsonb (no migration). */
+export type SectionDisplayOptions = {
+  /** When true, show the section nav label in the main column (sidebar label unchanged). Default false. */
+  showSectionTitle?: boolean
+  /**
+   * When true with showSectionTitle, and the section is media-only (no body/heading),
+   * show the section name above media/gallery. Otherwise in-content title stays with text or is hidden.
+   */
+  sectionTitleAboveMedia?: boolean
+}
+
 /** Content for a section; shape depends on layout (e.g. text + one image for text-left-media-right). */
 export type SectionContent = {
   heading?: string
   body?: string
   media?: { type: 'image' | 'video'; src: string; alt?: string; poster?: string; objectPosition?: string; objectScale?: number; objectRotation?: number }
   gallery?: { src: string; alt?: string; caption?: string }[]
+  display?: SectionDisplayOptions
 }
 
 export type ProjectCoverMedia =

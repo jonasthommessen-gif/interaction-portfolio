@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { fetchVisibleProjects } from '../lib/cms'
 import type { Project } from '../types/cms'
@@ -141,17 +141,41 @@ function getImageAverageRgb(src: string): Promise<RGB | null> {
   })
 }
 
+const CLEAR_ACTIVE_MS = 100
+
 export function ProjectsPage() {
   const [projects, setProjects] = useState<Project[]>([])
   const [loading, setLoading] = useState(true)
   const [activeSlug, setActiveSlug] = useState<string | null>(null)
   const [pillThemes, setPillThemes] = useState<Record<string, PillTheme>>({})
+  const clearActiveRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const cancelClearActive = useCallback(() => {
+    if (clearActiveRef.current) {
+      clearTimeout(clearActiveRef.current)
+      clearActiveRef.current = null
+    }
+  }, [])
+
+  const scheduleClearActive = useCallback(() => {
+    cancelClearActive()
+    clearActiveRef.current = setTimeout(() => {
+      clearActiveRef.current = null
+      setActiveSlug(null)
+    }, CLEAR_ACTIVE_MS)
+  }, [cancelClearActive])
 
   useEffect(() => {
     fetchVisibleProjects()
       .then(setProjects)
       .catch(() => setProjects([]))
       .finally(() => setLoading(false))
+  }, [])
+
+  useEffect(() => {
+    return () => {
+      if (clearActiveRef.current) clearTimeout(clearActiveRef.current)
+    }
   }, [])
 
   const columns = 3
@@ -229,12 +253,16 @@ export function ProjectsPage() {
         <div
           className={styles.mosaic}
           data-has-active={hasActive}
-          onPointerLeave={() => setActiveSlug(null)}
+          onPointerEnter={cancelClearActive}
+          onPointerLeave={scheduleClearActive}
           onBlurCapture={(e) => {
             const next = e.relatedTarget
             if (!next) return
             if (!(e.currentTarget instanceof HTMLElement)) return
-            if (!e.currentTarget.contains(next as Node)) setActiveSlug(null)
+            if (!e.currentTarget.contains(next as Node)) {
+              cancelClearActive()
+              setActiveSlug(null)
+            }
           }}
         >
           {Array.from({ length: rows }).map((_, rowIndex) => {
@@ -290,8 +318,14 @@ export function ProjectsPage() {
                       className={styles.card}
                       data-active={isActive}
                       style={cardStyle}
-                      onPointerEnter={() => setActiveSlug(project.slug)}
-                      onFocus={() => setActiveSlug(project.slug)}
+                      onPointerEnter={() => {
+                        cancelClearActive()
+                        setActiveSlug(project.slug)
+                      }}
+                      onFocus={() => {
+                        cancelClearActive()
+                        setActiveSlug(project.slug)
+                      }}
                       aria-label={`Open project: ${project.title}`}
                     >
                       <div className={styles.cardInner}>
