@@ -26,8 +26,7 @@ function MediaBlock({
   loading?: 'eager' | 'lazy'
 }) {
   if (!media?.src) return null
-  const positionStyle = {
-    objectFit: 'cover' as const,
+  const positionStyle: React.CSSProperties = {
     objectPosition: media.objectPosition ?? defaultObjectPosition,
   }
   const wrapClass = variant === 'hero' ? `${styles.mediaWrap} ${styles.mediaWrapHero}` : styles.mediaWrap

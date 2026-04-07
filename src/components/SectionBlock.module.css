@@ -36,17 +36,12 @@
   width: 100%;
 }
 
-@media (max-width: 640px) {
-  .mediaWrapHero {
-    min-height: min(72dvh, calc(100dvh - var(--nav-height) - var(--nav-offset) - 36px));
-  }
-}
-
 .media {
   display: block;
   width: 100%;
   height: auto;
   vertical-align: middle;
+  object-fit: cover;
 }
 
 .mediaHero {
@@ -74,12 +69,6 @@
   align-items: start;
 }
 
-@media (max-width: 640px) {
-  .textLeftMediaRight {
-    grid-template-columns: 1fr;
-  }
-}
-
 /* media-left-text-right */
 .mediaLeftTextRight {
   display: grid;
@@ -88,13 +77,43 @@
   align-items: start;
 }
 
-@media (max-width: 640px) {
+/* Match project detail mobile bottom nav (819px): stack columns, media above text */
+@media (max-width: 819px) {
+  .textLeftMediaRight,
   .mediaLeftTextRight {
     grid-template-columns: 1fr;
   }
 
+  .textLeftMediaRight .mediaWrap,
   .mediaLeftTextRight .mediaWrap {
     order: -1;
+  }
+
+  /* Hero: bounded frame + contain so asset fits in viewport band (letterboxing ok) */
+  .mediaWrapHero {
+    min-height: min(52dvh, calc(100dvh - var(--nav-height) - var(--nav-offset) - 96px));
+    max-height: min(65dvh, calc(100dvh - var(--nav-height) - var(--nav-offset) - 96px));
+    background: var(--bg);
+  }
+
+  .mediaWrapHero .mediaHero {
+    object-fit: contain;
+  }
+
+  /* Split-layout media: cap height, contain, center */
+  .mediaWrap:not(.mediaWrapHero) {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    max-height: min(60dvh, calc(100dvh - var(--nav-height) - var(--nav-offset) - 96px));
+  }
+
+  .mediaWrap:not(.mediaWrapHero) .media {
+    width: auto;
+    max-width: 100%;
+    max-height: min(60dvh, calc(100dvh - var(--nav-height) - var(--nav-offset) - 96px));
+    height: auto;
+    object-fit: contain;
   }
 }
 

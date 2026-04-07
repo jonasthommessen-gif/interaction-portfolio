@@ -17,6 +17,7 @@ export function ProjectDetailPage() {
   const [separatorLineTop, setSeparatorLineTop] = useState<number | null>(null)
   const [activeSectionId, setActiveSectionId] = useState<string | null>(null)
   const separatorRef = useRef<HTMLDivElement>(null)
+  const sectionNavBottomRef = useRef<HTMLElement>(null)
 
   useEffect(() => {
     if (!slug) {
@@ -136,6 +137,24 @@ export function ProjectDetailPage() {
       window.removeEventListener('scroll', onScroll)
     }
   }, [project, sections])
+
+  useEffect(() => {
+    if (!activeSectionId) return
+    const narrow = window.matchMedia('(max-width: 819px)')
+    if (!narrow.matches) return
+    const nav = sectionNavBottomRef.current
+    if (!nav) return
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    const id = requestAnimationFrame(() => {
+      const link = nav.querySelector<HTMLElement>('a[aria-current="location"]')
+      link?.scrollIntoView({
+        inline: 'center',
+        block: 'nearest',
+        behavior: reduceMotion ? 'auto' : 'smooth',
+      })
+    })
+    return () => cancelAnimationFrame(id)
+  }, [activeSectionId])
 
   useEffect(() => {
     if (!project || !separatorRef.current) return
@@ -265,7 +284,11 @@ export function ProjectDetailPage() {
       </div>
 
       {sections.length > 0 && (
-        <nav className={styles.sectionNavBottom} aria-label="Sections">
+        <nav
+          ref={sectionNavBottomRef}
+          className={styles.sectionNavBottom}
+          aria-label="Sections"
+        >
           {sectionLinks}
         </nav>
       )}
