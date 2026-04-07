@@ -8,6 +8,10 @@ type Props = {
   value: SectionContent['media']
   onChange: (media: SectionContent['media']) => void
   uploadFolder: string
+  /** Main field label (default: “Media (image or video)”). */
+  label?: string
+  /** Short hint under the label (e.g. portrait / breakpoint guidance). */
+  description?: string
   /** File input accept attribute; default allows image and video. */
   accept?: string
   /** Aspect ratio for the adjust-crop frame (e.g. '16/10' for project card). */
@@ -29,7 +33,18 @@ function Preview({ media }: { media: NonNullable<SectionContent['media']> }) {
   return <img src={media.src} alt="" className={styles.preview} />
 }
 
-export function SectionMediaUpload({ value, onChange, uploadFolder, accept = 'image/*,video/*', cropAspectRatio, cropFrameLabel, cropEnableZoom, cropEnableRotation }: Props) {
+export function SectionMediaUpload({
+  value,
+  onChange,
+  uploadFolder,
+  accept = 'image/*,video/*',
+  cropAspectRatio,
+  cropFrameLabel,
+  cropEnableZoom,
+  cropEnableRotation,
+  label,
+  description,
+}: Props) {
   const [uploading, setUploading] = useState(false)
   const [uploadError, setUploadError] = useState<string | null>(null)
   const [adjustCropOpen, setAdjustCropOpen] = useState(false)
@@ -55,7 +70,8 @@ export function SectionMediaUpload({ value, onChange, uploadFolder, accept = 'im
 
   return (
     <div className={styles.wrap}>
-      <label className={styles.label}>Media (image or video)</label>
+      <span className={styles.label}>{label ?? 'Media (image or video)'}</span>
+      {description ? <p className={styles.fieldDescription}>{description}</p> : null}
       {value?.src ? (
         <div className={styles.hasMedia}>
           <div className={styles.previewWrap}>

@@ -548,11 +548,22 @@ export function AdminProjectEditPage() {
                     />
                   </div>
                   {LAYOUTS_WITH_SINGLE_MEDIA.includes(s.layout) && (
-                    <SectionMediaUpload
-                      value={s.content?.media}
-                      onChange={(media) => updateSectionContent(s.id, { media })}
-                      uploadFolder={uploadFolder}
-                    />
+                    <>
+                      <SectionMediaUpload
+                        value={s.content?.media}
+                        onChange={(media) => updateSectionContent(s.id, { media })}
+                        uploadFolder={uploadFolder}
+                      />
+                      <SectionMediaUpload
+                        label="Mobile media (optional)"
+                        description="Portrait or vertical (e.g. 9:16). Shown on narrow screens instead of main media when set. Desktop always uses main media above."
+                        value={s.content?.mediaMobile}
+                        onChange={(mediaMobile) => updateSectionContent(s.id, { mediaMobile })}
+                        uploadFolder={uploadFolder}
+                        cropAspectRatio="9/16"
+                        cropFrameLabel="Phone viewport"
+                      />
+                    </>
                   )}
                   {s.layout === 'gallery-strip' && (
                     <SectionGalleryUpload
@@ -587,7 +598,7 @@ export function AdminProjectEditPage() {
                           !s.content?.display?.showSectionTitle ||
                           !(
                             (LAYOUTS_WITH_SINGLE_MEDIA.includes(s.layout) &&
-                              Boolean(s.content?.media?.src) &&
+                              Boolean(s.content?.media?.src || s.content?.mediaMobile?.src) &&
                               !hasTrimmedText(s.content?.body) &&
                               !hasTrimmedText(s.content?.heading)) ||
                             (s.layout === 'gallery-strip' &&

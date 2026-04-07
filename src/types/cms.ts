@@ -24,11 +24,24 @@ export type SectionDisplayOptions = {
   sectionTitleAboveMedia?: boolean
 }
 
+/** Single image/video slot used for `media` and optional `mediaMobile`. */
+export type SectionMediaAsset = {
+  type: 'image' | 'video'
+  src: string
+  alt?: string
+  poster?: string
+  objectPosition?: string
+  objectScale?: number
+  objectRotation?: number
+}
+
 /** Content for a section; shape depends on layout (e.g. text + one image for text-left-media-right). */
 export type SectionContent = {
   heading?: string
   body?: string
-  media?: { type: 'image' | 'video'; src: string; alt?: string; poster?: string; objectPosition?: string; objectScale?: number; objectRotation?: number }
+  media?: SectionMediaAsset
+  /** Optional portrait-friendly asset; shown below 819px when set, instead of `media`. */
+  mediaMobile?: SectionMediaAsset
   gallery?: { src: string; alt?: string; caption?: string }[]
   display?: SectionDisplayOptions
 }

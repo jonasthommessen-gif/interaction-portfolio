@@ -24,6 +24,28 @@
   margin: 0;
 }
 
+.mediaColumn {
+  min-width: 0;
+}
+
+.mediaResponsiveDesktop {
+  display: block;
+}
+
+.mediaResponsiveMobile {
+  display: none;
+}
+
+@media (max-width: 819px) {
+  .mediaResponsiveDesktop {
+    display: none;
+  }
+
+  .mediaResponsiveMobile {
+    display: block;
+  }
+}
+
 .mediaWrap {
   min-width: 0;
   overflow: hidden;
@@ -84,8 +106,8 @@
     grid-template-columns: 1fr;
   }
 
-  .textLeftMediaRight .mediaWrap,
-  .mediaLeftTextRight .mediaWrap {
+  .textLeftMediaRight .mediaColumn,
+  .mediaLeftTextRight .mediaColumn {
     order: -1;
   }
 

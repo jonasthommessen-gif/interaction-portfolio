@@ -10,6 +10,14 @@
   color: var(--fg);
 }
 
+.fieldDescription {
+  margin: -0.25rem 0 0 0;
+  font-size: var(--text-xs, 0.75rem);
+  color: var(--muted);
+  line-height: 1.4;
+  max-width: 36rem;
+}
+
 .hasMedia {
   display: flex;
   gap: 1rem;

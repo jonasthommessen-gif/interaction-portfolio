@@ -60,6 +60,40 @@ function MediaBlock({
   )
 }
 
+/** Main `media` on desktop; `mediaMobile` below 819px when both exist. */
+function ResponsiveSingleMedia({
+  media,
+  mediaMobile,
+  variant,
+  loading,
+}: {
+  media: SectionContent['media']
+  mediaMobile: SectionContent['mediaMobile']
+  variant: 'default' | 'hero'
+  loading?: 'eager' | 'lazy'
+}) {
+  const hasMain = Boolean(media?.src)
+  const hasMobile = Boolean(mediaMobile?.src)
+  if (!hasMain && !hasMobile) return null
+
+  const usePair = hasMain && hasMobile
+
+  if (!usePair) {
+    return <MediaBlock media={media ?? mediaMobile} variant={variant} loading={loading} />
+  }
+
+  return (
+    <>
+      <div className={styles.mediaResponsiveDesktop}>
+        <MediaBlock media={media} variant={variant} loading={loading} />
+      </div>
+      <div className={styles.mediaResponsiveMobile}>
+        <MediaBlock media={mediaMobile} variant={variant} loading={loading} />
+      </div>
+    </>
+  )
+}
+
 function SectionTitle({ label, visible }: { label: string; visible: boolean }) {
   if (!visible || !label.trim()) return null
   return <h2 className={styles.sectionHeading}>{label}</h2>
@@ -77,11 +111,12 @@ export function SectionBlock({ layout, content, sectionLabel, imageLoading = 'la
   const hasHeading = Boolean(headingStr)
   const hasText = hasBody || hasHeading
   const media = content?.media
+  const mediaMobile = content?.mediaMobile
   const gallery = content?.gallery ?? []
   const showSectionTitle = content?.display?.showSectionTitle === true
   const sectionTitleAboveMedia = content?.display?.sectionTitleAboveMedia === true
 
-  const hasSingleMedia = Boolean(media?.src)
+  const hasSingleMedia = Boolean(media?.src || mediaMobile?.src)
   const hasGallery = gallery.length > 0
 
   const pureSingleMediaBlock = hasSingleMedia && !hasText
@@ -114,7 +149,14 @@ export function SectionBlock({ layout, content, sectionLabel, imageLoading = 'la
           <ContentHeading text={headingStr} />
           {hasBody ? <div className={styles.body}>{bodyStr}</div> : <p className={styles.placeholder}>Add content in admin.</p>}
         </div>
-        <MediaBlock media={media} variant="default" loading={imageLoading} />
+        <div className={styles.mediaColumn}>
+          <ResponsiveSingleMedia
+            media={media}
+            mediaMobile={mediaMobile}
+            variant="default"
+            loading={imageLoading}
+          />
+        </div>
       </div>
     )
   }
@@ -122,7 +164,14 @@ export function SectionBlock({ layout, content, sectionLabel, imageLoading = 'la
   if (layout === 'media-left-text-right') {
     return (
       <div className={styles.mediaLeftTextRight}>
-        <MediaBlock media={media} variant="default" loading={imageLoading} />
+        <div className={styles.mediaColumn}>
+          <ResponsiveSingleMedia
+            media={media}
+            mediaMobile={mediaMobile}
+            variant="default"
+            loading={imageLoading}
+          />
+        </div>
         <div className={styles.textBlock}>
           <SectionTitle label={sectionLabel} visible={showTitleWithText} />
           <ContentHeading text={headingStr} />
@@ -141,7 +190,14 @@ export function SectionBlock({ layout, content, sectionLabel, imageLoading = 'la
     return (
       <div className={styles.fullBleedMedia}>
         <SectionTitle label={sectionLabel} visible={titleAboveMedia} />
-        <MediaBlock media={media} variant="hero" loading={imageLoading} />
+        <div className={styles.mediaColumn}>
+          <ResponsiveSingleMedia
+            media={media}
+            mediaMobile={mediaMobile}
+            variant="hero"
+            loading={imageLoading}
+          />
+        </div>
         {showCaption ? (
           <div className={styles.caption}>
             <SectionTitle label={sectionLabel} visible={showTitleWithText} />
@@ -165,7 +221,16 @@ export function SectionBlock({ layout, content, sectionLabel, imageLoading = 'la
     return (
       <div className={styles.mediaAboveText}>
         <SectionTitle label={sectionLabel} visible={titleAboveMedia} />
-        {hasSingleMedia ? <MediaBlock media={media} variant="hero" loading={imageLoading} /> : null}
+        {hasSingleMedia ? (
+          <div className={styles.mediaColumn}>
+            <ResponsiveSingleMedia
+              media={media}
+              mediaMobile={mediaMobile}
+              variant="hero"
+              loading={imageLoading}
+            />
+          </div>
+        ) : null}
         {showTextBlock ? (
           <div className={styles.textBlock}>
             <SectionTitle label={sectionLabel} visible={showTitleWithText && !pureSingleMediaBlock} />
