@@ -155,7 +155,8 @@
   transition: font-weight 160ms var(--ease-out), color 160ms var(--ease-out);
 }
 
-.sectionLink:hover {
+.sectionLink:hover,
+.sectionLinkActive {
   font-weight: 700;
   color: var(--fg);
 }
@@ -207,7 +208,8 @@
     border-radius: 4px;
   }
 
-  .sectionNavBottom .sectionLink:hover {
+  .sectionNavBottom .sectionLink:hover,
+  .sectionNavBottom .sectionLinkActive {
     background: rgba(255, 255, 255, 0.08);
   }
 

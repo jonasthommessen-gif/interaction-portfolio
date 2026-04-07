@@ -6,10 +6,16 @@ import type { Project } from '../types/cms'
 import { NotFoundPage } from './NotFoundPage'
 import styles from './ProjectDetailPage.module.css'
 
+function parseCssPx(value: string) {
+  const n = parseFloat(value)
+  return Number.isFinite(n) ? n : 0
+}
+
 export function ProjectDetailPage() {
   const { slug } = useParams()
   const [project, setProject] = useState<Project | null | undefined>(null)
   const [separatorLineTop, setSeparatorLineTop] = useState<number | null>(null)
+  const [activeSectionId, setActiveSectionId] = useState<string | null>(null)
   const separatorRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -24,9 +30,112 @@ export function ProjectDetailPage() {
   }, [slug])
 
   useEffect(() => {
+    document.documentElement.classList.add('project-detail-page')
     document.body.classList.add('project-detail-page')
-    return () => document.body.classList.remove('project-detail-page')
+    return () => {
+      document.documentElement.classList.remove('project-detail-page')
+      document.body.classList.remove('project-detail-page')
+    }
   }, [])
+
+  const title = useMemo(() => {
+    if (project) return project.title
+    if (!slug) return 'Project'
+    return slug
+      .split('-')
+      .map((part) => part.slice(0, 1).toUpperCase() + part.slice(1))
+      .join(' ')
+  }, [project, slug])
+
+  const sections = useMemo(
+    () =>
+      project?.sections?.length
+        ? project.sections.map((s) => ({
+            id: s.id,
+            label: s.label,
+            layout: s.layout,
+            content: s.content,
+          }))
+        : [],
+    [project],
+  )
+
+  useEffect(() => {
+    if (!sections.length) {
+      setActiveSectionId(null)
+      return
+    }
+    setActiveSectionId((prev) => {
+      if (prev && sections.some((s) => s.id === prev)) return prev
+      return sections[0].id
+    })
+  }, [sections])
+
+  useEffect(() => {
+    if (!sections.length) return
+
+    const applyHash = () => {
+      const h = window.location.hash
+      if (!h.startsWith('#section-')) return
+      const id = h.slice('#section-'.length)
+      if (sections.some((s) => s.id === id)) setActiveSectionId(id)
+    }
+    applyHash()
+    window.addEventListener('hashchange', applyHash)
+    return () => window.removeEventListener('hashchange', applyHash)
+  }, [sections])
+
+  useEffect(() => {
+    if (!sections.length || !project) return
+
+    const elements = sections
+      .map((s) => document.getElementById(`section-${s.id}`))
+      .filter((el): el is HTMLElement => el !== null)
+    if (!elements.length) return
+
+    const navOffsetPx = () => {
+      const root = document.documentElement
+      const h = parseCssPx(getComputedStyle(root).getPropertyValue('--nav-height'))
+      const o = parseCssPx(getComputedStyle(root).getPropertyValue('--nav-offset'))
+      return h + o + 24
+    }
+
+    const thresholds = [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1]
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const intersecting = entries.filter((e) => e.isIntersecting && e.target.id.startsWith('section-'))
+        if (intersecting.length === 0) return
+        intersecting.sort((a, b) => b.intersectionRatio - a.intersectionRatio)
+        const id = intersecting[0].target.id.replace(/^section-/, '')
+        setActiveSectionId(id)
+      },
+      {
+        root: null,
+        rootMargin: `-${navOffsetPx()}px 0px -35% 0px`,
+        threshold: thresholds,
+      },
+    )
+
+    elements.forEach((el) => observer.observe(el))
+
+    const onScroll = () => {
+      const last = elements[elements.length - 1]
+      const rect = last.getBoundingClientRect()
+      if (rect.bottom <= window.innerHeight + 2) {
+        const id = last.id.replace(/^section-/, '')
+        setActiveSectionId(id)
+      }
+    }
+
+    window.addEventListener('scroll', onScroll, { passive: true })
+    onScroll()
+
+    return () => {
+      observer.disconnect()
+      window.removeEventListener('scroll', onScroll)
+    }
+  }, [project, sections])
 
   useEffect(() => {
     if (!project || !separatorRef.current) return
@@ -46,6 +155,28 @@ export function ProjectDetailPage() {
     }
   }, [project])
 
+  const sectionLinks = useMemo(
+    () => (
+      <>
+        {sections.map((section) => {
+          const isActive = activeSectionId === section.id
+          return (
+            <a
+              key={section.id}
+              className={`${styles.sectionLink}${isActive ? ` ${styles.sectionLinkActive}` : ''}`}
+              href={`#section-${section.id}`}
+              aria-current={isActive ? 'location' : undefined}
+              onClick={() => setActiveSectionId(section.id)}
+            >
+              {section.label}
+            </a>
+          )
+        })}
+      </>
+    ),
+    [sections, activeSectionId],
+  )
+
   if (slug && project === undefined) {
     return (
       <Suspense fallback={null}>
@@ -53,33 +184,6 @@ export function ProjectDetailPage() {
       </Suspense>
     )
   }
-
-  const title = useMemo(() => {
-    if (project) return project.title
-    if (!slug) return 'Project'
-    return slug
-      .split('-')
-      .map((part) => part.slice(0, 1).toUpperCase() + part.slice(1))
-      .join(' ')
-  }, [project, slug])
-
-  const sections = project?.sections?.length
-    ? project.sections.map((s) => ({ id: s.id, label: s.label, layout: s.layout, content: s.content }))
-    : []
-
-  const sectionLinks = (
-    <>
-      {sections.map((section) => (
-        <a
-          key={section.id}
-          className={styles.sectionLink}
-          href={`#section-${section.id}`}
-        >
-          {section.label}
-        </a>
-      ))}
-    </>
-  )
 
   if (project === null) {
     return (

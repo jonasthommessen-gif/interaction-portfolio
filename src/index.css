@@ -88,12 +88,14 @@ body {
   overflow-x: hidden;
 }
 
-/* Hide main scrollbar on project detail page only (sidebar/content still scroll) */
+/* Hide main scrollbar on project detail page only (viewport scrolls on html in most browsers) */
+html.project-detail-page,
 body.project-detail-page {
   scrollbar-width: none;
   -ms-overflow-style: none;
 }
 
+html.project-detail-page::-webkit-scrollbar,
 body.project-detail-page::-webkit-scrollbar {
   display: none;
 }
