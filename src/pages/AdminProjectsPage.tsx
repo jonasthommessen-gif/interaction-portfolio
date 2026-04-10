@@ -654,13 +654,21 @@ export function AdminProjectsPage() {
                 <div key={rowKey} className={projectStyles.row} style={{ ['--row-grow' as string]: 1 }}>
                   {rowProjects.map((project) => {
                     const fallbackPillBg = derivePillBg(project.gradient.from, project.gradient.to)
-                    const pillBg = pillThemes[project.slug]?.bg ?? fallbackPillBg
-                    const pillFg = pillThemes[project.slug]?.fg ?? pickTextColor(pillBg)
+                    const derivedPill = pillThemes[project.slug]
+                    const customPill = project.cardPillBackground
+                    const pillBg =
+                      customPill ?? derivedPill?.bg ?? fallbackPillBg
+                    const pillFg = customPill
+                      ? pickTextColor(customPill)
+                      : derivedPill?.fg ?? pickTextColor(pillBg)
                     const cardStyle = {
                       ['--card-grow' as string]: 1,
                       ['--card-gradient' as string]: `linear-gradient(135deg, ${project.gradient.from}, ${project.gradient.to})`,
                       ['--pill-bg' as string]: pillBg,
                       ['--pill-fg' as string]: pillFg,
+                      ...(project.cardTitleColor
+                        ? { ['--card-title-color' as string]: project.cardTitleColor }
+                        : {}),
                     } as React.CSSProperties
                     return (
                       <Link

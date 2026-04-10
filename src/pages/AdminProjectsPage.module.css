@@ -455,23 +455,23 @@
   color: var(--fg);
 }
 
-/* Reuse Projects page mosaic/row/card layout and styles; override height and hidden state */
+/* Reuse Projects page mosaic/row/card layout; height follows card aspect-ratio like the public page */
 .previewMosaicWrap {
   margin-top: 1rem;
-  max-height: 50vh;
+  max-height: 70vh;
   overflow: auto;
 }
 
 .previewMosaicWrap > div {
   height: auto;
-  min-height: 400px;
+  min-height: 0;
 }
 
-/* Desktop: give mosaic an explicit height so flex layout (row/card/cardInner with height: 100%) can render */
+/* Desktop: definite height so row flex-grow matches the public Projects page */
 @media (min-width: 821px) {
   .previewMosaicWrap > div {
-    height: 420px;
-    min-height: 420px;
+    height: min(520px, 55vh);
+    min-height: 480px;
   }
 }
 

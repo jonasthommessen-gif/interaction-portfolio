@@ -65,6 +65,10 @@ export type ProjectRow = {
   cover_object_position: string | null
   cover_object_scale: number | null
   cover_object_rotation: number | null
+  /** Hex e.g. #1a1a1a; mosaic overlay title. Null/omit = default light text. */
+  card_title_color?: string | null
+  /** Hex pill background on project cards. Null/omit = derive from cover/gradient. */
+  card_pill_background?: string | null
   visible: boolean
   order: number
   created_at: string
@@ -118,6 +122,9 @@ export type Project = {
   categories: string[]
   gradient: { from: `#${string}`; to: `#${string}` }
   cover: ProjectCoverMedia
+  /** Normalized #RRGGBB when set. */
+  cardTitleColor?: string
+  cardPillBackground?: string
   visible: boolean
   order: number
   sections: {

@@ -21,6 +21,20 @@ function toHex(s: string): `#${string}` {
   return HEX.test(s) ? (s as `#${string}`) : (`#${s.replace(/^#/, '')}` as `#${string}`)
 }
 
+/** Normalize optional #RGB/#RRGGBB for card color fields. Exported for admin validation. */
+export function normalizeOptionalHex(s: string | null | undefined): string | undefined {
+  if (s == null || !String(s).trim()) return undefined
+  let t = String(s).trim().replace(/^#/, '')
+  if (t.length === 3 && /^[0-9A-Fa-f]{3}$/.test(t)) {
+    t = t
+      .split('')
+      .map((c) => c + c)
+      .join('')
+  }
+  if (!/^[0-9A-Fa-f]{6}$/.test(t)) return undefined
+  return `#${t.toLowerCase()}`
+}
+
 function projectRowToProject(row: ProjectRow, sections: ProjectSectionRow[]): Project {
   const objectPosition = row.cover_object_position ?? undefined
   const objectScale = row.cover_object_scale != null && row.cover_object_scale > 0 ? row.cover_object_scale : undefined
@@ -30,6 +44,8 @@ function projectRowToProject(row: ProjectRow, sections: ProjectSectionRow[]): Pr
       ? { type: 'video' as const, src: row.cover_src, poster: row.cover_poster ?? undefined, objectPosition, objectScale, objectRotation }
       : { type: 'image' as const, src: row.cover_src, alt: row.cover_alt || '', objectPosition, objectScale, objectRotation }
   const sortedSections = [...sections].sort((a, b) => a.order - b.order)
+  const cardTitleColor = normalizeOptionalHex(row.card_title_color)
+  const cardPillBackground = normalizeOptionalHex(row.card_pill_background)
   return {
     id: row.id,
     slug: row.slug,
@@ -38,6 +54,8 @@ function projectRowToProject(row: ProjectRow, sections: ProjectSectionRow[]): Pr
     categories: row.categories ?? [],
     gradient: { from: toHex(row.gradient_from), to: toHex(row.gradient_to) },
     cover,
+    ...(cardTitleColor ? { cardTitleColor } : {}),
+    ...(cardPillBackground ? { cardPillBackground } : {}),
     visible: row.visible,
     order: row.order,
     sections: sortedSections.map((s) => ({
@@ -192,6 +210,8 @@ export async function updateProject(
     cover_object_position?: string | null
     cover_object_scale?: number | null
     cover_object_rotation?: number | null
+    card_title_color?: string | null
+    card_pill_background?: string | null
   }
 ): Promise<{ error: string | null }> {
   if (!supabase) return { error: 'Database not configured' }

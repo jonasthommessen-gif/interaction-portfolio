@@ -5,6 +5,7 @@ import {
   deleteProjectSection,
   fetchProjectRowBySlug,
   fetchProjectSections,
+  normalizeOptionalHex,
   updateProject,
   updateProjectSection,
 } from '../lib/cms'
@@ -57,6 +58,8 @@ export function AdminProjectEditPage() {
   const [coverObjectPosition, setCoverObjectPosition] = useState('50% 50%')
   const [coverObjectScale, setCoverObjectScale] = useState(1)
   const [coverObjectRotation, setCoverObjectRotation] = useState(0)
+  const [cardTitleHex, setCardTitleHex] = useState('')
+  const [cardPillHex, setCardPillHex] = useState('')
 
   const loadSections = useCallback((projectId: string) => {
     setSectionsLoading(true)
@@ -88,6 +91,8 @@ export function AdminProjectEditPage() {
           setCoverObjectPosition(data.cover_object_position ?? '50% 50%')
           setCoverObjectScale(data.cover_object_scale != null && data.cover_object_scale > 0 ? data.cover_object_scale : 1)
           setCoverObjectRotation(data.cover_object_rotation ?? 0)
+          setCardTitleHex(normalizeOptionalHex(data.card_title_color) ?? '')
+          setCardPillHex(normalizeOptionalHex(data.card_pill_background) ?? '')
           loadSections(data.id)
         }
       })
@@ -103,6 +108,22 @@ export function AdminProjectEditPage() {
       .split(/[,;]/)
       .map((s) => s.trim())
       .filter(Boolean)
+
+    const titleTrim = cardTitleHex.trim()
+    const pillTrim = cardPillHex.trim()
+    const titleNorm = titleTrim ? normalizeOptionalHex(titleTrim) : null
+    const pillNorm = pillTrim ? normalizeOptionalHex(pillTrim) : null
+    if (titleTrim && titleNorm === undefined) {
+      setSaveError('Card title color: use a valid hex like #1a1a1a or #rgb.')
+      setSaving(false)
+      return
+    }
+    if (pillTrim && pillNorm === undefined) {
+      setSaveError('Pill background: use a valid hex like #2d5016 or #rgb.')
+      setSaving(false)
+      return
+    }
+
     const { error } = await updateProject(row.id, {
       title: title.trim() || undefined,
       slug: slugValue.trim() || undefined,
@@ -117,6 +138,8 @@ export function AdminProjectEditPage() {
       cover_object_position: coverObjectPosition === '50% 50%' ? null : coverObjectPosition,
       cover_object_scale: coverObjectScale !== 1 ? coverObjectScale : null,
       cover_object_rotation: coverObjectRotation !== 0 ? coverObjectRotation : null,
+      card_title_color: titleNorm ?? null,
+      card_pill_background: pillNorm ?? null,
     })
     setSaving(false)
     if (error) {
@@ -356,6 +379,72 @@ export function AdminProjectEditPage() {
             />
           </div>
         </div>
+        <div className={styles.field}>
+          <span className={styles.label}>Projects page — card title color</span>
+          <p className={styles.cardPictureHint}>
+            Optional. Use when the cover is light so white text disappears. Leave empty for automatic.
+          </p>
+          <div className={styles.colorPickRow}>
+            <input
+              type="color"
+              className={styles.colorPick}
+              aria-label="Pick title color"
+              value={normalizeOptionalHex(cardTitleHex) ?? '#ffffff'}
+              onChange={(e) => setCardTitleHex(e.target.value)}
+            />
+            <input
+              type="text"
+              className={styles.input}
+              style={{ flex: '1 1 10rem', minWidth: '7rem' }}
+              value={cardTitleHex}
+              onChange={(e) => setCardTitleHex(e.target.value)}
+              placeholder="#1a1a1a"
+              spellCheck={false}
+              autoComplete="off"
+            />
+            <button
+              type="button"
+              className={styles.submit}
+              style={{ flex: '0 0 auto' }}
+              onClick={() => setCardTitleHex('')}
+            >
+              Clear
+            </button>
+          </div>
+        </div>
+        <div className={styles.field}>
+          <span className={styles.label}>Projects page — category pill background</span>
+          <p className={styles.cardPictureHint}>
+            Optional. Overrides colors sampled from the cover image. Pill label text picks light/dark automatically.
+          </p>
+          <div className={styles.colorPickRow}>
+            <input
+              type="color"
+              className={styles.colorPick}
+              aria-label="Pick pill background"
+              value={normalizeOptionalHex(cardPillHex) ?? '#ffffff'}
+              onChange={(e) => setCardPillHex(e.target.value)}
+            />
+            <input
+              type="text"
+              className={styles.input}
+              style={{ flex: '1 1 10rem', minWidth: '7rem' }}
+              value={cardPillHex}
+              onChange={(e) => setCardPillHex(e.target.value)}
+              placeholder="#2d5016"
+              spellCheck={false}
+              autoComplete="off"
+            />
+            <button
+              type="button"
+              className={styles.submit}
+              style={{ flex: '0 0 auto' }}
+              onClick={() => setCardPillHex('')}
+            >
+              Clear
+            </button>
+          </div>
+        </div>
         {saveError && <p className={styles.error}>{saveError}</p>}
         <button type="submit" className={styles.submit} disabled={saving}>
           {saving ? 'Saving…' : 'Save'}
@@ -385,7 +474,7 @@ export function AdminProjectEditPage() {
             }
           }}
           uploadFolder={row?.id ? `projects/${row.id}` : 'projects'}
-          cropAspectRatio="16/10"
+          cropAspectRatio="1772/1080"
           cropFrameLabel="Project card on the site"
           cropEnableZoom
           cropEnableRotation
