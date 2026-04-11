@@ -9,7 +9,7 @@ import {
   updateProject,
   updateProjectSection,
 } from '../lib/cms'
-import type { ProjectRow, ProjectSectionRow, SectionDisplayOptions } from '../types/cms'
+import type { ProjectRow, ProjectSectionRow, SectionDisplayOptions, SectionSideInfo } from '../types/cms'
 import type { SectionContent, SectionLayoutKey } from '../types/cms'
 import { SECTION_LAYOUTS } from '../types/cms'
 import { SectionGalleryUpload } from '../components/SectionGalleryUpload'
@@ -22,6 +22,8 @@ const LAYOUTS_WITH_SINGLE_MEDIA: SectionLayoutKey[] = [
   'media-above-text',
   'full-bleed-media',
 ]
+
+const LAYOUTS_WITH_SIDE_INFO: SectionLayoutKey[] = ['media-above-text', 'full-bleed-media']
 
 function hasTrimmedText(s: string | undefined) {
   return Boolean(s?.trim())
@@ -210,6 +212,22 @@ export function AdminProjectEditPage() {
           },
         }
       })
+    )
+  }, [])
+
+  const patchSectionSideInfo = useCallback((sectionId: string, patch: Partial<SectionSideInfo>) => {
+    setSections((prev) =>
+      prev.map((s) => {
+        if (s.id !== sectionId) return s
+        const cur = s.content.sideInfo ?? {}
+        return {
+          ...s,
+          content: {
+            ...s.content,
+            sideInfo: { ...cur, ...patch },
+          },
+        }
+      }),
     )
   }, [])
 
@@ -706,6 +724,295 @@ export function AdminProjectEditPage() {
                       Sidebar section names are unchanged. “Media-only” means no body or optional heading text.
                     </p>
                   </div>
+                  <div className={styles.field}>
+                    <label className={styles.checkboxLabel}>
+                      <input
+                        type="checkbox"
+                        className={styles.checkbox}
+                        checked={s.content?.display?.showSideInfo === true}
+                        disabled={!LAYOUTS_WITH_SIDE_INFO.includes(s.layout)}
+                        onChange={(e) =>
+                          patchSectionDisplay(s.id, {
+                            showSideInfo: e.target.checked,
+                          })
+                        }
+                      />
+                      Show side info (desktop: column beside intro text; mobile: under body)
+                    </label>
+                    {!LAYOUTS_WITH_SIDE_INFO.includes(s.layout) ? (
+                      <p className={styles.displayHint}>
+                        Side info only appears on the public page for layouts{' '}
+                        <strong>media-above-text</strong> and <strong>full-bleed-media</strong>.
+                      </p>
+                    ) : null}
+                  </div>
+                  {LAYOUTS_WITH_SIDE_INFO.includes(s.layout) && s.content?.display?.showSideInfo ? (
+                    <div className={styles.sideInfoBlock}>
+                      <p className={styles.sideInfoIntro}>
+                        Facts for the right column (desktop) or block under the body (mobile).
+                      </p>
+                      <div className={styles.field}>
+                        <label className={styles.label} htmlFor={`side-overview-${s.id}`}>
+                          Overview (short)
+                        </label>
+                        <textarea
+                          id={`side-overview-${s.id}`}
+                          className={styles.textarea}
+                          rows={3}
+                          value={s.content?.sideInfo?.overview ?? ''}
+                          onChange={(e) =>
+                            patchSectionSideInfo(s.id, {
+                              overview: e.target.value.trim() ? e.target.value : undefined,
+                            })
+                          }
+                          placeholder="One short paragraph"
+                        />
+                      </div>
+                      <div className={styles.row}>
+                        <div className={styles.field} style={{ flex: '1 1 12rem' }}>
+                          <label className={styles.label} htmlFor={`side-time-${s.id}`}>
+                            Timeframe
+                          </label>
+                          <input
+                            id={`side-time-${s.id}`}
+                            className={styles.input}
+                            value={s.content?.sideInfo?.timeframe ?? ''}
+                            onChange={(e) =>
+                              patchSectionSideInfo(s.id, {
+                                timeframe: e.target.value.trim() ? e.target.value : undefined,
+                              })
+                            }
+                            placeholder="e.g. Jan–Jun 2024"
+                          />
+                        </div>
+                        <div className={styles.field} style={{ flex: '1 1 12rem' }}>
+                          <label className={styles.label} htmlFor={`side-loc-${s.id}`}>
+                            Location
+                          </label>
+                          <input
+                            id={`side-loc-${s.id}`}
+                            className={styles.input}
+                            value={s.content?.sideInfo?.location ?? ''}
+                            onChange={(e) =>
+                              patchSectionSideInfo(s.id, {
+                                location: e.target.value.trim() ? e.target.value : undefined,
+                              })
+                            }
+                          />
+                        </div>
+                      </div>
+                      <div className={styles.field}>
+                        <label className={styles.label} htmlFor={`side-role-${s.id}`}>
+                          Role
+                        </label>
+                        <input
+                          id={`side-role-${s.id}`}
+                          className={styles.input}
+                          value={s.content?.sideInfo?.role ?? ''}
+                          onChange={(e) =>
+                            patchSectionSideInfo(s.id, {
+                              role: e.target.value.trim() ? e.target.value : undefined,
+                            })
+                          }
+                        />
+                      </div>
+                      <div className={styles.row}>
+                        <div className={styles.field} style={{ flex: '1 1 12rem' }}>
+                          <label className={styles.label} htmlFor={`side-tools-${s.id}`}>
+                            Tools
+                          </label>
+                          <input
+                            id={`side-tools-${s.id}`}
+                            className={styles.input}
+                            value={s.content?.sideInfo?.tools ?? ''}
+                            onChange={(e) =>
+                              patchSectionSideInfo(s.id, {
+                                tools: e.target.value.trim() ? e.target.value : undefined,
+                              })
+                            }
+                          />
+                        </div>
+                        <div className={styles.field} style={{ flex: '1 1 12rem' }}>
+                          <label className={styles.label} htmlFor={`side-methods-${s.id}`}>
+                            Methods
+                          </label>
+                          <input
+                            id={`side-methods-${s.id}`}
+                            className={styles.input}
+                            value={s.content?.sideInfo?.methods ?? ''}
+                            onChange={(e) =>
+                              patchSectionSideInfo(s.id, {
+                                methods: e.target.value.trim() ? e.target.value : undefined,
+                              })
+                            }
+                          />
+                        </div>
+                      </div>
+                      <div className={styles.field}>
+                        <label className={styles.label} htmlFor={`side-part-${s.id}`}>
+                          Participants (one per line or comma-separated)
+                        </label>
+                        <textarea
+                          id={`side-part-${s.id}`}
+                          className={styles.textarea}
+                          rows={3}
+                          value={s.content?.sideInfo?.participants ?? ''}
+                          onChange={(e) =>
+                            patchSectionSideInfo(s.id, {
+                              participants: e.target.value.trim() ? e.target.value : undefined,
+                            })
+                          }
+                        />
+                      </div>
+                      <div className={styles.field}>
+                        <div className={styles.sideInfoListHeader}>
+                          <span className={styles.label}>Links</span>
+                          <button
+                            type="button"
+                            className={styles.textButton}
+                            onClick={() => {
+                              const links = [...(s.content?.sideInfo?.links ?? []), { label: '', href: '' }]
+                              patchSectionSideInfo(s.id, { links })
+                            }}
+                          >
+                            Add link
+                          </button>
+                        </div>
+                        {(s.content?.sideInfo?.links ?? []).map((link, i) => (
+                          <div key={`link-${s.id}-${i}`} className={styles.sideInfoRepeatRow}>
+                            <input
+                              className={styles.input}
+                              aria-label={`Link ${i + 1} label`}
+                              placeholder="Label"
+                              value={link.label}
+                              onChange={(e) => {
+                                const links = [...(s.content?.sideInfo?.links ?? [])]
+                                links[i] = { ...links[i], label: e.target.value }
+                                patchSectionSideInfo(s.id, { links })
+                              }}
+                            />
+                            <input
+                              className={styles.input}
+                              aria-label={`Link ${i + 1} URL`}
+                              placeholder="https://"
+                              value={link.href}
+                              onChange={(e) => {
+                                const links = [...(s.content?.sideInfo?.links ?? [])]
+                                links[i] = { ...links[i], href: e.target.value }
+                                patchSectionSideInfo(s.id, { links })
+                              }}
+                            />
+                            <button
+                              type="button"
+                              className={styles.textButton}
+                              onClick={() => {
+                                const links = (s.content?.sideInfo?.links ?? []).filter((_, j) => j !== i)
+                                patchSectionSideInfo(s.id, {
+                                  links: links.length ? links : undefined,
+                                })
+                              }}
+                            >
+                              Remove
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                      <div className={styles.field}>
+                        <div className={styles.sideInfoListHeader}>
+                          <span className={styles.label}>Collaborators (logo URL + alt)</span>
+                          <button
+                            type="button"
+                            className={styles.textButton}
+                            onClick={() => {
+                              const collaborators = [
+                                ...(s.content?.sideInfo?.collaborators ?? []),
+                                { logoSrc: '', logoAlt: '' },
+                              ]
+                              patchSectionSideInfo(s.id, { collaborators })
+                            }}
+                          >
+                            Add partner
+                          </button>
+                        </div>
+                        {(s.content?.sideInfo?.collaborators ?? []).map((c, i) => (
+                          <div key={`collab-${s.id}-${i}`} className={styles.sideInfoRepeatCol}>
+                            <div className={styles.row}>
+                              <input
+                                className={styles.input}
+                                style={{ flex: '2 1 8rem' }}
+                                aria-label={`Partner ${i + 1} logo URL`}
+                                placeholder="Logo image URL"
+                                value={c.logoSrc}
+                                onChange={(e) => {
+                                  const collaborators = [...(s.content?.sideInfo?.collaborators ?? [])]
+                                  collaborators[i] = { ...collaborators[i], logoSrc: e.target.value }
+                                  patchSectionSideInfo(s.id, { collaborators })
+                                }}
+                              />
+                              <input
+                                className={styles.input}
+                                style={{ flex: '1 1 6rem' }}
+                                aria-label={`Partner ${i + 1} alt text`}
+                                placeholder="Alt text"
+                                value={c.logoAlt}
+                                onChange={(e) => {
+                                  const collaborators = [...(s.content?.sideInfo?.collaborators ?? [])]
+                                  collaborators[i] = { ...collaborators[i], logoAlt: e.target.value }
+                                  patchSectionSideInfo(s.id, { collaborators })
+                                }}
+                              />
+                            </div>
+                            <div className={styles.row}>
+                              <input
+                                className={styles.input}
+                                style={{ flex: '1 1 8rem' }}
+                                aria-label={`Partner ${i + 1} name`}
+                                placeholder="Name (optional)"
+                                value={c.name ?? ''}
+                                onChange={(e) => {
+                                  const collaborators = [...(s.content?.sideInfo?.collaborators ?? [])]
+                                  collaborators[i] = {
+                                    ...collaborators[i],
+                                    name: e.target.value.trim() ? e.target.value : undefined,
+                                  }
+                                  patchSectionSideInfo(s.id, { collaborators })
+                                }}
+                              />
+                              <input
+                                className={styles.input}
+                                style={{ flex: '1 1 8rem' }}
+                                aria-label={`Partner ${i + 1} link`}
+                                placeholder="Link (optional)"
+                                value={c.url ?? ''}
+                                onChange={(e) => {
+                                  const collaborators = [...(s.content?.sideInfo?.collaborators ?? [])]
+                                  collaborators[i] = {
+                                    ...collaborators[i],
+                                    url: e.target.value.trim() ? e.target.value : undefined,
+                                  }
+                                  patchSectionSideInfo(s.id, { collaborators })
+                                }}
+                              />
+                              <button
+                                type="button"
+                                className={styles.textButton}
+                                onClick={() => {
+                                  const collaborators = (s.content?.sideInfo?.collaborators ?? []).filter(
+                                    (_, j) => j !== i,
+                                  )
+                                  patchSectionSideInfo(s.id, {
+                                    collaborators: collaborators.length ? collaborators : undefined,
+                                  })
+                                }}
+                              >
+                                Remove
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ) : null}
                   <div className={styles.contentSectionActions}>
                     <button
                       type="button"

@@ -22,6 +22,38 @@ export type SectionDisplayOptions = {
    * show the section name above media/gallery. Otherwise in-content title stays with text or is hidden.
    */
   sectionTitleAboveMedia?: boolean
+  /**
+   * When true and `sideInfo` has content, show facts beside narrow body (desktop) or under it (mobile).
+   * Supported layouts: `media-above-text`, `full-bleed-media`.
+   */
+  showSideInfo?: boolean
+}
+
+/** Partner / org logo row for section side info (URLs from storage or external). */
+export type SectionSideInfoCollaborator = {
+  logoSrc: string
+  logoAlt: string
+  name?: string
+  url?: string
+}
+
+export type SectionSideInfoLink = {
+  label: string
+  href: string
+}
+
+/** Structured facts for the optional project section side column. */
+export type SectionSideInfo = {
+  overview?: string
+  timeframe?: string
+  /** Multiline or comma-separated; rendered as a list when possible. */
+  participants?: string
+  collaborators?: SectionSideInfoCollaborator[]
+  role?: string
+  tools?: string
+  methods?: string
+  location?: string
+  links?: SectionSideInfoLink[]
 }
 
 /** Single image/video slot used for `media` and optional `mediaMobile`. */
@@ -44,6 +76,7 @@ export type SectionContent = {
   mediaMobile?: SectionMediaAsset
   gallery?: { src: string; alt?: string; caption?: string }[]
   display?: SectionDisplayOptions
+  sideInfo?: SectionSideInfo
 }
 
 export type ProjectCoverMedia =
