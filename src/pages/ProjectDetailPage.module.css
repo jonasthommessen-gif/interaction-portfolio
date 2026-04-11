@@ -247,6 +247,8 @@
 @media (min-width: 980px) {
   .page {
     --sidebar-width: clamp(220px, 18vw, 280px);
+    /* Tighter than global .page: hero sits higher under floating nav */
+    padding-top: max(12px, calc(var(--nav-height) + var(--nav-offset) + 10px - 48px));
   }
 
   .grid {
