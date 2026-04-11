@@ -167,6 +167,11 @@
     /* One rhythm: between row groups and between cards inside a row */
     --stack-gap: 3.25rem;
     gap: var(--stack-gap);
+    /* ~one viewport of runway so the last card can scroll up comfortably */
+    padding-bottom: max(
+      5rem,
+      calc(100dvh - var(--nav-height) - var(--nav-offset) - 32px)
+    );
   }
 
   .row {
