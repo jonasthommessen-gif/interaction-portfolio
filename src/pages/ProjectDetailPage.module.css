@@ -260,13 +260,13 @@
     grid-template-columns: var(--sidebar-width) minmax(0, 1fr);
     gap: 24px;
     padding-inline: 12px 24px;
-    padding-block: 24px 80px;
+    /* No extra top padding: hero aligns with sidebar under global .page nav offset */
+    padding-block: 0 80px;
     align-items: start;
   }
 
-  /* Sidebar sits to the side of the nav so it can start at the top; content keeps top margin */
   .sidebar {
-    margin-top: -24px;
+    margin-top: 0;
   }
 
   /* Sidebar is fixed, own layer; no scroll. overflow-x: visible so separator can extend to viewport left */
