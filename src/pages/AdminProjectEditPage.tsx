@@ -162,7 +162,11 @@ export function AdminProjectEditPage() {
     })
     setAddingSection(false)
     if (error) {
-      setSectionError(error)
+      const hint =
+        /check constraint|violates check/i.test(error) && addSectionLayout === 'project-overview'
+          ? `${error} Run migration 011 (project_sections layout check) on your Supabase project, e.g. paste supabase/migrations/011_project_section_overview_layout.sql into the SQL editor.`
+          : error
+      setSectionError(hint)
       return
     }
     setAddSectionLabel('')
@@ -239,7 +243,11 @@ export function AdminProjectEditPage() {
     const { error } = await updateProjectSection(sectionId, { layout })
     setSavingLayoutSectionId(null)
     if (error) {
-      setSectionError(error)
+      const hint =
+        /check constraint|violates check/i.test(error) && layout === 'project-overview'
+          ? `${error} Run migration 011 (project_sections layout check) on your Supabase project, e.g. paste supabase/migrations/011_project_section_overview_layout.sql into the SQL editor.`
+          : error
+      setSectionError(hint)
       loadSections(row.id)
     }
   }
@@ -499,6 +507,7 @@ export function AdminProjectEditPage() {
 
       <section className={styles.sectionsBlock} aria-labelledby="sections-heading">
         <h3 id="sections-heading" className={styles.sectionsHeading}>Sections</h3>
+        {sectionError && <p className={styles.error}>{sectionError}</p>}
         {sectionsLoading && <p className={styles.message}>Loading sections…</p>}
         <ul className={styles.sectionList}>
           {sections.map((s) => (
@@ -581,7 +590,6 @@ export function AdminProjectEditPage() {
               </select>
             </div>
           </div>
-          {sectionError && <p className={styles.error}>{sectionError}</p>}
           <button type="submit" className={styles.submit} disabled={addingSection}>
             {addingSection ? 'Adding…' : 'Add section'}
           </button>
@@ -601,6 +609,7 @@ export function AdminProjectEditPage() {
             <p className={styles.contentStageIntro}>
               Fill in the text and media for each section. The fields below match each section’s layout preset.
             </p>
+            {sectionError && <p className={styles.error}>{sectionError}</p>}
             {contentSectionError && <p className={styles.error}>{contentSectionError}</p>}
             {sections.map((s) => (
               <div key={s.id} className={styles.contentSectionCard} id={`content-section-${s.id}`}>
