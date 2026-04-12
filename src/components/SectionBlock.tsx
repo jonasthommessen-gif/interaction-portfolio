@@ -6,6 +6,7 @@ import type {
   SectionSubBlock,
 } from '../types/cms'
 import { formatSectionBody } from '../lib/formatSectionBody'
+import { VideoInView } from './VideoInView'
 import styles from './SectionBlock.module.css'
 
 function hasSideInfoData(info: SectionSideInfo | undefined): boolean {
@@ -208,15 +209,15 @@ function MediaBlock({
   const mediaClass = variant === 'hero' ? `${styles.media} ${styles.mediaHero}` : styles.media
 
   if (media.type === 'video') {
+    const ariaLabel = media.alt?.trim() ? media.alt.trim() : undefined
     return (
       <div className={wrapClass}>
-        <video
+        <VideoInView
           src={media.src}
           poster={media.poster}
-          controls
-          playsInline
           className={mediaClass}
           style={positionStyle}
+          ariaLabel={ariaLabel}
         />
       </div>
     )

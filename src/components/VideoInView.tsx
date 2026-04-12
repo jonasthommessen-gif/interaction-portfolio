@@ -8,13 +8,15 @@ interface VideoInViewProps {
   width?: number
   height?: number
   style?: React.CSSProperties
+  /** When set, video is exposed to assistive tech; when unset, uses aria-hidden (decorative). */
+  ariaLabel?: string
 }
 
 /**
  * Video that autoplays (muted, loop) when in viewport and pauses when out.
  * Use for gallery/project card covers.
  */
-export function VideoInView({ src, className, poster, width, height, style }: VideoInViewProps) {
+export function VideoInView({ src, className, poster, width, height, style, ariaLabel }: VideoInViewProps) {
   const videoRef = useRef<HTMLVideoElement>(null)
 
   useEffect(() => {
@@ -51,7 +53,7 @@ export function VideoInView({ src, className, poster, width, height, style }: Vi
       height={height}
       style={style}
       draggable={false}
-      aria-hidden
+      {...(ariaLabel ? { 'aria-label': ariaLabel } : { 'aria-hidden': true })}
     />
   )
 }
