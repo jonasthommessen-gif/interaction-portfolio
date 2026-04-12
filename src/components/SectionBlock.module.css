@@ -169,7 +169,55 @@
   font-size: var(--text-sm);
   line-height: 1.45;
   color: var(--muted);
+  max-width: min(90ch, 100%);
+}
+
+.overviewLayout {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.25rem 1.75rem;
+  align-items: start;
+}
+
+@media (min-width: 720px) {
+  .overviewLayoutWithAside {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+}
+
+.overviewMain {
+  min-width: 0;
   max-width: min(72ch, 100%);
+}
+
+.overviewAside {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  min-width: 0;
+}
+
+@media (min-width: 720px) {
+  .overviewAside {
+    align-items: flex-end;
+    padding-top: 0.15rem;
+  }
+}
+
+.overviewAsideLink,
+.overviewAsideFigure {
+  display: block;
+  line-height: 0;
+}
+
+.overviewAsideLogo {
+  display: block;
+  height: auto;
+  width: clamp(7rem, 18vw, 11rem);
+  max-height: 5.5rem;
+  max-width: 100%;
+  object-fit: contain;
 }
 
 .overviewLead {
@@ -179,21 +227,15 @@
 }
 
 .overviewRow {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.35rem 1rem;
-  min-height: 2.25rem;
-  padding-block: 0.4rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.overviewRow:last-of-type {
-  border-bottom: none;
+  display: grid;
+  grid-template-columns: minmax(11rem, 32%) minmax(0, 1fr);
+  column-gap: 1rem;
+  row-gap: 0.25rem;
+  align-items: baseline;
+  padding-block: 0.45rem;
 }
 
 .overviewLabel {
-  flex: 0 0 auto;
   font-size: var(--text-xs);
   font-weight: 600;
   letter-spacing: 0.06em;
@@ -202,29 +244,14 @@
 }
 
 .overviewValue {
-  flex: 1 1 12rem;
   margin: 0;
   min-width: 0;
   color: var(--fg);
 }
 
-.overviewCollabValue {
-  flex: 1 1 12rem;
-  display: inline-flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.5rem 0.75rem;
-  min-width: 0;
-  color: var(--fg);
-}
-
-.overviewCollabLogo {
-  display: block;
-  height: 1.35rem;
-  width: auto;
-  max-width: 5.5rem;
-  object-fit: contain;
-  flex-shrink: 0;
+.overviewValueMuted {
+  display: inline-block;
+  min-height: 1em;
 }
 
 .overviewCollabName {

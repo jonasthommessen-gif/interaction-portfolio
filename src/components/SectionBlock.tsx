@@ -62,63 +62,94 @@ function OverviewFactsPanel({ info }: { info: SectionSideInfo }) {
     if (collaboratorLogoSrc(c)) return true
     return Boolean(c.name?.trim())
   })
+  const collaboratorsWithLogo = (info.collaborators ?? []).filter((c) =>
+    Boolean(collaboratorLogoSrc(c)),
+  )
   const links = (info.links ?? []).filter((l) => l.label?.trim() && l.href?.trim())
+  const hasAside = collaboratorsWithLogo.length > 0
 
   return (
     <aside className={styles.overviewFacts} aria-label="Project overview">
-      {info.overview?.trim() ? <p className={styles.overviewLead}>{info.overview.trim()}</p> : null}
+      <div className={hasAside ? `${styles.overviewLayout} ${styles.overviewLayoutWithAside}` : styles.overviewLayout}>
+        <div className={styles.overviewMain}>
+          {info.overview?.trim() ? <p className={styles.overviewLead}>{info.overview.trim()}</p> : null}
 
-      {info.timeframe?.trim() ? (
-        <OverviewRow label="Timeframe">{info.timeframe.trim()}</OverviewRow>
-      ) : null}
-      {info.role?.trim() ? <OverviewRow label="Role">{info.role.trim()}</OverviewRow> : null}
-      {info.location?.trim() ? (
-        <OverviewRow label="Location">{info.location.trim()}</OverviewRow>
-      ) : null}
-      {info.participants?.trim() ? (
-        <OverviewRow label="Participants">{participantsOneLine(info.participants)}</OverviewRow>
-      ) : null}
-      {info.tools?.trim() ? <OverviewRow label="Tools">{info.tools.trim()}</OverviewRow> : null}
-      {info.methods?.trim() ? <OverviewRow label="Methods">{info.methods.trim()}</OverviewRow> : null}
+          {info.timeframe?.trim() ? (
+            <OverviewRow label="Timeframe">{info.timeframe.trim()}</OverviewRow>
+          ) : null}
+          {info.role?.trim() ? <OverviewRow label="Role">{info.role.trim()}</OverviewRow> : null}
+          {info.location?.trim() ? (
+            <OverviewRow label="Location">{info.location.trim()}</OverviewRow>
+          ) : null}
+          {info.participants?.trim() ? (
+            <OverviewRow label="Participants">{participantsOneLine(info.participants)}</OverviewRow>
+          ) : null}
+          {info.tools?.trim() ? <OverviewRow label="Tools">{info.tools.trim()}</OverviewRow> : null}
+          {info.methods?.trim() ? <OverviewRow label="Methods">{info.methods.trim()}</OverviewRow> : null}
 
-      {collaborators.map((c, i) => {
-        const src = collaboratorLogoSrc(c)
-        const alt = collaboratorLogoAlt(c) || 'Partner logo'
-        const name = c.name?.trim() ?? ''
-        const nameNode = c.url?.trim() ? (
-          <a href={c.url.trim()} rel="noopener noreferrer" target="_blank" className={styles.overviewCollabName}>
-            {name || 'Website'}
-          </a>
-        ) : name ? (
-          <span className={styles.overviewCollabName}>{name}</span>
-        ) : null
+          {collaborators.map((c, i) => {
+            const src = collaboratorLogoSrc(c)
+            const name = c.name?.trim() ?? ''
+            const nameNode = c.url?.trim() ? (
+              <a href={c.url.trim()} rel="noopener noreferrer" target="_blank" className={styles.overviewCollabName}>
+                {name || 'Website'}
+              </a>
+            ) : name ? (
+              <span className={styles.overviewCollabName}>{name}</span>
+            ) : null
+            const valueCell = nameNode ?? (src ? <span className={styles.overviewValueMuted} aria-hidden="true" /> : null)
+            if (!nameNode && !src) return null
 
-        return (
-          <div key={`collab-${i}-${src ?? name}`} className={styles.overviewRow}>
-            <span className={styles.overviewLabel}>In collaboration with</span>
-            <span className={styles.overviewCollabValue}>
-              {src ? (
+            return (
+              <div key={`collab-${i}-${src ?? (name || String(i))}`} className={styles.overviewRow}>
+                <span className={styles.overviewLabel}>In collaboration with</span>
+                <span className={styles.overviewValue}>{valueCell}</span>
+              </div>
+            )
+          })}
+
+          {links.map((l, i) => (
+            <OverviewRow key={`${l.href}-${i}`} label="Link">
+              <a href={l.href.trim()} rel="noopener noreferrer" target="_blank" className={styles.overviewLink}>
+                {l.label.trim()}
+              </a>
+            </OverviewRow>
+          ))}
+        </div>
+
+        {hasAside ? (
+          <div className={styles.overviewAside} aria-label="Partner logos">
+            {collaboratorsWithLogo.map((c, i) => {
+              const src = collaboratorLogoSrc(c)!
+              const alt = collaboratorLogoAlt(c) || 'Partner logo'
+              const img = (
                 <img
                   src={src}
                   alt={alt}
-                  className={styles.overviewCollabLogo}
+                  className={styles.overviewAsideLogo}
                   loading="lazy"
                   decoding="async"
                 />
-              ) : null}
-              {nameNode}
-            </span>
+              )
+              return c.url?.trim() ? (
+                <a
+                  key={`aside-logo-${i}-${src}`}
+                  href={c.url.trim()}
+                  rel="noopener noreferrer"
+                  target="_blank"
+                  className={styles.overviewAsideLink}
+                >
+                  {img}
+                </a>
+              ) : (
+                <div key={`aside-logo-${i}-${src}`} className={styles.overviewAsideFigure}>
+                  {img}
+                </div>
+              )
+            })}
           </div>
-        )
-      })}
-
-      {links.map((l, i) => (
-        <OverviewRow key={`${l.href}-${i}`} label="Link">
-          <a href={l.href.trim()} rel="noopener noreferrer" target="_blank" className={styles.overviewLink}>
-            {l.label.trim()}
-          </a>
-        </OverviewRow>
-      ))}
+        ) : null}
+      </div>
     </aside>
   )
 }
