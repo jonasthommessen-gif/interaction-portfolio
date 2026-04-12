@@ -288,6 +288,10 @@ function rootSliceFromContent(content?: SectionContent): SectionSubBlock {
   }
 }
 
+function effectiveSubLayout(sub: SectionSubBlock, parentLayout: SectionLayoutKey): SectionLayoutKey {
+  return sub.layout ?? parentLayout
+}
+
 function sliceHasRenderable(slice: SectionSubBlock, layout: SectionLayoutKey): boolean {
   const bodyStr = trimText(slice.body)
   const headingStr = trimText(slice.heading)
@@ -519,7 +523,9 @@ export function SectionBlock({ layout, content, sectionLabel, imageLoading = 'la
   }
 
   const rootSlice = rootSliceFromContent(content)
-  const subs = (content?.subsections ?? []).filter((s) => sliceHasRenderable(s, layout))
+  const subs = (content?.subsections ?? []).filter((s) =>
+    sliceHasRenderable(s, effectiveSubLayout(s, layout)),
+  )
   const rootEl = (
     <SectionLayoutSlice
       layout={layout}
@@ -539,7 +545,7 @@ export function SectionBlock({ layout, content, sectionLabel, imageLoading = 'la
       {subs.map((sub, i) => (
         <div key={`sub-${i}-${trimText(sub.heading) || trimText(sub.body) || i}`} className={styles.sectionSubBlock}>
           <SectionLayoutSlice
-            layout={layout}
+            layout={effectiveSubLayout(sub, layout)}
             slice={sub}
             sectionLabel={sectionLabel}
             display={undefined}

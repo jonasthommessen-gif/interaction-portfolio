@@ -10,8 +10,8 @@ import {
   updateProjectSection,
 } from '../lib/cms'
 import type { ProjectRow, ProjectSectionRow, SectionDisplayOptions, SectionSideInfo } from '../types/cms'
-import type { SectionContent, SectionLayoutKey, SectionSubBlock } from '../types/cms'
-import { SECTION_LAYOUTS } from '../types/cms'
+import type { SectionContent, SectionLayoutKey, SectionSubBlock, SectionSubBlockLayoutKey } from '../types/cms'
+import { SECTION_LAYOUTS, SECTION_SUBBLOCK_LAYOUTS } from '../types/cms'
 import { SectionGalleryUpload } from '../components/SectionGalleryUpload'
 import { SectionMediaUpload } from '../components/SectionMediaUpload'
 import styles from './AdminProjectEditPage.module.css'
@@ -703,10 +703,12 @@ export function AdminProjectEditPage() {
                           </button>
                         </div>
                         <p className={styles.displayHint}>
-                          Optional extra strips below the main fields, using this section’s layout. Does not add sidebar
-                          items or new anchors.
+                          Optional extra strips below the main fields. Each block can use the section layout or pick its
+                          own for media placement. Does not add sidebar items or new anchors.
                         </p>
-                        {(s.content?.subsections ?? []).map((sub, i) => (
+                        {(s.content?.subsections ?? []).map((sub, i) => {
+                          const rowLayout: SectionLayoutKey = sub.layout ?? s.layout
+                          return (
                           <div key={`subsection-${s.id}-${i}`} className={styles.subsectionCard}>
                             <div className={styles.subsectionCardHeader}>
                               <span className={styles.subsectionCardTitle}>Block {i + 1}</span>
@@ -754,6 +756,32 @@ export function AdminProjectEditPage() {
                               </div>
                             </div>
                             <div className={styles.field}>
+                              <label className={styles.label} htmlFor={`subsection-layout-${s.id}-${i}`}>
+                                Layout for this block
+                              </label>
+                              <select
+                                id={`subsection-layout-${s.id}-${i}`}
+                                className={styles.contentLayoutSelect}
+                                value={sub.layout ?? ''}
+                                onChange={(e) => {
+                                  const v = e.target.value
+                                  const subsections: SectionSubBlock[] = [...(s.content?.subsections ?? [])]
+                                  subsections[i] = {
+                                    ...subsections[i],
+                                    layout: v ? (v as SectionSubBlockLayoutKey) : undefined,
+                                  }
+                                  updateSectionContent(s.id, { subsections })
+                                }}
+                              >
+                                <option value="">Same as section ({s.layout})</option>
+                                {SECTION_SUBBLOCK_LAYOUTS.map((l) => (
+                                  <option key={l} value={l}>
+                                    {l}
+                                  </option>
+                                ))}
+                              </select>
+                            </div>
+                            <div className={styles.field}>
                               <label className={styles.label}>Heading (optional)</label>
                               <input
                                 type="text"
@@ -787,7 +815,7 @@ export function AdminProjectEditPage() {
                                 }}
                               />
                             </div>
-                            {LAYOUTS_WITH_SINGLE_MEDIA.includes(s.layout) && (
+                            {LAYOUTS_WITH_SINGLE_MEDIA.includes(rowLayout) && (
                               <>
                                 <SectionMediaUpload
                                   value={sub.media}
@@ -813,7 +841,7 @@ export function AdminProjectEditPage() {
                                 />
                               </>
                             )}
-                            {s.layout === 'gallery-strip' && (
+                            {rowLayout === 'gallery-strip' && (
                               <SectionGalleryUpload
                                 value={sub.gallery}
                                 onChange={(gallery) => {
@@ -825,7 +853,8 @@ export function AdminProjectEditPage() {
                               />
                             )}
                           </div>
-                        ))}
+                          )
+                        })}
                       </div>
                     </>
                   ) : null}

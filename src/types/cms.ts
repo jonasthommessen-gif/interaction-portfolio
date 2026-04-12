@@ -14,6 +14,13 @@ export const SECTION_LAYOUTS = [
 
 export type SectionLayoutKey = (typeof SECTION_LAYOUTS)[number]
 
+/** Layouts allowed on an additional in-section block (`project-overview` is section-only). */
+export type SectionSubBlockLayoutKey = Exclude<SectionLayoutKey, 'project-overview'>
+
+export const SECTION_SUBBLOCK_LAYOUTS = SECTION_LAYOUTS.filter(
+  (l): l is SectionSubBlockLayoutKey => l !== 'project-overview',
+)
+
 /** Optional presentation flags stored in section `content` jsonb (no migration). */
 export type SectionDisplayOptions = {
   /** When true, show the section nav label in the main column (sidebar label unchanged). Default false. */
@@ -68,8 +75,10 @@ export type SectionSideInfo = {
   links?: SectionSideInfoLink[]
 }
 
-/** Extra content blocks inside the same section (same nav entry); inherit the section layout. */
+/** Extra content blocks inside the same section (same nav entry); optional per-block layout. */
 export type SectionSubBlock = {
+  /** When set, controls text/media placement for this block; otherwise uses the section row layout. */
+  layout?: SectionSubBlockLayoutKey
   heading?: string
   body?: string
   media?: SectionMediaAsset
