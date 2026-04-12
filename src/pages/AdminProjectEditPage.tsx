@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
+import { flushSync } from 'react-dom'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import {
   createProjectSection,
@@ -9,6 +10,7 @@ import {
   updateProject,
   updateProjectSection,
 } from '../lib/cms'
+import { applyBoldMarkdownToSelection, isBoldShortcut } from '../lib/textareaBoldMarkdown'
 import type { ProjectRow, ProjectSectionRow, SectionDisplayOptions, SectionSideInfo } from '../types/cms'
 import type { SectionContent, SectionLayoutKey, SectionSubBlock, SectionSubBlockLayoutKey } from '../types/cms'
 import { SECTION_LAYOUTS, SECTION_SUBBLOCK_LAYOUTS } from '../types/cms'
@@ -678,13 +680,26 @@ export function AdminProjectEditPage() {
                         <textarea
                           value={s.content?.body ?? ''}
                           onChange={(e) => updateSectionContent(s.id, { body: e.target.value || undefined })}
+                          onKeyDown={(e) => {
+                            if (!isBoldShortcut(e)) return
+                            const cur = s.content?.body ?? ''
+                            const ta = e.currentTarget
+                            const res = applyBoldMarkdownToSelection(cur, ta.selectionStart, ta.selectionEnd)
+                            if (!res) return
+                            e.preventDefault()
+                            flushSync(() => {
+                              updateSectionContent(s.id, { body: res.value || undefined })
+                            })
+                            ta.setSelectionRange(res.start, res.end)
+                          }}
                           className={styles.textarea}
                           rows={4}
                           placeholder="Section body content"
                         />
                         <p className={styles.displayHint}>
-                          Use a blank line between paragraphs. Single line breaks stay as line breaks. Wrap words in{' '}
-                          <strong>**double asterisks**</strong> for bold.
+                          Use a blank line between paragraphs. Single line breaks stay as line breaks. Select text and
+                          press <strong>⌘B</strong> (Mac) or <strong>Ctrl+B</strong> (Windows) to bold, or wrap words in{' '}
+                          <strong>**double asterisks**</strong>.
                         </p>
                       </div>
                       {LAYOUTS_WITH_SINGLE_MEDIA.includes(s.layout) && (
@@ -839,9 +854,29 @@ export function AdminProjectEditPage() {
                                   }
                                   updateSectionContent(s.id, { subsections })
                                 }}
+                                onKeyDown={(e) => {
+                                  if (!isBoldShortcut(e)) return
+                                  const cur = sub.body ?? ''
+                                  const ta = e.currentTarget
+                                  const res = applyBoldMarkdownToSelection(cur, ta.selectionStart, ta.selectionEnd)
+                                  if (!res) return
+                                  e.preventDefault()
+                                  const body = res.value.trim() ? res.value : undefined
+                                  flushSync(() => {
+                                    const subsections: SectionSubBlock[] = [...(s.content?.subsections ?? [])]
+                                    subsections[i] = { ...subsections[i], body }
+                                    updateSectionContent(s.id, { subsections })
+                                  })
+                                  if (body !== undefined) {
+                                    ta.setSelectionRange(res.start, res.end)
+                                  } else {
+                                    ta.setSelectionRange(0, 0)
+                                  }
+                                }}
                               />
                               <p className={styles.displayHint}>
-                                Blank lines = paragraphs; <strong>**bold**</strong> supported.
+                                Blank lines = paragraphs; <strong>**bold**</strong> or <strong>⌘B</strong> /{' '}
+                                <strong>Ctrl+B</strong> on a selection.
                               </p>
                             </div>
                             {LAYOUTS_WITH_SINGLE_MEDIA.includes(rowLayout) && (

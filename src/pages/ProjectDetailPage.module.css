@@ -228,7 +228,7 @@
 }
 
 .section {
-  margin-block: 0 3rem;
+  margin-block: 0 clamp(5rem, 12vmin, 10rem);
   padding: 0;
   border: none;
   background: transparent;

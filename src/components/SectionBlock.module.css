@@ -154,7 +154,7 @@
 .sectionRootAndSubs {
   display: flex;
   flex-direction: column;
-  gap: 2.25rem;
+  gap: 3.25rem;
   min-width: 0;
 }
 
