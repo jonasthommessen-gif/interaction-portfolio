@@ -5,6 +5,7 @@ import type {
   SectionSideInfoCollaborator,
   SectionSubBlock,
 } from '../types/cms'
+import { formatSectionBody } from '../lib/formatSectionBody'
 import styles from './SectionBlock.module.css'
 
 function hasSideInfoData(info: SectionSideInfo | undefined): boolean {
@@ -339,7 +340,7 @@ function SectionLayoutSlice({
   const titleAboveMedia =
     showSectionTitle &&
     sectionTitleAboveMedia &&
-    ((layout === 'media-above-text' && pureSingleMediaBlock) ||
+    (((layout === 'media-above-text' || layout === 'media-wide-above-text') && pureSingleMediaBlock) ||
       (layout === 'full-bleed-media' && pureSingleMediaBlock) ||
       (layout === 'gallery-strip' && pureGalleryBlock))
 
@@ -350,7 +351,7 @@ function SectionLayoutSlice({
       <div className={styles.textOnly}>
         <SectionTitle label={sectionLabel} visible={showTitleWithText} />
         <ContentHeading text={headingStr} />
-        {hasBody ? <div className={styles.body}>{bodyStr}</div> : <p className={styles.placeholder}>Add content in admin.</p>}
+        {hasBody ? <div className={styles.body}>{formatSectionBody(bodyStr)}</div> : <p className={styles.placeholder}>Add content in admin.</p>}
       </div>
     )
   }
@@ -361,7 +362,7 @@ function SectionLayoutSlice({
         <div className={styles.textBlock}>
           <SectionTitle label={sectionLabel} visible={showTitleWithText} />
           <ContentHeading text={headingStr} />
-          {hasBody ? <div className={styles.body}>{bodyStr}</div> : <p className={styles.placeholder}>Add content in admin.</p>}
+          {hasBody ? <div className={styles.body}>{formatSectionBody(bodyStr)}</div> : <p className={styles.placeholder}>Add content in admin.</p>}
         </div>
         <div className={styles.mediaColumn}>
           <ResponsiveSingleMedia
@@ -389,7 +390,7 @@ function SectionLayoutSlice({
         <div className={styles.textBlock}>
           <SectionTitle label={sectionLabel} visible={showTitleWithText} />
           <ContentHeading text={headingStr} />
-          {hasBody ? <div className={styles.body}>{bodyStr}</div> : <p className={styles.placeholder}>Add content in admin.</p>}
+          {hasBody ? <div className={styles.body}>{formatSectionBody(bodyStr)}</div> : <p className={styles.placeholder}>Add content in admin.</p>}
         </div>
       </div>
     )
@@ -416,7 +417,7 @@ function SectionLayoutSlice({
           <div className={styles.caption}>
             <SectionTitle label={sectionLabel} visible={showTitleWithText} />
             <ContentHeading text={headingStr} />
-            {hasBody ? <div className={styles.body}>{bodyStr}</div> : null}
+            {hasBody ? <div className={styles.body}>{formatSectionBody(bodyStr)}</div> : null}
             {!hasBody && !hasHeading && !showTitleWithText ? (
               <p className={styles.placeholder}>
                 {!hasSingleMedia ? 'Add media and text in admin.' : 'Add content in admin.'}
@@ -428,9 +429,10 @@ function SectionLayoutSlice({
     )
   }
 
-  if (layout === 'media-above-text') {
+  if (layout === 'media-above-text' || layout === 'media-wide-above-text') {
     const showTextBlock =
       hasText || (showTitleWithText && !pureSingleMediaBlock) || !hasSingleMedia
+    const mediaVariant = layout === 'media-above-text' ? 'hero' : 'default'
 
     return (
       <div className={styles.mediaAboveText}>
@@ -440,7 +442,7 @@ function SectionLayoutSlice({
             <ResponsiveSingleMedia
               media={media}
               mediaMobile={mediaMobile}
-              variant="hero"
+              variant={mediaVariant}
               loading={imageLoading}
             />
           </div>
@@ -450,7 +452,7 @@ function SectionLayoutSlice({
             <SectionTitle label={sectionLabel} visible={showTitleWithText && !pureSingleMediaBlock} />
             <ContentHeading text={headingStr} />
             {hasBody ? (
-              <div className={styles.body}>{bodyStr}</div>
+              <div className={styles.body}>{formatSectionBody(bodyStr)}</div>
             ) : (
               <p className={styles.placeholder}>
                 {hasSingleMedia ? 'Add body text in admin.' : 'Add content in admin.'}
@@ -489,7 +491,7 @@ function SectionLayoutSlice({
           <div className={styles.textBlock}>
             <SectionTitle label={sectionLabel} visible={showTitleWithText && !pureGalleryBlock} />
             <ContentHeading text={headingStr} />
-            {hasBody ? <div className={styles.body}>{bodyStr}</div> : null}
+            {hasBody ? <div className={styles.body}>{formatSectionBody(bodyStr)}</div> : null}
             {!hasBody && !hasHeading && !showTitleWithText ? (
               <p className={styles.placeholder}>Add content in admin.</p>
             ) : null}
@@ -501,7 +503,7 @@ function SectionLayoutSlice({
 
   return (
     <div className={styles.textOnly}>
-      {hasBody ? <div className={styles.body}>{bodyStr}</div> : <p className={styles.placeholder}>Add content in admin.</p>}
+      {hasBody ? <div className={styles.body}>{formatSectionBody(bodyStr)}</div> : <p className={styles.placeholder}>Add content in admin.</p>}
     </div>
   )
 }

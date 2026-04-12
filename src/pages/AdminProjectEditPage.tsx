@@ -20,8 +20,20 @@ const LAYOUTS_WITH_SINGLE_MEDIA: SectionLayoutKey[] = [
   'text-left-media-right',
   'media-left-text-right',
   'media-above-text',
+  'media-wide-above-text',
   'full-bleed-media',
 ]
+
+const SECTION_LAYOUT_LABELS: Record<SectionLayoutKey, string> = {
+  'text-only': 'Text only',
+  'text-left-media-right': 'Text left, media right',
+  'media-left-text-right': 'Media left, text right',
+  'full-bleed-media': 'Full-bleed media (hero) + caption',
+  'media-above-text': 'Media above text (hero height)',
+  'media-wide-above-text': 'Media above text (wide, natural height)',
+  'gallery-strip': 'Gallery strip',
+  'project-overview': 'Project overview (facts)',
+}
 
 function hasTrimmedText(s: string | undefined) {
   return Boolean(s?.trim())
@@ -544,7 +556,9 @@ export function AdminProjectEditPage() {
                       onChange={(e) => handleSectionLayoutChange(s.id, e.target.value as SectionLayoutKey)}
                     >
                       {SECTION_LAYOUTS.map((l) => (
-                        <option key={l} value={l}>{l}</option>
+                        <option key={l} value={l}>
+                          {SECTION_LAYOUT_LABELS[l]}
+                        </option>
                       ))}
                     </select>
                   </label>
@@ -585,7 +599,9 @@ export function AdminProjectEditPage() {
                 className={styles.input}
               >
                 {SECTION_LAYOUTS.map((l) => (
-                  <option key={l} value={l}>{l}</option>
+                  <option key={l} value={l}>
+                    {SECTION_LAYOUT_LABELS[l]}
+                  </option>
                 ))}
               </select>
             </div>
@@ -625,7 +641,9 @@ export function AdminProjectEditPage() {
                       onChange={(e) => handleSectionLayoutChange(s.id, e.target.value as SectionLayoutKey)}
                     >
                       {SECTION_LAYOUTS.map((l) => (
-                        <option key={l} value={l}>{l}</option>
+                        <option key={l} value={l}>
+                          {SECTION_LAYOUT_LABELS[l]}
+                        </option>
                       ))}
                     </select>
                   </label>
@@ -662,6 +680,10 @@ export function AdminProjectEditPage() {
                           rows={4}
                           placeholder="Section body content"
                         />
+                        <p className={styles.displayHint}>
+                          Use a blank line between paragraphs. Single line breaks stay as line breaks. Wrap words in{' '}
+                          <strong>**double asterisks**</strong> for bold.
+                        </p>
                       </div>
                       {LAYOUTS_WITH_SINGLE_MEDIA.includes(s.layout) && (
                         <>
@@ -773,10 +795,12 @@ export function AdminProjectEditPage() {
                                   updateSectionContent(s.id, { subsections })
                                 }}
                               >
-                                <option value="">Same as section ({s.layout})</option>
+                                <option value="">
+                                  Same as section ({SECTION_LAYOUT_LABELS[s.layout]})
+                                </option>
                                 {SECTION_SUBBLOCK_LAYOUTS.map((l) => (
                                   <option key={l} value={l}>
-                                    {l}
+                                    {SECTION_LAYOUT_LABELS[l]}
                                   </option>
                                 ))}
                               </select>
@@ -814,6 +838,9 @@ export function AdminProjectEditPage() {
                                   updateSectionContent(s.id, { subsections })
                                 }}
                               />
+                              <p className={styles.displayHint}>
+                                Blank lines = paragraphs; <strong>**bold**</strong> supported.
+                              </p>
                             </div>
                             {LAYOUTS_WITH_SINGLE_MEDIA.includes(rowLayout) && (
                               <>

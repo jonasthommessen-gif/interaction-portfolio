@@ -8,6 +8,7 @@ export const SECTION_LAYOUTS = [
   'media-left-text-right',
   'full-bleed-media',
   'media-above-text',
+  'media-wide-above-text',
   'gallery-strip',
   'project-overview',
 ] as const
