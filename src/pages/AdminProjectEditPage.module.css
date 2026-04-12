@@ -616,6 +616,44 @@
   flex-wrap: wrap;
 }
 
+.subsectionsBlock {
+  margin-top: 0.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--frost-border);
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.subsectionCard {
+  padding: 0.75rem;
+  border: 1px solid var(--frost-border);
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.2);
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.subsectionCardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.subsectionCardTitle {
+  font-size: var(--text-sm);
+  font-weight: 600;
+}
+
+.subsectionCardActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
 .textButton {
   padding: 0.25rem 0.5rem;
   font-size: var(--text-xs, 0.75rem);

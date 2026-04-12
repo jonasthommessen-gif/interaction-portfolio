@@ -3,6 +3,7 @@ import type {
   SectionLayoutKey,
   SectionSideInfo,
   SectionSideInfoCollaborator,
+  SectionSubBlock,
 } from '../types/cms'
 import styles from './SectionBlock.module.css'
 
@@ -277,17 +278,53 @@ function ContentHeading({ text }: { text: string }) {
   return <h3 className={styles.heading}>{text}</h3>
 }
 
-export function SectionBlock({ layout, content, sectionLabel, imageLoading = 'lazy' }: Props) {
-  const bodyStr = trimText(content?.body)
-  const headingStr = trimText(content?.heading)
+function rootSliceFromContent(content?: SectionContent): SectionSubBlock {
+  return {
+    heading: content?.heading,
+    body: content?.body,
+    media: content?.media,
+    mediaMobile: content?.mediaMobile,
+    gallery: content?.gallery,
+  }
+}
+
+function sliceHasRenderable(slice: SectionSubBlock, layout: SectionLayoutKey): boolean {
+  const bodyStr = trimText(slice.body)
+  const headingStr = trimText(slice.heading)
+  const hasText = Boolean(bodyStr || headingStr)
+  const hasSingleMedia = Boolean(slice.media?.src || slice.mediaMobile?.src)
+  const hasGallery = (slice.gallery?.length ?? 0) > 0
+  if (layout === 'text-only') return hasText
+  if (layout === 'gallery-strip') return hasGallery || hasText
+  return hasText || hasSingleMedia
+}
+
+function SectionLayoutSlice({
+  layout,
+  slice,
+  sectionLabel,
+  display,
+  isRoot,
+  imageLoading,
+}: {
+  layout: SectionLayoutKey
+  slice: SectionSubBlock
+  sectionLabel: string
+  display?: SectionContent['display']
+  isRoot: boolean
+  imageLoading: 'eager' | 'lazy'
+}) {
+  const bodyStr = trimText(slice.body)
+  const headingStr = trimText(slice.heading)
   const hasBody = Boolean(bodyStr)
   const hasHeading = Boolean(headingStr)
   const hasText = hasBody || hasHeading
-  const media = content?.media
-  const mediaMobile = content?.mediaMobile
-  const gallery = content?.gallery ?? []
-  const showSectionTitle = content?.display?.showSectionTitle === true
-  const sectionTitleAboveMedia = content?.display?.sectionTitleAboveMedia === true
+  const media = slice.media
+  const mediaMobile = slice.mediaMobile
+  const gallery = slice.gallery ?? []
+
+  const showSectionTitle = isRoot && display?.showSectionTitle === true
+  const sectionTitleAboveMedia = isRoot && display?.sectionTitleAboveMedia === true
 
   const hasSingleMedia = Boolean(media?.src || mediaMobile?.src)
   const hasGallery = gallery.length > 0
@@ -350,20 +387,6 @@ export function SectionBlock({ layout, content, sectionLabel, imageLoading = 'la
           <ContentHeading text={headingStr} />
           {hasBody ? <div className={styles.body}>{bodyStr}</div> : <p className={styles.placeholder}>Add content in admin.</p>}
         </div>
-      </div>
-    )
-  }
-
-  if (layout === 'project-overview') {
-    const si = content?.sideInfo
-    return (
-      <div className={styles.projectOverview}>
-        <SectionTitle label={sectionLabel} visible={showTitleWithText} />
-        {hasSideInfoData(si) ? (
-          <OverviewFactsPanel info={si!} />
-        ) : (
-          <p className={styles.placeholder}>Add overview facts in admin.</p>
-        )}
       </div>
     )
   }
@@ -475,6 +498,56 @@ export function SectionBlock({ layout, content, sectionLabel, imageLoading = 'la
   return (
     <div className={styles.textOnly}>
       {hasBody ? <div className={styles.body}>{bodyStr}</div> : <p className={styles.placeholder}>Add content in admin.</p>}
+    </div>
+  )
+}
+
+export function SectionBlock({ layout, content, sectionLabel, imageLoading = 'lazy' }: Props) {
+  if (layout === 'project-overview') {
+    const showTitleWithText = content?.display?.showSectionTitle === true
+    const si = content?.sideInfo
+    return (
+      <div className={styles.projectOverview}>
+        <SectionTitle label={sectionLabel} visible={showTitleWithText} />
+        {hasSideInfoData(si) ? (
+          <OverviewFactsPanel info={si!} />
+        ) : (
+          <p className={styles.placeholder}>Add overview facts in admin.</p>
+        )}
+      </div>
+    )
+  }
+
+  const rootSlice = rootSliceFromContent(content)
+  const subs = (content?.subsections ?? []).filter((s) => sliceHasRenderable(s, layout))
+  const rootEl = (
+    <SectionLayoutSlice
+      layout={layout}
+      slice={rootSlice}
+      sectionLabel={sectionLabel}
+      display={content?.display}
+      isRoot
+      imageLoading={imageLoading}
+    />
+  )
+
+  if (subs.length === 0) return rootEl
+
+  return (
+    <div className={styles.sectionRootAndSubs}>
+      {rootEl}
+      {subs.map((sub, i) => (
+        <div key={`sub-${i}-${trimText(sub.heading) || trimText(sub.body) || i}`} className={styles.sectionSubBlock}>
+          <SectionLayoutSlice
+            layout={layout}
+            slice={sub}
+            sectionLabel={sectionLabel}
+            display={undefined}
+            isRoot={false}
+            imageLoading="lazy"
+          />
+        </div>
+      ))}
     </div>
   )
 }

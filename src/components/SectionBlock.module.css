@@ -93,6 +93,18 @@
   min-width: 0;
 }
 
+/* Stacked root + optional in-section sub-blocks (same nav entry) */
+.sectionRootAndSubs {
+  display: flex;
+  flex-direction: column;
+  gap: 2.25rem;
+  min-width: 0;
+}
+
+.sectionSubBlock {
+  min-width: 0;
+}
+
 /* text-only */
 .textOnly {
   display: block;
@@ -237,11 +249,26 @@
 }
 
 @media (max-width: 819px) {
-  /* Partner logos: edge-to-edge like section media on mobile (break out of .container inset) */
+  /*
+   * Flatten layout so partner aside shares the same width percentage base as facts
+   * (grid items can make margin-based full-bleed unreliable in some engines).
+   */
+  .overviewFactsWithAside {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+  }
+
+  .overviewFactsWithAside .overviewLayoutWithAside {
+    display: contents;
+  }
+
+  /* Partner logos: true viewport width (same visual as hero / section media on mobile) */
   .overviewFactsWithAside .overviewAside {
     width: 100vw;
     max-width: 100vw;
     box-sizing: border-box;
+    flex-shrink: 0;
     margin-left: calc(50% - 50vw);
     margin-right: calc(50% - 50vw);
     padding-inline: env(safe-area-inset-left, 0px) env(safe-area-inset-right, 0px);
@@ -256,10 +283,11 @@
   }
 
   .overviewAsideLogo {
+    display: block;
     width: 100%;
     max-width: 100%;
     height: auto;
-    max-height: min(52vh, 22rem);
+    max-height: min(70vh, 28rem);
     object-fit: contain;
   }
 }

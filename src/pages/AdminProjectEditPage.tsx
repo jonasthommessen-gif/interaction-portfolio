@@ -10,7 +10,7 @@ import {
   updateProjectSection,
 } from '../lib/cms'
 import type { ProjectRow, ProjectSectionRow, SectionDisplayOptions, SectionSideInfo } from '../types/cms'
-import type { SectionContent, SectionLayoutKey } from '../types/cms'
+import type { SectionContent, SectionLayoutKey, SectionSubBlock } from '../types/cms'
 import { SECTION_LAYOUTS } from '../types/cms'
 import { SectionGalleryUpload } from '../components/SectionGalleryUpload'
 import { SectionMediaUpload } from '../components/SectionMediaUpload'
@@ -688,6 +688,145 @@ export function AdminProjectEditPage() {
                           uploadFolder={uploadFolder}
                         />
                       )}
+                      <div className={styles.subsectionsBlock}>
+                        <div className={styles.sideInfoListHeader}>
+                          <span className={styles.label}>Additional blocks</span>
+                          <button
+                            type="button"
+                            className={styles.textButton}
+                            onClick={() => {
+                              const subsections = [...(s.content?.subsections ?? []), {}]
+                              updateSectionContent(s.id, { subsections })
+                            }}
+                          >
+                            Add block
+                          </button>
+                        </div>
+                        <p className={styles.displayHint}>
+                          Optional extra strips below the main fields, using this section’s layout. Does not add sidebar
+                          items or new anchors.
+                        </p>
+                        {(s.content?.subsections ?? []).map((sub, i) => (
+                          <div key={`subsection-${s.id}-${i}`} className={styles.subsectionCard}>
+                            <div className={styles.subsectionCardHeader}>
+                              <span className={styles.subsectionCardTitle}>Block {i + 1}</span>
+                              <div className={styles.subsectionCardActions}>
+                                <button
+                                  type="button"
+                                  className={styles.textButton}
+                                  disabled={i === 0}
+                                  onClick={() => {
+                                    const subsections = [...(s.content?.subsections ?? [])]
+                                    const prev = subsections[i - 1]!
+                                    subsections[i - 1] = subsections[i]!
+                                    subsections[i] = prev
+                                    updateSectionContent(s.id, { subsections })
+                                  }}
+                                >
+                                  Move up
+                                </button>
+                                <button
+                                  type="button"
+                                  className={styles.textButton}
+                                  disabled={i === (s.content?.subsections?.length ?? 0) - 1}
+                                  onClick={() => {
+                                    const subsections = [...(s.content?.subsections ?? [])]
+                                    const next = subsections[i + 1]!
+                                    subsections[i + 1] = subsections[i]!
+                                    subsections[i] = next
+                                    updateSectionContent(s.id, { subsections })
+                                  }}
+                                >
+                                  Move down
+                                </button>
+                                <button
+                                  type="button"
+                                  className={styles.textButton}
+                                  onClick={() => {
+                                    const subsections = (s.content?.subsections ?? []).filter((_, j) => j !== i)
+                                    updateSectionContent(s.id, {
+                                      subsections: subsections.length ? subsections : undefined,
+                                    })
+                                  }}
+                                >
+                                  Remove
+                                </button>
+                              </div>
+                            </div>
+                            <div className={styles.field}>
+                              <label className={styles.label}>Heading (optional)</label>
+                              <input
+                                type="text"
+                                className={styles.input}
+                                placeholder="Block heading"
+                                value={sub.heading ?? ''}
+                                onChange={(e) => {
+                                  const subsections: SectionSubBlock[] = [...(s.content?.subsections ?? [])]
+                                  subsections[i] = {
+                                    ...subsections[i],
+                                    heading: e.target.value.trim() ? e.target.value : undefined,
+                                  }
+                                  updateSectionContent(s.id, { subsections })
+                                }}
+                              />
+                            </div>
+                            <div className={styles.field}>
+                              <label className={styles.label}>Body text</label>
+                              <textarea
+                                className={styles.textarea}
+                                rows={4}
+                                placeholder="Block body"
+                                value={sub.body ?? ''}
+                                onChange={(e) => {
+                                  const subsections: SectionSubBlock[] = [...(s.content?.subsections ?? [])]
+                                  subsections[i] = {
+                                    ...subsections[i],
+                                    body: e.target.value.trim() ? e.target.value : undefined,
+                                  }
+                                  updateSectionContent(s.id, { subsections })
+                                }}
+                              />
+                            </div>
+                            {LAYOUTS_WITH_SINGLE_MEDIA.includes(s.layout) && (
+                              <>
+                                <SectionMediaUpload
+                                  value={sub.media}
+                                  onChange={(media) => {
+                                    const subsections: SectionSubBlock[] = [...(s.content?.subsections ?? [])]
+                                    subsections[i] = { ...subsections[i], media }
+                                    updateSectionContent(s.id, { subsections })
+                                  }}
+                                  uploadFolder={uploadFolder}
+                                />
+                                <SectionMediaUpload
+                                  label="Mobile media (optional)"
+                                  description="Portrait or vertical when set; same behavior as main block."
+                                  value={sub.mediaMobile}
+                                  onChange={(mediaMobile) => {
+                                    const subsections: SectionSubBlock[] = [...(s.content?.subsections ?? [])]
+                                    subsections[i] = { ...subsections[i], mediaMobile }
+                                    updateSectionContent(s.id, { subsections })
+                                  }}
+                                  uploadFolder={uploadFolder}
+                                  cropAspectRatio="9/16"
+                                  cropFrameLabel="Phone viewport"
+                                />
+                              </>
+                            )}
+                            {s.layout === 'gallery-strip' && (
+                              <SectionGalleryUpload
+                                value={sub.gallery}
+                                onChange={(gallery) => {
+                                  const subsections: SectionSubBlock[] = [...(s.content?.subsections ?? [])]
+                                  subsections[i] = { ...subsections[i], gallery }
+                                  updateSectionContent(s.id, { subsections })
+                                }}
+                                uploadFolder={uploadFolder}
+                              />
+                            )}
+                          </div>
+                        ))}
+                      </div>
                     </>
                   ) : null}
                   <div className={styles.field}>

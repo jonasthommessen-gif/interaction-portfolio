@@ -68,6 +68,15 @@ export type SectionSideInfo = {
   links?: SectionSideInfoLink[]
 }
 
+/** Extra content blocks inside the same section (same nav entry); inherit the section layout. */
+export type SectionSubBlock = {
+  heading?: string
+  body?: string
+  media?: SectionMediaAsset
+  mediaMobile?: SectionMediaAsset
+  gallery?: { src: string; alt?: string; caption?: string }[]
+}
+
 /** Content for a section; shape depends on layout (e.g. text + one image for text-left-media-right). */
 export type SectionContent = {
   heading?: string
@@ -78,6 +87,8 @@ export type SectionContent = {
   gallery?: { src: string; alt?: string; caption?: string }[]
   display?: SectionDisplayOptions
   sideInfo?: SectionSideInfo
+  /** Optional stacked blocks below the root; ignored for `project-overview`. */
+  subsections?: SectionSubBlock[]
 }
 
 export type ProjectCoverMedia =
