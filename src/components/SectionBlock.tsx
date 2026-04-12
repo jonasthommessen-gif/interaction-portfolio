@@ -48,10 +48,23 @@ function participantsOneLine(raw: string): string {
     .join(', ')
 }
 
-function OverviewRow({ label, children }: { label: string; children: React.ReactNode }) {
+function OverviewRow({
+  label,
+  children,
+  showLabel = true,
+}: {
+  label: string
+  children: React.ReactNode
+  /** When false, the label cell is empty so the grid stays aligned (e.g. extra link rows). */
+  showLabel?: boolean
+}) {
   return (
     <div className={styles.overviewRow}>
-      <span className={styles.overviewLabel}>{label}</span>
+      {showLabel ? (
+        <span className={styles.overviewLabel}>{label}</span>
+      ) : (
+        <span className={styles.overviewLabelEmpty} aria-hidden="true" />
+      )}
       <span className={styles.overviewValue}>{children}</span>
     </div>
   )
@@ -112,7 +125,11 @@ function OverviewFactsPanel({ info }: { info: SectionSideInfo }) {
           })}
 
           {links.map((l, i) => (
-            <OverviewRow key={`${l.href}-${i}`} label="Link">
+            <OverviewRow
+              key={`${l.href}-${i}`}
+              label={links.length === 1 ? 'Link' : 'Links'}
+              showLabel={i === 0}
+            >
               <a href={l.href.trim()} rel="noopener noreferrer" target="_blank" className={styles.overviewLink}>
                 {l.label.trim()}
               </a>
