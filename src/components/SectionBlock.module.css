@@ -224,6 +224,24 @@
   width: 100%;
 }
 
+/* full-bleed-media-natural: no hero/cover crop; mobile media spans viewport */
+.fullBleedMediaNatural .media,
+.fullBleedMediaNatural video {
+  object-fit: contain;
+}
+
+@media (max-width: 819px) {
+  .fullBleedMediaNatural .mediaColumn {
+    width: 100vw;
+    max-width: 100vw;
+    box-sizing: border-box;
+    flex-shrink: 0;
+    margin-left: calc(50% - 50vw);
+    margin-right: calc(50% - 50vw);
+    padding-inline: env(safe-area-inset-left, 0px) env(safe-area-inset-right, 0px);
+  }
+}
+
 .caption {
   max-width: 65ch;
 }

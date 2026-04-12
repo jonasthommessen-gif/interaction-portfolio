@@ -22,6 +22,7 @@ const LAYOUTS_WITH_SINGLE_MEDIA: SectionLayoutKey[] = [
   'media-above-text',
   'media-wide-above-text',
   'full-bleed-media',
+  'full-bleed-media-natural',
 ]
 
 const SECTION_LAYOUT_LABELS: Record<SectionLayoutKey, string> = {
@@ -29,6 +30,7 @@ const SECTION_LAYOUT_LABELS: Record<SectionLayoutKey, string> = {
   'text-left-media-right': 'Text left, media right',
   'media-left-text-right': 'Media left, text right',
   'full-bleed-media': 'Full-bleed media (hero) + caption',
+  'full-bleed-media-natural': 'Full-bleed media (natural height, uncropped) + caption',
   'media-above-text': 'Media above text (hero height)',
   'media-wide-above-text': 'Media above text (wide, natural height)',
   'gallery-strip': 'Gallery strip',

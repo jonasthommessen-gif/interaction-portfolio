@@ -341,7 +341,7 @@ function SectionLayoutSlice({
     showSectionTitle &&
     sectionTitleAboveMedia &&
     (((layout === 'media-above-text' || layout === 'media-wide-above-text') && pureSingleMediaBlock) ||
-      (layout === 'full-bleed-media' && pureSingleMediaBlock) ||
+      ((layout === 'full-bleed-media' || layout === 'full-bleed-media-natural') && pureSingleMediaBlock) ||
       (layout === 'gallery-strip' && pureGalleryBlock))
 
   const showTitleWithText = showSectionTitle && !titleAboveMedia
@@ -396,20 +396,24 @@ function SectionLayoutSlice({
     )
   }
 
-  if (layout === 'full-bleed-media') {
+  if (layout === 'full-bleed-media' || layout === 'full-bleed-media-natural') {
     const showCaption =
       hasText ||
       (showTitleWithText && !pureSingleMediaBlock) ||
       (!hasSingleMedia && !hasText)
+    const fullBleedRootClass =
+      layout === 'full-bleed-media-natural'
+        ? `${styles.fullBleedMedia} ${styles.fullBleedMediaNatural}`
+        : styles.fullBleedMedia
 
     return (
-      <div className={styles.fullBleedMedia}>
+      <div className={fullBleedRootClass}>
         <SectionTitle label={sectionLabel} visible={titleAboveMedia} />
         <div className={styles.mediaColumn}>
           <ResponsiveSingleMedia
             media={media}
             mediaMobile={mediaMobile}
-            variant="hero"
+            variant={layout === 'full-bleed-media' ? 'hero' : 'default'}
             loading={imageLoading}
           />
         </div>
