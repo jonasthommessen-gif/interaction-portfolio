@@ -172,6 +172,11 @@
   max-width: min(90ch, 100%);
 }
 
+.overviewFactsWithAside {
+  max-width: none;
+  width: 100%;
+}
+
 .overviewLayout {
   display: grid;
   grid-template-columns: 1fr;
@@ -181,47 +186,71 @@
 
 @media (min-width: 720px) {
   .overviewLayoutWithAside {
-    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-columns: minmax(0, min(72ch, 100%)) minmax(0, 1fr);
+    align-items: stretch;
+    column-gap: 1.5rem;
   }
 }
 
 .overviewMain {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
   min-width: 0;
   max-width: min(72ch, 100%);
+}
+
+@media (min-width: 720px) {
+  .overviewLayoutWithAside .overviewMain {
+    max-width: none;
+    width: 100%;
+  }
 }
 
 .overviewAside {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 1rem;
+  align-self: stretch;
+  gap: 0.75rem;
   min-width: 0;
-}
-
-@media (min-width: 720px) {
-  .overviewAside {
-    align-items: flex-end;
-    padding-top: 0.15rem;
-  }
+  min-height: 0;
 }
 
 .overviewAsideLink,
 .overviewAsideFigure {
-  display: block;
+  flex: 1 1 0;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  width: 100%;
   line-height: 0;
 }
 
 .overviewAsideLogo {
   display: block;
+  width: auto;
   height: auto;
-  width: clamp(7rem, 18vw, 11rem);
-  max-height: 5.5rem;
   max-width: 100%;
+  max-height: 100%;
   object-fit: contain;
 }
 
+@media (max-width: 719px) {
+  .overviewAsideLink,
+  .overviewAsideFigure {
+    flex: 0 1 auto;
+    min-height: auto;
+    justify-content: flex-start;
+  }
+
+  .overviewAsideLogo {
+    max-height: min(40vh, 11rem);
+  }
+}
+
 .overviewLead {
-  margin: 0 0 1rem;
+  margin: 0;
   color: var(--fg);
   line-height: 1.55;
 }
@@ -230,9 +259,9 @@
   display: grid;
   grid-template-columns: minmax(11rem, 32%) minmax(0, 1fr);
   column-gap: 1rem;
-  row-gap: 0.25rem;
-  align-items: baseline;
-  padding-block: 0.45rem;
+  row-gap: 0.2rem;
+  align-items: start;
+  padding-block: 0;
 }
 
 .overviewLabel {
@@ -241,12 +270,15 @@
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: rgba(255, 255, 255, 0.55);
+  line-height: 1.35;
+  padding-top: 0.12em;
 }
 
 .overviewValue {
   margin: 0;
   min-width: 0;
   color: var(--fg);
+  line-height: 1.35;
 }
 
 .overviewValueMuted {

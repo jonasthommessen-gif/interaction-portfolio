@@ -69,7 +69,10 @@ function OverviewFactsPanel({ info }: { info: SectionSideInfo }) {
   const hasAside = collaboratorsWithLogo.length > 0
 
   return (
-    <aside className={styles.overviewFacts} aria-label="Project overview">
+    <aside
+      className={hasAside ? `${styles.overviewFacts} ${styles.overviewFactsWithAside}` : styles.overviewFacts}
+      aria-label="Project overview"
+    >
       <div className={hasAside ? `${styles.overviewLayout} ${styles.overviewLayoutWithAside}` : styles.overviewLayout}>
         <div className={styles.overviewMain}>
           {info.overview?.trim() ? <p className={styles.overviewLead}>{info.overview.trim()}</p> : null}
