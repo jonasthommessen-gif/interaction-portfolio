@@ -23,8 +23,6 @@ const LAYOUTS_WITH_SINGLE_MEDIA: SectionLayoutKey[] = [
   'full-bleed-media',
 ]
 
-const LAYOUTS_WITH_SIDE_INFO: SectionLayoutKey[] = ['media-above-text', 'full-bleed-media']
-
 function hasTrimmedText(s: string | undefined) {
   return Boolean(s?.trim())
 }
@@ -634,51 +632,55 @@ export function AdminProjectEditPage() {
                   )}
                 </div>
                 <div className={styles.contentSectionForm}>
-                  <div className={styles.field}>
-                    <label className={styles.label}>Heading (optional)</label>
-                    <input
-                      type="text"
-                      value={s.content?.heading ?? ''}
-                      onChange={(e) => updateSectionContent(s.id, { heading: e.target.value || undefined })}
-                      className={styles.input}
-                      placeholder="Section heading"
-                    />
-                  </div>
-                  <div className={styles.field}>
-                    <label className={styles.label}>Body text</label>
-                    <textarea
-                      value={s.content?.body ?? ''}
-                      onChange={(e) => updateSectionContent(s.id, { body: e.target.value || undefined })}
-                      className={styles.textarea}
-                      rows={4}
-                      placeholder="Section body content"
-                    />
-                  </div>
-                  {LAYOUTS_WITH_SINGLE_MEDIA.includes(s.layout) && (
+                  {s.layout !== 'project-overview' ? (
                     <>
-                      <SectionMediaUpload
-                        value={s.content?.media}
-                        onChange={(media) => updateSectionContent(s.id, { media })}
-                        uploadFolder={uploadFolder}
-                      />
-                      <SectionMediaUpload
-                        label="Mobile media (optional)"
-                        description="Portrait or vertical (e.g. 9:16). Shown on narrow screens instead of main media when set. Desktop always uses main media above."
-                        value={s.content?.mediaMobile}
-                        onChange={(mediaMobile) => updateSectionContent(s.id, { mediaMobile })}
-                        uploadFolder={uploadFolder}
-                        cropAspectRatio="9/16"
-                        cropFrameLabel="Phone viewport"
-                      />
+                      <div className={styles.field}>
+                        <label className={styles.label}>Heading (optional)</label>
+                        <input
+                          type="text"
+                          value={s.content?.heading ?? ''}
+                          onChange={(e) => updateSectionContent(s.id, { heading: e.target.value || undefined })}
+                          className={styles.input}
+                          placeholder="Section heading"
+                        />
+                      </div>
+                      <div className={styles.field}>
+                        <label className={styles.label}>Body text</label>
+                        <textarea
+                          value={s.content?.body ?? ''}
+                          onChange={(e) => updateSectionContent(s.id, { body: e.target.value || undefined })}
+                          className={styles.textarea}
+                          rows={4}
+                          placeholder="Section body content"
+                        />
+                      </div>
+                      {LAYOUTS_WITH_SINGLE_MEDIA.includes(s.layout) && (
+                        <>
+                          <SectionMediaUpload
+                            value={s.content?.media}
+                            onChange={(media) => updateSectionContent(s.id, { media })}
+                            uploadFolder={uploadFolder}
+                          />
+                          <SectionMediaUpload
+                            label="Mobile media (optional)"
+                            description="Portrait or vertical (e.g. 9:16). Shown on narrow screens instead of main media when set. Desktop always uses main media above."
+                            value={s.content?.mediaMobile}
+                            onChange={(mediaMobile) => updateSectionContent(s.id, { mediaMobile })}
+                            uploadFolder={uploadFolder}
+                            cropAspectRatio="9/16"
+                            cropFrameLabel="Phone viewport"
+                          />
+                        </>
+                      )}
+                      {s.layout === 'gallery-strip' && (
+                        <SectionGalleryUpload
+                          value={s.content?.gallery}
+                          onChange={(gallery) => updateSectionContent(s.id, { gallery })}
+                          uploadFolder={uploadFolder}
+                        />
+                      )}
                     </>
-                  )}
-                  {s.layout === 'gallery-strip' && (
-                    <SectionGalleryUpload
-                      value={s.content?.gallery}
-                      onChange={(gallery) => updateSectionContent(s.id, { gallery })}
-                      uploadFolder={uploadFolder}
-                    />
-                  )}
+                  ) : null}
                   <div className={styles.field}>
                     <label className={styles.checkboxLabel}>
                       <input
@@ -695,62 +697,39 @@ export function AdminProjectEditPage() {
                       Show section title on project page (next to content, not in sidebar)
                     </label>
                   </div>
-                  <div className={styles.field}>
-                    <label className={styles.checkboxLabel}>
-                      <input
-                        type="checkbox"
-                        className={styles.checkbox}
-                        checked={s.content?.display?.sectionTitleAboveMedia === true}
-                        disabled={
-                          !s.content?.display?.showSectionTitle ||
-                          !(
-                            (LAYOUTS_WITH_SINGLE_MEDIA.includes(s.layout) &&
-                              Boolean(s.content?.media?.src || s.content?.mediaMobile?.src) &&
-                              !hasTrimmedText(s.content?.body) &&
-                              !hasTrimmedText(s.content?.heading)) ||
-                            (s.layout === 'gallery-strip' &&
-                              (s.content?.gallery?.length ?? 0) > 0 &&
-                              !hasTrimmedText(s.content?.body) &&
-                              !hasTrimmedText(s.content?.heading))
-                          )
-                        }
-                        onChange={(e) =>
-                          patchSectionDisplay(s.id, { sectionTitleAboveMedia: e.target.checked })
-                        }
-                      />
-                      Place title above media (only when section is media-only and title is shown)
-                    </label>
-                    <p className={styles.displayHint}>
-                      Sidebar section names are unchanged. “Media-only” means no body or optional heading text.
-                    </p>
-                  </div>
-                  <div className={styles.field}>
-                    <label className={styles.checkboxLabel}>
-                      <input
-                        type="checkbox"
-                        className={styles.checkbox}
-                        checked={s.content?.display?.showSideInfo === true}
-                        disabled={!LAYOUTS_WITH_SIDE_INFO.includes(s.layout)}
-                        onChange={(e) =>
-                          patchSectionDisplay(s.id, {
-                            showSideInfo: e.target.checked,
-                          })
-                        }
-                      />
-                      Show side info (desktop: column beside intro text; mobile: under body)
-                    </label>
-                    {!LAYOUTS_WITH_SIDE_INFO.includes(s.layout) ? (
+                  {s.layout !== 'project-overview' ? (
+                    <div className={styles.field}>
+                      <label className={styles.checkboxLabel}>
+                        <input
+                          type="checkbox"
+                          className={styles.checkbox}
+                          checked={s.content?.display?.sectionTitleAboveMedia === true}
+                          disabled={
+                            !s.content?.display?.showSectionTitle ||
+                            !(
+                              (LAYOUTS_WITH_SINGLE_MEDIA.includes(s.layout) &&
+                                Boolean(s.content?.media?.src || s.content?.mediaMobile?.src) &&
+                                !hasTrimmedText(s.content?.body) &&
+                                !hasTrimmedText(s.content?.heading)) ||
+                              (s.layout === 'gallery-strip' &&
+                                (s.content?.gallery?.length ?? 0) > 0 &&
+                                !hasTrimmedText(s.content?.body) &&
+                                !hasTrimmedText(s.content?.heading))
+                            )
+                          }
+                          onChange={(e) =>
+                            patchSectionDisplay(s.id, { sectionTitleAboveMedia: e.target.checked })
+                          }
+                        />
+                        Place title above media (only when section is media-only and title is shown)
+                      </label>
                       <p className={styles.displayHint}>
-                        Side info only appears on the public page for layouts{' '}
-                        <strong>media-above-text</strong> and <strong>full-bleed-media</strong>.
+                        Sidebar section names are unchanged. “Media-only” means no body or optional heading text.
                       </p>
-                    ) : null}
-                  </div>
-                  {LAYOUTS_WITH_SIDE_INFO.includes(s.layout) && s.content?.display?.showSideInfo ? (
+                    </div>
+                  ) : null}
+                  {s.layout === 'project-overview' ? (
                     <div className={styles.sideInfoBlock}>
-                      <p className={styles.sideInfoIntro}>
-                        Facts for the right column (desktop) or block under the body (mobile).
-                      </p>
                       <div className={styles.field}>
                         <label className={styles.label} htmlFor={`side-overview-${s.id}`}>
                           Overview (short)
@@ -919,15 +898,12 @@ export function AdminProjectEditPage() {
                       </div>
                       <div className={styles.field}>
                         <div className={styles.sideInfoListHeader}>
-                          <span className={styles.label}>Collaborators (logo URL + alt)</span>
+                          <span className={styles.label}>Collaborators</span>
                           <button
                             type="button"
                             className={styles.textButton}
                             onClick={() => {
-                              const collaborators = [
-                                ...(s.content?.sideInfo?.collaborators ?? []),
-                                { logoSrc: '', logoAlt: '' },
-                              ]
+                              const collaborators = [...(s.content?.sideInfo?.collaborators ?? []), {}]
                               patchSectionSideInfo(s.id, { collaborators })
                             }}
                           >
@@ -936,32 +912,26 @@ export function AdminProjectEditPage() {
                         </div>
                         {(s.content?.sideInfo?.collaborators ?? []).map((c, i) => (
                           <div key={`collab-${s.id}-${i}`} className={styles.sideInfoRepeatCol}>
-                            <div className={styles.row}>
-                              <input
-                                className={styles.input}
-                                style={{ flex: '2 1 8rem' }}
-                                aria-label={`Partner ${i + 1} logo URL`}
-                                placeholder="Logo image URL"
-                                value={c.logoSrc}
-                                onChange={(e) => {
-                                  const collaborators = [...(s.content?.sideInfo?.collaborators ?? [])]
-                                  collaborators[i] = { ...collaborators[i], logoSrc: e.target.value }
-                                  patchSectionSideInfo(s.id, { collaborators })
-                                }}
-                              />
-                              <input
-                                className={styles.input}
-                                style={{ flex: '1 1 6rem' }}
-                                aria-label={`Partner ${i + 1} alt text`}
-                                placeholder="Alt text"
-                                value={c.logoAlt}
-                                onChange={(e) => {
-                                  const collaborators = [...(s.content?.sideInfo?.collaborators ?? [])]
-                                  collaborators[i] = { ...collaborators[i], logoAlt: e.target.value }
-                                  patchSectionSideInfo(s.id, { collaborators })
-                                }}
-                              />
-                            </div>
+                            <SectionMediaUpload
+                              label={`Partner ${i + 1} logo (image)`}
+                              accept="image/*"
+                              value={c.logo?.type === 'image' ? c.logo : undefined}
+                              onChange={(media) => {
+                                const collaborators = [...(s.content?.sideInfo?.collaborators ?? [])]
+                                if (media?.type === 'image') {
+                                  collaborators[i] = {
+                                    ...collaborators[i],
+                                    logo: media,
+                                    logoSrc: undefined,
+                                    logoAlt: undefined,
+                                  }
+                                } else {
+                                  collaborators[i] = { ...collaborators[i], logo: undefined }
+                                }
+                                patchSectionSideInfo(s.id, { collaborators })
+                              }}
+                              uploadFolder={uploadFolder}
+                            />
                             <div className={styles.row}>
                               <input
                                 className={styles.input}

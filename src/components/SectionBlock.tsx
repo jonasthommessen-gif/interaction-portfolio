@@ -1,7 +1,10 @@
-import type { SectionContent, SectionLayoutKey, SectionSideInfo } from '../types/cms'
+import type {
+  SectionContent,
+  SectionLayoutKey,
+  SectionSideInfo,
+  SectionSideInfoCollaborator,
+} from '../types/cms'
 import styles from './SectionBlock.module.css'
-
-const LAYOUTS_WITH_SIDE_INFO: SectionLayoutKey[] = ['media-above-text', 'full-bleed-media']
 
 function hasSideInfoData(info: SectionSideInfo | undefined): boolean {
   if (!info) return false
@@ -14,147 +17,108 @@ function hasSideInfoData(info: SectionSideInfo | undefined): boolean {
   if (t(info.methods)) return true
   if (t(info.location)) return true
   if (info.links?.some((l) => t(l.label) && t(l.href))) return true
-  if (info.collaborators?.some((c) => t(c.logoSrc) && t(c.logoAlt))) return true
+  if (
+    info.collaborators?.some(
+      (c) =>
+        Boolean(c.logo?.src?.trim()) ||
+        (Boolean(c.logoSrc?.trim()) && Boolean(c.logoAlt?.trim())) ||
+        Boolean(c.name?.trim()),
+    )
+  )
+    return true
   return false
 }
 
-function sideInfoActive(layout: SectionLayoutKey, content: SectionContent | undefined): boolean {
-  if (!content?.display?.showSideInfo) return false
-  if (!LAYOUTS_WITH_SIDE_INFO.includes(layout)) return false
-  return hasSideInfoData(content.sideInfo)
+function collaboratorLogoSrc(c: SectionSideInfoCollaborator): string | null {
+  const fromAsset = c.logo?.src?.trim()
+  if (fromAsset) return fromAsset
+  const legacy = c.logoSrc?.trim()
+  return legacy || null
 }
 
-function formatParticipants(raw: string) {
-  const lines = raw
+function collaboratorLogoAlt(c: SectionSideInfoCollaborator): string {
+  return (c.logo?.alt ?? c.logoAlt ?? '').trim()
+}
+
+function participantsOneLine(raw: string): string {
+  return raw
     .split(/\n/)
-    .map((x) => x.trim())
+    .map((s) => s.trim())
     .filter(Boolean)
-  if (lines.length > 1) {
-    return (
-      <ul className={styles.sideInfoList}>
-        {lines.map((line, i) => (
-          <li key={`${i}-${line.slice(0, 24)}`}>{line}</li>
-        ))}
-      </ul>
-    )
-  }
-  const parts = raw
-    .split(/[,;]/)
-    .map((x) => x.trim())
-    .filter(Boolean)
-  if (parts.length > 1) {
-    return (
-      <ul className={styles.sideInfoList}>
-        {parts.map((p, i) => (
-          <li key={`${i}-${p.slice(0, 24)}`}>{p}</li>
-        ))}
-      </ul>
-    )
-  }
-  return <p className={styles.sideInfoValue}>{raw.trim()}</p>
+    .join(', ')
 }
 
-function SideInfoPanel({ info }: { info: SectionSideInfo }) {
-  const collaborators = (info.collaborators ?? []).filter(
-    (c) => c.logoSrc?.trim() && c.logoAlt?.trim(),
+function OverviewRow({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className={styles.overviewRow}>
+      <span className={styles.overviewLabel}>{label}</span>
+      <span className={styles.overviewValue}>{children}</span>
+    </div>
   )
+}
+
+function OverviewFactsPanel({ info }: { info: SectionSideInfo }) {
+  const collaborators = (info.collaborators ?? []).filter((c) => {
+    if (collaboratorLogoSrc(c)) return true
+    return Boolean(c.name?.trim())
+  })
   const links = (info.links ?? []).filter((l) => l.label?.trim() && l.href?.trim())
 
-  const showFactsDl = Boolean(
-    info.timeframe?.trim() ||
-      info.role?.trim() ||
-      info.location?.trim() ||
-      info.tools?.trim() ||
-      info.methods?.trim() ||
-      info.participants?.trim(),
-  )
-
   return (
-    <aside className={styles.sideInfo} aria-label="Project facts">
-      {info.overview?.trim() ? (
-        <p className={styles.sideInfoOverview}>{info.overview.trim()}</p>
-      ) : null}
+    <aside className={styles.overviewFacts} aria-label="Project overview">
+      {info.overview?.trim() ? <p className={styles.overviewLead}>{info.overview.trim()}</p> : null}
 
-      {showFactsDl ? (
-        <dl className={styles.sideInfoDl}>
-          {info.timeframe?.trim() ? (
-            <div className={styles.sideInfoPair}>
-              <dt className={styles.sideInfoLabel}>Timeframe</dt>
-              <dd className={styles.sideInfoValue}>{info.timeframe.trim()}</dd>
-            </div>
-          ) : null}
-          {info.role?.trim() ? (
-            <div className={styles.sideInfoPair}>
-              <dt className={styles.sideInfoLabel}>Role</dt>
-              <dd className={styles.sideInfoValue}>{info.role.trim()}</dd>
-            </div>
-          ) : null}
-          {info.location?.trim() ? (
-            <div className={styles.sideInfoPair}>
-              <dt className={styles.sideInfoLabel}>Location</dt>
-              <dd className={styles.sideInfoValue}>{info.location.trim()}</dd>
-            </div>
-          ) : null}
-          {info.tools?.trim() ? (
-            <div className={styles.sideInfoPair}>
-              <dt className={styles.sideInfoLabel}>Tools</dt>
-              <dd className={styles.sideInfoValue}>{info.tools.trim()}</dd>
-            </div>
-          ) : null}
-          {info.methods?.trim() ? (
-            <div className={styles.sideInfoPair}>
-              <dt className={styles.sideInfoLabel}>Methods</dt>
-              <dd className={styles.sideInfoValue}>{info.methods.trim()}</dd>
-            </div>
-          ) : null}
-          {info.participants?.trim() ? (
-            <div className={styles.sideInfoPair}>
-              <dt className={styles.sideInfoLabel}>Participants</dt>
-              <dd>{formatParticipants(info.participants)}</dd>
-            </div>
-          ) : null}
-        </dl>
+      {info.timeframe?.trim() ? (
+        <OverviewRow label="Timeframe">{info.timeframe.trim()}</OverviewRow>
       ) : null}
+      {info.role?.trim() ? <OverviewRow label="Role">{info.role.trim()}</OverviewRow> : null}
+      {info.location?.trim() ? (
+        <OverviewRow label="Location">{info.location.trim()}</OverviewRow>
+      ) : null}
+      {info.participants?.trim() ? (
+        <OverviewRow label="Participants">{participantsOneLine(info.participants)}</OverviewRow>
+      ) : null}
+      {info.tools?.trim() ? <OverviewRow label="Tools">{info.tools.trim()}</OverviewRow> : null}
+      {info.methods?.trim() ? <OverviewRow label="Methods">{info.methods.trim()}</OverviewRow> : null}
 
-      {collaborators.length > 0 ? (
-        <div className={styles.sideInfoPair}>
-          <div className={styles.sideInfoLabel}>Collaboration</div>
-          <div className={styles.sideInfoPartners}>
-            {collaborators.map((c, i) => {
-              const inner = (
-                <>
-                  <img src={c.logoSrc.trim()} alt={c.logoAlt.trim()} loading="lazy" decoding="async" />
-                  {c.name?.trim() ? <span className={styles.sideInfoValue}>{c.name.trim()}</span> : null}
-                </>
-              )
-              return (
-                <div key={`${c.logoSrc}-${i}`} className={styles.sideInfoPartner}>
-                  {c.url?.trim() ? (
-                    <a href={c.url.trim()} rel="noopener noreferrer" target="_blank">
-                      {inner}
-                    </a>
-                  ) : (
-                    inner
-                  )}
-                </div>
-              )
-            })}
+      {collaborators.map((c, i) => {
+        const src = collaboratorLogoSrc(c)
+        const alt = collaboratorLogoAlt(c) || 'Partner logo'
+        const name = c.name?.trim() ?? ''
+        const nameNode = c.url?.trim() ? (
+          <a href={c.url.trim()} rel="noopener noreferrer" target="_blank" className={styles.overviewCollabName}>
+            {name || 'Website'}
+          </a>
+        ) : name ? (
+          <span className={styles.overviewCollabName}>{name}</span>
+        ) : null
+
+        return (
+          <div key={`collab-${i}-${src ?? name}`} className={styles.overviewRow}>
+            <span className={styles.overviewLabel}>In collaboration with</span>
+            <span className={styles.overviewCollabValue}>
+              {src ? (
+                <img
+                  src={src}
+                  alt={alt}
+                  className={styles.overviewCollabLogo}
+                  loading="lazy"
+                  decoding="async"
+                />
+              ) : null}
+              {nameNode}
+            </span>
           </div>
-        </div>
-      ) : null}
+        )
+      })}
 
-      {links.length > 0 ? (
-        <div className={styles.sideInfoPair}>
-          <div className={styles.sideInfoLabel}>Links</div>
-          <div className={styles.sideInfoLinks}>
-            {links.map((l, i) => (
-              <a key={`${l.href}-${i}`} href={l.href.trim()} rel="noopener noreferrer" target="_blank">
-                {l.label.trim()}
-              </a>
-            ))}
-          </div>
-        </div>
-      ) : null}
+      {links.map((l, i) => (
+        <OverviewRow key={`${l.href}-${i}`} label="Link">
+          <a href={l.href.trim()} rel="noopener noreferrer" target="_blank" className={styles.overviewLink}>
+            {l.label.trim()}
+          </a>
+        </OverviewRow>
+      ))}
     </aside>
   )
 }
@@ -339,28 +303,25 @@ export function SectionBlock({ layout, content, sectionLabel, imageLoading = 'la
     )
   }
 
+  if (layout === 'project-overview') {
+    const si = content?.sideInfo
+    return (
+      <div className={styles.projectOverview}>
+        <SectionTitle label={sectionLabel} visible={showTitleWithText} />
+        {hasSideInfoData(si) ? (
+          <OverviewFactsPanel info={si!} />
+        ) : (
+          <p className={styles.placeholder}>Add overview facts in admin.</p>
+        )}
+      </div>
+    )
+  }
+
   if (layout === 'full-bleed-media') {
     const showCaption =
       hasText ||
       (showTitleWithText && !pureSingleMediaBlock) ||
       (!hasSingleMedia && !hasText)
-
-    const sideOn = sideInfoActive(layout, content)
-    const sideInfoNode =
-      sideOn && content?.sideInfo ? <SideInfoPanel info={content.sideInfo} /> : null
-
-    const captionMain = (
-      <>
-        <SectionTitle label={sectionLabel} visible={showTitleWithText} />
-        <ContentHeading text={headingStr} />
-        {hasBody ? <div className={styles.body}>{bodyStr}</div> : null}
-        {!hasBody && !hasHeading && !showTitleWithText ? (
-          <p className={styles.placeholder}>
-            {!hasSingleMedia ? 'Add media and text in admin.' : 'Add content in admin.'}
-          </p>
-        ) : null}
-      </>
-    )
 
     return (
       <div className={styles.fullBleedMedia}>
@@ -374,18 +335,16 @@ export function SectionBlock({ layout, content, sectionLabel, imageLoading = 'la
           />
         </div>
         {showCaption ? (
-          <div className={`${styles.caption} ${sideOn ? styles.captionWide : ''}`}>
-            {sideOn ? (
-              <div className={styles.postHeroRow}>
-                <div className={styles.postHeroRowMain}>{captionMain}</div>
-                {sideInfoNode}
-              </div>
-            ) : (
-              captionMain
-            )}
+          <div className={styles.caption}>
+            <SectionTitle label={sectionLabel} visible={showTitleWithText} />
+            <ContentHeading text={headingStr} />
+            {hasBody ? <div className={styles.body}>{bodyStr}</div> : null}
+            {!hasBody && !hasHeading && !showTitleWithText ? (
+              <p className={styles.placeholder}>
+                {!hasSingleMedia ? 'Add media and text in admin.' : 'Add content in admin.'}
+              </p>
+            ) : null}
           </div>
-        ) : sideInfoNode ? (
-          <div className={styles.sideInfoStandalone}>{sideInfoNode}</div>
         ) : null}
       </div>
     )
@@ -394,24 +353,6 @@ export function SectionBlock({ layout, content, sectionLabel, imageLoading = 'la
   if (layout === 'media-above-text') {
     const showTextBlock =
       hasText || (showTitleWithText && !pureSingleMediaBlock) || !hasSingleMedia
-
-    const sideOn = sideInfoActive(layout, content)
-    const sideInfoNode =
-      sideOn && content?.sideInfo ? <SideInfoPanel info={content.sideInfo} /> : null
-
-    const textMain = (
-      <>
-        <SectionTitle label={sectionLabel} visible={showTitleWithText && !pureSingleMediaBlock} />
-        <ContentHeading text={headingStr} />
-        {hasBody ? (
-          <div className={styles.body}>{bodyStr}</div>
-        ) : (
-          <p className={styles.placeholder}>
-            {hasSingleMedia ? 'Add body text in admin.' : 'Add content in admin.'}
-          </p>
-        )}
-      </>
-    )
 
     return (
       <div className={styles.mediaAboveText}>
@@ -427,16 +368,17 @@ export function SectionBlock({ layout, content, sectionLabel, imageLoading = 'la
           </div>
         ) : null}
         {showTextBlock ? (
-          sideOn ? (
-            <div className={styles.postHeroRow}>
-              <div className={styles.postHeroRowMain}>{textMain}</div>
-              {sideInfoNode}
-            </div>
-          ) : (
-            <div className={styles.textBlock}>{textMain}</div>
-          )
-        ) : sideInfoNode ? (
-          <div className={styles.sideInfoStandalone}>{sideInfoNode}</div>
+          <div className={styles.textBlock}>
+            <SectionTitle label={sectionLabel} visible={showTitleWithText && !pureSingleMediaBlock} />
+            <ContentHeading text={headingStr} />
+            {hasBody ? (
+              <div className={styles.body}>{bodyStr}</div>
+            ) : (
+              <p className={styles.placeholder}>
+                {hasSingleMedia ? 'Add body text in admin.' : 'Add content in admin.'}
+              </p>
+            )}
+          </div>
         ) : null}
       </div>
     )

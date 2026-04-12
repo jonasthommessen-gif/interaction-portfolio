@@ -9,6 +9,7 @@ export const SECTION_LAYOUTS = [
   'full-bleed-media',
   'media-above-text',
   'gallery-strip',
+  'project-overview',
 ] as const
 
 export type SectionLayoutKey = (typeof SECTION_LAYOUTS)[number]
@@ -23,37 +24,9 @@ export type SectionDisplayOptions = {
    */
   sectionTitleAboveMedia?: boolean
   /**
-   * When true and `sideInfo` has content, show facts beside narrow body (desktop) or under it (mobile).
-   * Supported layouts: `media-above-text`, `full-bleed-media`.
+   * Legacy: was used to show `sideInfo` beside hero body. Facts now use layout `project-overview` only.
    */
   showSideInfo?: boolean
-}
-
-/** Partner / org logo row for section side info (URLs from storage or external). */
-export type SectionSideInfoCollaborator = {
-  logoSrc: string
-  logoAlt: string
-  name?: string
-  url?: string
-}
-
-export type SectionSideInfoLink = {
-  label: string
-  href: string
-}
-
-/** Structured facts for the optional project section side column. */
-export type SectionSideInfo = {
-  overview?: string
-  timeframe?: string
-  /** Multiline or comma-separated; rendered as a list when possible. */
-  participants?: string
-  collaborators?: SectionSideInfoCollaborator[]
-  role?: string
-  tools?: string
-  methods?: string
-  location?: string
-  links?: SectionSideInfoLink[]
 }
 
 /** Single image/video slot used for `media` and optional `mediaMobile`. */
@@ -65,6 +38,34 @@ export type SectionMediaAsset = {
   objectPosition?: string
   objectScale?: number
   objectRotation?: number
+}
+
+/** Partner / org for overview: prefer `logo` upload; `logoSrc`/`logoAlt` kept for older JSON. */
+export type SectionSideInfoCollaborator = {
+  logo?: SectionMediaAsset
+  logoSrc?: string
+  logoAlt?: string
+  name?: string
+  url?: string
+}
+
+export type SectionSideInfoLink = {
+  label: string
+  href: string
+}
+
+/** Structured facts for `project-overview` sections (stored in `content.sideInfo`). */
+export type SectionSideInfo = {
+  overview?: string
+  timeframe?: string
+  /** Shown on one line; newlines become comma-space for compact display. */
+  participants?: string
+  collaborators?: SectionSideInfoCollaborator[]
+  role?: string
+  tools?: string
+  methods?: string
+  location?: string
+  links?: SectionSideInfoLink[]
 }
 
 /** Content for a section; shape depends on layout (e.g. text + one image for text-left-media-right). */
