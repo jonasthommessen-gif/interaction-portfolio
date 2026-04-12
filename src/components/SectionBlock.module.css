@@ -341,10 +341,10 @@
 
   .overviewAsideLogo {
     display: block;
-    width: 100%;
-    max-width: 100%;
+    width: 50%;
+    max-width: 50%;
     height: auto;
-    max-height: min(70vh, 28rem);
+    max-height: min(35vh, 14rem);
     object-fit: contain;
   }
 }
