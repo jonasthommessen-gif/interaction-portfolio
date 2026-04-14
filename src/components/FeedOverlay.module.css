@@ -26,7 +26,8 @@
   position: relative;
   z-index: 45;
 
-  width: min(520px, calc(100vw - 32px));
+  /* Narrower column on short viewports so 4:5 media + text fits one screen (R = reserved px for shelf + chrome) */
+  width: min(520px, calc(100vw - 32px), calc(max(0px, 100dvh - 280px) * 4 / 5));
   /* Full viewport height — stretches to top of page */
   height: 100dvh;
 
