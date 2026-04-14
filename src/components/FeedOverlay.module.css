@@ -44,6 +44,7 @@
 
 .feed {
   flex: 1;
+  min-height: 0;
   overflow-y: scroll;
   overflow-x: hidden;
 
@@ -69,6 +70,7 @@
   position: relative;
   flex-shrink: 0;
   height: 100%;
+  min-height: 0;
   padding: 20px 20px 12px;
   display: flex;
   flex-direction: column;
@@ -94,10 +96,12 @@
   overflow: hidden;
   background: #111;
 
-  /* Takes up most of the item height */
-  flex: 0 0 auto;
+  /* Takes up most of the item height; cap height on short viewports so text shelf stays visible */
+  flex: 0 1 auto;
+  min-height: 0;
   aspect-ratio: 4 / 5;
   width: 100%;
+  max-height: min(65dvh, calc(100dvh - 260px));
 
   /* Shadow: no Y offset, blur only (30px) */
   box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
