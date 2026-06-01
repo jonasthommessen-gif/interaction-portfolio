@@ -8,6 +8,11 @@ export type DepthLayer = 1 | 2 | 3
 
 interface ArchiveCardProps {
   project: ArchiveProject
+  /** Gallery instance title (may differ from project.title when post spawns multiple times). */
+  displayTitle?: string
+  /** Override cover src for this gallery instance. */
+  coverSrc?: string
+  coverType?: 'image' | 'video'
   /** 1 = foreground, 2 = mid, 3 = background */
   depth: DepthLayer
   /** Whether this card is currently focused */
@@ -25,6 +30,9 @@ interface ArchiveCardProps {
 
 export function ArchiveCard({
   project,
+  displayTitle,
+  coverSrc,
+  coverType,
   isFocused,
   anyFocused,
   onHover,
@@ -32,6 +40,12 @@ export function ArchiveCard({
   layoutId,
   disableFloat = false,
 }: ArchiveCardProps) {
+  const title = displayTitle ?? project.title
+  const cover = coverSrc ?? project.cover
+  const isVideo =
+    coverType === 'video' ||
+    (coverType == null &&
+      project.media?.find((m) => m.src === cover)?.type === 'video')
   const controls = useAnimationControls()
   const idleRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const mountedRef = useRef(true)
@@ -42,8 +56,11 @@ export function ArchiveCard({
     if (disableFloat) return
     mountedRef.current = true
 
-    const cardNum = parseInt(project.id.replace('arc-', ''), 10) - 1
-    const staggerMs = cardNum * 280
+    let cardNum = 0
+    for (let i = 0; i < layoutId.length; i++) {
+      cardNum = (cardNum + layoutId.charCodeAt(i)) % 1000
+    }
+    const staggerMs = cardNum * 28
 
     idleRef.current = setTimeout(() => {
       if (!mountedRef.current) return
@@ -63,7 +80,7 @@ export function ArchiveCard({
       if (idleRef.current) clearTimeout(idleRef.current)
       controls.stop()
     }
-  }, [controls, project.id, disableFloat])
+  }, [controls, layoutId, disableFloat])
 
   // Stop idle when any card is focused
   useEffect(() => {
@@ -92,12 +109,12 @@ export function ArchiveCard({
           : undefined
       }
       onClick={!anyFocused ? onClick : undefined}
-      onHoverStart={() => !anyFocused && onHover(project.title)}
+      onHoverStart={() => !anyFocused && onHover(title)}
       onHoverEnd={() => onHover(null)}
     >
-      {project.media?.[0]?.src === project.cover && project.media[0].type === 'video' ? (
+      {isVideo ? (
         <VideoInView
-          src={project.cover}
+          src={cover}
           className={styles.image}
           width={800}
           height={600}
@@ -105,8 +122,8 @@ export function ArchiveCard({
       ) : (
         <img
           className={styles.image}
-          src={project.cover}
-          alt={project.title}
+          src={cover}
+          alt={title}
           width={800}
           height={600}
           loading="lazy"

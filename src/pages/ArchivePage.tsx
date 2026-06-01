@@ -1,6 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { AnimatePresence, useMotionValue } from 'framer-motion'
 import { fetchArchiveProjects } from '../lib/cms'
+import {
+  buildArchiveGalleryEntries,
+  getArchiveLoopWidth,
+  type ArchiveGalleryEntry,
+} from '../lib/archiveGallery'
 import type { ArchiveProject } from '../types/cms'
 import { ArchiveCard } from '../components/ArchiveCard'
 import type { DepthLayer } from '../components/ArchiveCard'
@@ -16,7 +21,6 @@ function getInitialArchiveState(): { viewMode: 'gallery' | 'feed'; feedEntryId: 
 }
 
 // ─── Constants ────────────────────────────────────────────────────────────────
-const LOOP_WIDTH = 4000
 const FRICTION = 0.94
 /** Idle auto-scroll: starts after 10s of no interaction */
 const IDLE_TIMEOUT_MS = 10_000
@@ -26,8 +30,11 @@ const IDLE_SCROLL_SPEED = 0.35
 /** Lerp factor for smooth scroll: display follows target by this fraction per frame */
 const SMOOTH_LERP = 0.12
 
+/** Minimum center-to-center spacing between cards along the loop (px). */
+const MIN_CARD_GAP_PX = 160
+
 /** Max wheel delta per event so target does not jump too far and break smoothness */
-const MAX_WHEEL_DELTA = 20
+const MAX_WHEEL_DELTA = 48
 
 /** Snap to target when within this distance (avoids drift and micro-jitter) */
 const SNAP_THRESHOLD = 0.4
@@ -52,9 +59,9 @@ function seededRandom(seed: number): () => number {
 }
 
 /** Minimum horizontal gap between cards as a fraction of the loop (avoids overlap) */
-function buildLayouts(total: number): CardLayout[] {
+function buildLayouts(total: number, loopWidth: number): CardLayout[] {
   if (total <= 0) return []
-  const MIN_X_GAP_FRACTION = 0.8 / total
+  const MIN_X_GAP_FRACTION = MIN_CARD_GAP_PX / loopWidth
   const rng = seededRandom(42)
   const layouts: CardLayout[] = []
   const depthPattern: DepthLayer[] = [
@@ -122,7 +129,16 @@ export function ArchivePage() {
   }, [])
 
   const TOTAL = projects.length
-  const CARD_LAYOUTS = useMemo(() => buildLayouts(TOTAL), [TOTAL])
+  const galleryEntries = useMemo(
+    () => buildArchiveGalleryEntries(projects),
+    [projects],
+  )
+  const CARD_COUNT = galleryEntries.length
+  const LOOP_WIDTH = useMemo(() => getArchiveLoopWidth(CARD_COUNT), [CARD_COUNT])
+  const CARD_LAYOUTS = useMemo(
+    () => buildLayouts(CARD_COUNT, LOOP_WIDTH),
+    [CARD_COUNT, LOOP_WIDTH],
+  )
 
   const [hoveredTitle, setHoveredTitle] = useState<string | null>(null)
   const [viewMode, setViewMode] = useState<'gallery' | 'feed'>(initial.viewMode)
@@ -224,7 +240,8 @@ export function ArchivePage() {
 
       resetIdleTimer()
 
-      const rawDelta = e.deltaY
+      const rawDelta =
+        Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY
       const delta =
         Math.sign(rawDelta) * Math.min(Math.abs(rawDelta), MAX_WHEEL_DELTA)
       targetOffsetRef.current += delta
@@ -254,10 +271,13 @@ export function ArchivePage() {
   )
 
   useEffect(() => {
-    const el = containerRef.current
-    if (!el) return
-    el.addEventListener('wheel', handleWheel, { passive: false })
-    return () => el.removeEventListener('wheel', handleWheel)
+    const scene = containerRef.current
+    const page = scene?.closest('main')
+    const targets = [scene, page].filter((el): el is HTMLElement => !!el)
+    targets.forEach((el) => el.addEventListener('wheel', handleWheel, { passive: false }))
+    return () => {
+      targets.forEach((el) => el.removeEventListener('wheel', handleWheel))
+    }
   }, [handleWheel])
 
   useEffect(() => {
@@ -336,10 +356,10 @@ export function ArchivePage() {
   }, [])
 
   const sortedIndices = useMemo(() => {
-    return Array.from({ length: TOTAL }, (_, i) => i).sort(
+    return Array.from({ length: CARD_COUNT }, (_, i) => i).sort(
       (a, b) => CARD_LAYOUTS[b].depth - CARD_LAYOUTS[a].depth,
     )
-  }, [TOTAL, CARD_LAYOUTS])
+  }, [CARD_COUNT, CARD_LAYOUTS])
 
   const viewportWidth = typeof window !== 'undefined' ? window.innerWidth : 1440
 
@@ -387,20 +407,27 @@ export function ArchivePage() {
       {isMobile && viewMode === 'gallery' ? (
         <div className={styles.mobileGridWrap}>
           <div className={styles.mobileGrid}>
-            {projects.map((project) => (
-              <div key={project.id} className={styles.mobileGridCell}>
-                <ArchiveCard
-                  project={project}
-                  depth={1}
-                  isFocused={false}
-                  anyFocused={isFeedOpen}
-                  onHover={() => {}}
-                  onClick={() => openFeedFromCard(project.id)}
-                  layoutId={`archive-card-${project.id}`}
-                  disableFloat
-                />
-              </div>
-            ))}
+            {galleryEntries.map((entry) => {
+              const project = projects.find((p) => p.id === entry.projectId)
+              if (!project) return null
+              return (
+                <div key={entry.instanceId} className={styles.mobileGridCell}>
+                  <ArchiveCard
+                    project={project}
+                    displayTitle={entry.displayTitle}
+                    coverSrc={entry.cover}
+                    coverType={entry.coverType}
+                    depth={1}
+                    isFocused={false}
+                    anyFocused={isFeedOpen}
+                    onHover={() => {}}
+                    onClick={() => openFeedFromCard(entry.projectId)}
+                    layoutId={`archive-card-${entry.instanceId}`}
+                    disableFloat
+                  />
+                </div>
+              )
+            })}
           </div>
         </div>
       ) : null}
@@ -413,8 +440,10 @@ export function ArchivePage() {
           onTouchEnd={handleTouchEnd}
         >
           <ScrollCanvas
+            entries={galleryEntries}
             projects={projects}
             cardLayouts={CARD_LAYOUTS}
+            loopWidth={LOOP_WIDTH}
             offsetMV={offsetMV}
             sortedIndices={sortedIndices}
             isFeedOpen={isFeedOpen}
@@ -427,7 +456,10 @@ export function ArchivePage() {
 
       {/* ── Status bar ────────────────────────────────────────────────────── */}
       <div className={styles.statusBar}>
-        <span className={styles.statusLeft}>Archive inventory: {TOTAL}</span>
+        <span className={styles.statusLeft}>
+          Archive inventory: {TOTAL}
+          {CARD_COUNT > TOTAL ? ` · ${CARD_COUNT} cards` : ''}
+        </span>
         <span className={styles.statusRight}>{hoveredTitle ?? ''}</span>
       </div>
 
@@ -450,8 +482,10 @@ export function ArchivePage() {
 // ─── ScrollCanvas ─────────────────────────────────────────────────────────────
 
 function ScrollCanvas({
+  entries,
   projects,
   cardLayouts,
+  loopWidth,
   offsetMV,
   sortedIndices,
   isFeedOpen,
@@ -459,8 +493,10 @@ function ScrollCanvas({
   onCardClick,
   viewportWidth,
 }: {
+  entries: ArchiveGalleryEntry[]
   projects: ArchiveProject[]
   cardLayouts: CardLayout[]
+  loopWidth: number
   offsetMV: ReturnType<typeof useMotionValue<number>>
   sortedIndices: number[]
   isFeedOpen: boolean
@@ -470,23 +506,26 @@ function ScrollCanvas({
 }) {
   const slotRefs = useRef<Map<string, HTMLDivElement>>(new Map())
   const halfVW = viewportWidth / 2
+  const projectById = useMemo(
+    () => new Map(projects.map((p) => [p.id, p])),
+    [projects],
+  )
 
   const PARALLAX_SPEED: Record<DepthLayer, number> = { 1: 1.0, 2: 0.82, 3: 0.65 }
 
   useEffect(() => {
     const updatePositions = (offset: number) => {
-      sortedIndices.forEach((projectIndex) => {
-        const project = projects[projectIndex]
-        const layout = cardLayouts[projectIndex]
-        const el = slotRefs.current.get(project.id)
+      sortedIndices.forEach((entryIndex) => {
+        const entry = entries[entryIndex]
+        const layout = cardLayouts[entryIndex]
+        const el = slotRefs.current.get(entry.instanceId)
         if (!el) return
 
-        // Use unbounded offset so crossing 0/LOOP_WIDTH doesn't cause a visible jump
         const parallaxOffset = offset * PARALLAX_SPEED[layout.depth]
-        const cardAbsX = layout.xFraction * LOOP_WIDTH
+        const cardAbsX = layout.xFraction * loopWidth
         const relXUnwrapped = cardAbsX - parallaxOffset
-        let relX = ((relXUnwrapped % LOOP_WIDTH) + LOOP_WIDTH) % LOOP_WIDTH
-        if (relX > LOOP_WIDTH / 2) relX -= LOOP_WIDTH
+        let relX = ((relXUnwrapped % loopWidth) + loopWidth) % loopWidth
+        if (relX > loopWidth / 2) relX -= loopWidth
 
         const halfCard = (layout.width * layout.scale) / 2
         const visible = relX >= -(halfVW + halfCard + 50) && relX <= halfVW + halfCard + 50
@@ -503,21 +542,23 @@ function ScrollCanvas({
     updatePositions(offsetMV.get())
     const unsub = offsetMV.on('change', updatePositions)
     return unsub
-  }, [offsetMV, sortedIndices, halfVW, projects, cardLayouts])
+  }, [offsetMV, sortedIndices, halfVW, entries, cardLayouts, loopWidth])
 
   return (
     <div className={styles.canvas}>
-      {sortedIndices.map((projectIndex) => {
-        const project = projects[projectIndex]
-        const layout = cardLayouts[projectIndex]
+      {sortedIndices.map((entryIndex) => {
+        const entry = entries[entryIndex]
+        const project = projectById.get(entry.projectId)
+        if (!project) return null
+        const layout = cardLayouts[entryIndex]
         const zIndex = layout.depth === 1 ? 30 : layout.depth === 2 ? 20 : 10
 
         return (
           <div
-            key={project.id}
+            key={entry.instanceId}
             ref={(el) => {
-              if (el) slotRefs.current.set(project.id, el)
-              else slotRefs.current.delete(project.id)
+              if (el) slotRefs.current.set(entry.instanceId, el)
+              else slotRefs.current.delete(entry.instanceId)
             }}
             className={styles.cardSlot}
             style={{
@@ -531,12 +572,15 @@ function ScrollCanvas({
           >
             <ArchiveCard
               project={project}
+              displayTitle={entry.displayTitle}
+              coverSrc={entry.cover}
+              coverType={entry.coverType}
               depth={layout.depth}
               isFocused={false}
               anyFocused={isFeedOpen}
               onHover={onHover}
-              onClick={() => onCardClick(project.id)}
-              layoutId={`archive-card-${project.id}`}
+              onClick={() => onCardClick(entry.projectId)}
+              layoutId={`archive-card-${entry.instanceId}`}
             />
           </div>
         )
