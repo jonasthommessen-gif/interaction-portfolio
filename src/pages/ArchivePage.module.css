@@ -11,6 +11,7 @@
 
   /* Prevent default scroll on the page itself */
   touch-action: none;
+  overscroll-behavior: none;
 }
 
 /* ─── Gallery scene ──────────────────────────────────────────────────────────── */

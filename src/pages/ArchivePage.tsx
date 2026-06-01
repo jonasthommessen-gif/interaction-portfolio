@@ -39,6 +39,20 @@ const MAX_WHEEL_DELTA = 48
 /** Snap to target when within this distance (avoids drift and micro-jitter) */
 const SNAP_THRESHOLD = 0.4
 
+function normalizeWheelDelta(e: WheelEvent): number {
+  let dx = e.deltaX
+  let dy = e.deltaY
+  if (e.deltaMode === 1) {
+    dx *= 16
+    dy *= 16
+  } else if (e.deltaMode === 2) {
+    const page = typeof window !== 'undefined' ? window.innerHeight : 800
+    dx *= page
+    dy *= page
+  }
+  return Math.abs(dx) > Math.abs(dy) ? dx : dy
+}
+
 // ─── Layout data ──────────────────────────────────────────────────────────────
 
 type CardLayout = {
@@ -231,17 +245,16 @@ export function ArchivePage() {
   }, [])
 
   const containerRef = useRef<HTMLDivElement>(null)
+  const pageRef = useRef<HTMLElement>(null)
 
   const handleWheel = useCallback(
     (e: WheelEvent) => {
-      // Block gallery scroll when feed is open
-      if (isFeedOpen) return
+      if (isFeedOpen || isMobile) return
       e.preventDefault()
 
       resetIdleTimer()
 
-      const rawDelta =
-        Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY
+      const rawDelta = normalizeWheelDelta(e)
       const delta =
         Math.sign(rawDelta) * Math.min(Math.abs(rawDelta), MAX_WHEEL_DELTA)
       targetOffsetRef.current += delta
@@ -267,18 +280,40 @@ export function ArchivePage() {
         }
       }, 60)
     },
-    [isFeedOpen, resetIdleTimer, runMomentum],
+    [isFeedOpen, isMobile, resetIdleTimer, runMomentum],
   )
 
+  const handleWheelRef = useRef(handleWheel)
+  handleWheelRef.current = handleWheel
+
+  // Attach after gallery mounts (scene ref is null while loading). Window capture
+  // ensures trackpad/mouse wheel works even when hovering cards or overlays.
   useEffect(() => {
-    const scene = containerRef.current
-    const page = scene?.closest('main')
-    const targets = [scene, page].filter((el): el is HTMLElement => !!el)
-    targets.forEach((el) => el.addEventListener('wheel', handleWheel, { passive: false }))
-    return () => {
-      targets.forEach((el) => el.removeEventListener('wheel', handleWheel))
+    if (loading || isMobile) return
+
+    const onWheel = (e: WheelEvent) => {
+      handleWheelRef.current(e)
     }
-  }, [handleWheel])
+
+    const scene = containerRef.current
+    const page = pageRef.current
+    const targets = [scene, page, window].filter(
+      (t): t is HTMLElement | Window => t != null,
+    )
+
+    targets.forEach((target) => {
+      target.addEventListener('wheel', onWheel as EventListener, {
+        passive: false,
+        capture: true,
+      })
+    })
+
+    return () => {
+      targets.forEach((target) => {
+        target.removeEventListener('wheel', onWheel as EventListener, { capture: true })
+      })
+    }
+  }, [loading, isMobile])
 
   useEffect(() => {
     return () => {
@@ -361,11 +396,18 @@ export function ArchivePage() {
     )
   }, [CARD_COUNT, CARD_LAYOUTS])
 
-  const viewportWidth = typeof window !== 'undefined' ? window.innerWidth : 1440
+  const [viewportWidth, setViewportWidth] = useState(
+    () => (typeof window !== 'undefined' ? window.innerWidth : 1440),
+  )
+  useEffect(() => {
+    const onResize = () => setViewportWidth(window.innerWidth)
+    window.addEventListener('resize', onResize)
+    return () => window.removeEventListener('resize', onResize)
+  }, [])
 
   if (loading) {
     return (
-      <main className={styles.page}>
+      <main ref={pageRef} className={styles.page}>
         <p className={styles.statusLeft}>Loading archive…</p>
       </main>
     )
@@ -373,6 +415,7 @@ export function ArchivePage() {
 
   return (
     <main
+      ref={pageRef}
       className={styles.page}
       onMouseMove={handleMouseMove}
     >
