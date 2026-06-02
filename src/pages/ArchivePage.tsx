@@ -297,9 +297,10 @@ export function ArchivePage() {
 
     const scene = containerRef.current
     const page = pageRef.current
-    const targets = [scene, page, window].filter(
-      (t): t is HTMLElement | Window => t != null,
-    )
+    const targets: Array<HTMLElement | Window> = []
+    if (scene) targets.push(scene)
+    if (page) targets.push(page)
+    targets.push(window)
 
     targets.forEach((target) => {
       target.addEventListener('wheel', onWheel as EventListener, {
