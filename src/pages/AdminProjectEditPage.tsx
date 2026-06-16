@@ -27,6 +27,24 @@ const LAYOUTS_WITH_SINGLE_MEDIA: SectionLayoutKey[] = [
   'full-bleed-media-natural',
 ]
 
+const ICON_SIZE = 16
+
+function IconChevronUp() {
+  return (
+    <svg width={ICON_SIZE} height={ICON_SIZE} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <polyline points="18 15 12 9 6 15" />
+    </svg>
+  )
+}
+
+function IconChevronDown() {
+  return (
+    <svg width={ICON_SIZE} height={ICON_SIZE} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <polyline points="6 9 12 15 18 9" />
+    </svg>
+  )
+}
+
 const SECTION_LAYOUT_LABELS: Record<SectionLayoutKey, string> = {
   'text-only': 'Text only',
   'text-left-media-right': 'Text left, media right',
@@ -66,6 +84,7 @@ export function AdminProjectEditPage() {
   const [stage, setStage] = useState<'structure' | 'content'>('structure')
   const [savingContentSectionId, setSavingContentSectionId] = useState<string | null>(null)
   const [savingLayoutSectionId, setSavingLayoutSectionId] = useState<string | null>(null)
+  const [reorderingSectionId, setReorderingSectionId] = useState<string | null>(null)
   const [contentSectionError, setContentSectionError] = useState<string | null>(null)
   const [coverType, setCoverType] = useState<'image' | 'video'>('image')
   const [coverSrc, setCoverSrc] = useState('')
@@ -291,6 +310,37 @@ export function AdminProjectEditPage() {
     else if (row?.id) loadSections(row.id)
   }
 
+  const handleMoveSection = async (index: number, direction: 'up' | 'down') => {
+    if (!row?.id) return
+    const sorted = [...sections].sort((a, b) => a.order - b.order)
+    const targetIndex = direction === 'up' ? index - 1 : index + 1
+    if (targetIndex < 0 || targetIndex >= sorted.length) return
+
+    const current = sorted[index]!
+    const neighbor = sorted[targetIndex]!
+    setSectionError(null)
+    setReorderingSectionId(current.id)
+
+    setSections((prev) =>
+      prev.map((s) => {
+        if (s.id === current.id) return { ...s, order: neighbor.order }
+        if (s.id === neighbor.id) return { ...s, order: current.order }
+        return s
+      }),
+    )
+
+    const [currentResult, neighborResult] = await Promise.all([
+      updateProjectSection(current.id, { order: neighbor.order }),
+      updateProjectSection(neighbor.id, { order: current.order }),
+    ])
+    setReorderingSectionId(null)
+
+    if (currentResult.error || neighborResult.error) {
+      setSectionError(currentResult.error ?? neighborResult.error ?? 'Failed to reorder section')
+      loadSections(row.id)
+    }
+  }
+
   if (row === undefined && slug) {
     return (
       <div className={styles.page}>
@@ -309,6 +359,7 @@ export function AdminProjectEditPage() {
   }
 
   const hasSections = sections.length > 0
+  const sortedSections = [...sections].sort((a, b) => a.order - b.order)
   const uploadFolder = row?.id ? `projects/${row.id}` : 'projects'
 
   return (
@@ -526,7 +577,7 @@ export function AdminProjectEditPage() {
         {sectionError && <p className={styles.error}>{sectionError}</p>}
         {sectionsLoading && <p className={styles.message}>Loading sections…</p>}
         <ul className={styles.sectionList}>
-          {sections.map((s) => (
+          {sortedSections.map((s, index) => (
             <li key={s.id} className={styles.sectionItem}>
               {editingSectionId === s.id ? (
                 <form onSubmit={handleSaveSectionLabel} className={styles.sectionEditForm}>
@@ -549,6 +600,28 @@ export function AdminProjectEditPage() {
                 </form>
               ) : (
                 <>
+                  <div className={styles.sectionReorder}>
+                    <button
+                      type="button"
+                      className={styles.sectionReorderBtn}
+                      onClick={() => handleMoveSection(index, 'up')}
+                      disabled={index === 0 || reorderingSectionId !== null}
+                      aria-label={`Move ${s.label} up`}
+                      title="Move up"
+                    >
+                      <IconChevronUp />
+                    </button>
+                    <button
+                      type="button"
+                      className={styles.sectionReorderBtn}
+                      onClick={() => handleMoveSection(index, 'down')}
+                      disabled={index === sortedSections.length - 1 || reorderingSectionId !== null}
+                      aria-label={`Move ${s.label} down`}
+                      title="Move down"
+                    >
+                      <IconChevronDown />
+                    </button>
+                  </div>
                   <span className={styles.sectionLabel}>{s.label}</span>
                   <label className={styles.sectionLayoutField}>
                     <span className={styles.visuallyHidden}>Layout</span>
@@ -631,7 +704,7 @@ export function AdminProjectEditPage() {
             </p>
             {sectionError && <p className={styles.error}>{sectionError}</p>}
             {contentSectionError && <p className={styles.error}>{contentSectionError}</p>}
-            {sections.map((s) => (
+            {sortedSections.map((s) => (
               <div key={s.id} className={styles.contentSectionCard} id={`content-section-${s.id}`}>
                 <div className={styles.contentSectionHeader}>
                   <h4 className={styles.contentSectionTitle}>{s.label}</h4>

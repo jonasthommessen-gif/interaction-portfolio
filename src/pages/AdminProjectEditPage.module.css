@@ -347,6 +347,37 @@
   border-radius: 6px;
 }
 
+.sectionReorder {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.sectionReorderBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.25rem;
+  padding: 0;
+  color: var(--muted);
+  background: transparent;
+  border: 1px solid var(--frost-border);
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.sectionReorderBtn:hover:not(:disabled) {
+  color: var(--fg);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.sectionReorderBtn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
 .sectionLabel {
   font-weight: 500;
 }
