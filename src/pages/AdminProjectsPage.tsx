@@ -100,16 +100,20 @@ function getImageAverageRgb(src: string): Promise<RGB | null> {
 type PillTheme = { bg: string; fg: string }
 
 const ICON_SIZE = 20
+const REORDER_ICON_SIZE = 16
 
-function IconDragHandle() {
+function IconChevronUp() {
   return (
-    <svg width={ICON_SIZE} height={ICON_SIZE} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden>
-      <circle cx="9" cy="6" r="1.5" fill="currentColor" />
-      <circle cx="15" cy="6" r="1.5" fill="currentColor" />
-      <circle cx="9" cy="12" r="1.5" fill="currentColor" />
-      <circle cx="15" cy="12" r="1.5" fill="currentColor" />
-      <circle cx="9" cy="18" r="1.5" fill="currentColor" />
-      <circle cx="15" cy="18" r="1.5" fill="currentColor" />
+    <svg width={REORDER_ICON_SIZE} height={REORDER_ICON_SIZE} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <polyline points="18 15 12 9 6 15" />
+    </svg>
+  )
+}
+
+function IconChevronDown() {
+  return (
+    <svg width={REORDER_ICON_SIZE} height={REORDER_ICON_SIZE} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <polyline points="6 9 12 15 18 9" />
     </svg>
   )
 }
@@ -152,8 +156,6 @@ export function AdminProjectsPage() {
   const [actionLoading, setActionLoading] = useState<string | null>(null)
   const [toast, setToast] = useState<string | null>(null)
   const [pillThemes, setPillThemes] = useState<Record<string, PillTheme>>({})
-  const [draggedId, setDraggedId] = useState<string | null>(null)
-  const [dragOverKey, setDragOverKey] = useState<string | null>(null)
   const [staticReason, setStaticReason] = useState<'no-env' | 'error' | 'empty' | null>(null)
   const [staticErrorMessage, setStaticErrorMessage] = useState<string | null>(null)
   const [importLoading, setImportLoading] = useState(false)
@@ -275,8 +277,6 @@ export function AdminProjectsPage() {
     const { error: err1 } = await updateProject(dragged.id, { order: target.order })
     const { error: err2 } = await updateProject(target.id, { order: dragged.order })
     setActionLoading(null)
-    setDraggedId(null)
-    setDragOverKey(null)
     if (err1 || err2) setError(err1 ?? err2 ?? 'Failed to reorder')
     else {
       await loadProjects()
@@ -284,54 +284,12 @@ export function AdminProjectsPage() {
     }
   }
 
-  const handleDragStart = (e: React.DragEvent, project: Project) => {
-    if (!project.id) return
-    e.dataTransfer.effectAllowed = 'move'
-    e.dataTransfer.setData('text/plain', project.id)
-    e.dataTransfer.setData('application/json', JSON.stringify({ id: project.id, order: project.order }))
-    setDraggedId(project.id)
-  }
-
-  const handleDragOver = (e: React.DragEvent, key: string) => {
-    e.preventDefault()
-    e.dataTransfer.dropEffect = 'move'
-    setDragOverKey(key)
-  }
-
-  const handleDragLeave = () => {
-    setDragOverKey(null)
-  }
-
-  const handleDrop = (e: React.DragEvent, targetProject: Project, _list: Project[]) => {
-    e.preventDefault()
-    setDragOverKey(null)
-    const raw = e.dataTransfer.getData('application/json')
-    if (!raw) {
-      setDraggedId(null)
-      return
-    }
-    let payload: { id: string; order: number }
-    try {
-      payload = JSON.parse(raw)
-    } catch {
-      setDraggedId(null)
-      return
-    }
-    const draggedProject = projects.find((p) => p.id === payload.id)
-    if (!draggedProject || !targetProject.id) {
-      setDraggedId(null)
-      return
-    }
-    if (draggedProject.id === targetProject.id) {
-      setDraggedId(null)
-      return
-    }
-    handleReorder(draggedProject, targetProject)
-  }
-
-  const handleDragEnd = () => {
-    setDraggedId(null)
-    setDragOverKey(null)
+  const handleMoveProject = async (list: Project[], index: number, direction: 'up' | 'down') => {
+    const targetIndex = direction === 'up' ? index - 1 : index + 1
+    if (targetIndex < 0 || targetIndex >= list.length) return
+    const current = list[index]!
+    const neighbor = list[targetIndex]!
+    await handleReorder(current, neighbor)
   }
 
   const handleDeleteConfirm = async () => {
@@ -387,21 +345,33 @@ export function AdminProjectsPage() {
           <section className={styles.listSection} aria-labelledby="visible-heading">
             <h3 id="visible-heading" className={styles.sectionHeading}>Visible projects</h3>
             <ul className={styles.list} data-edit-mode={editMode}>
-              {visibleProjects.map((p, i) => {
-                const itemKey = `visible-${p.slug}`
-                const isDragging = draggedId === p.id
-                const isDragOver = dragOverKey === itemKey
-                return (
-                  <li
-                    key={p.slug}
-                    className={styles.item}
-                    data-dragging={isDragging}
-                    data-drag-over={isDragOver}
-                    onDragOver={editMode && p.id ? (e) => handleDragOver(e, itemKey) : undefined}
-                    onDragLeave={editMode ? handleDragLeave : undefined}
-                    onDrop={editMode && p.id ? (e) => handleDrop(e, p, visibleProjects) : undefined}
-                  >
-                    <span className={styles.thumb}>
+              {visibleProjects.map((p, i) => (
+                <li key={p.slug} className={styles.item}>
+                  {editMode && (
+                    <div className={styles.projectReorder}>
+                      <button
+                        type="button"
+                        className={styles.projectReorderBtn}
+                        onClick={() => handleMoveProject(visibleProjects, i, 'up')}
+                        disabled={i === 0 || !p.id || !!actionLoading}
+                        aria-label={`Move ${p.title} up`}
+                        title="Move up"
+                      >
+                        <IconChevronUp />
+                      </button>
+                      <button
+                        type="button"
+                        className={styles.projectReorderBtn}
+                        onClick={() => handleMoveProject(visibleProjects, i, 'down')}
+                        disabled={i === visibleProjects.length - 1 || !p.id || !!actionLoading}
+                        aria-label={`Move ${p.title} down`}
+                        title="Move down"
+                      >
+                        <IconChevronDown />
+                      </button>
+                    </div>
+                  )}
+                  <span className={styles.thumb}>
                       {p.cover.type === 'video' ? (
                         <video src={p.cover.src} poster={p.cover.poster} muted width={48} height={48} aria-hidden />
                       ) : (
@@ -419,25 +389,6 @@ export function AdminProjectsPage() {
                     </Link>
                     {editMode && (
                       <div className={styles.itemActions}>
-                        <span
-                          className={styles.dragHandle}
-                          draggable={!!p.id}
-                          onDragStart={p.id ? (e) => handleDragStart(e, p) : undefined}
-                          onDragEnd={handleDragEnd}
-                          role="button"
-                          tabIndex={p.id ? 0 : -1}
-                          aria-label={p.id ? 'Reorder project' : 'Reorder (database projects only)'}
-                          aria-disabled={!p.id}
-                          title={!p.id ? 'Only database projects can be reordered' : undefined}
-                          onKeyDown={p.id ? (e) => {
-                            if (e.key === 'Enter' || e.key === ' ') {
-                              e.preventDefault()
-                              e.currentTarget.focus()
-                            }
-                          } : undefined}
-                        >
-                          <IconDragHandle />
-                        </span>
                         <button
                           type="button"
                           className={styles.iconBtn}
@@ -460,9 +411,8 @@ export function AdminProjectsPage() {
                         </button>
                       </div>
                     )}
-                  </li>
-                )
-              })}
+                </li>
+              ))}
             </ul>
             {visibleProjects.length === 0 && (
               <p className={styles.sectionEmpty}>No visible projects. Toggle visibility in the list below.</p>
@@ -472,21 +422,33 @@ export function AdminProjectsPage() {
           <section className={styles.listSection} aria-labelledby="hidden-heading">
             <h3 id="hidden-heading" className={styles.sectionHeading}>Not visible</h3>
             <ul className={styles.list} data-edit-mode={editMode}>
-              {hiddenProjects.map((p, i) => {
-                const itemKey = `hidden-${p.slug}`
-                const isDragging = draggedId === p.id
-                const isDragOver = dragOverKey === itemKey
-                return (
-                  <li
-                    key={p.slug}
-                    className={styles.item}
-                    data-dragging={isDragging}
-                    data-drag-over={isDragOver}
-                    onDragOver={editMode && p.id ? (e) => handleDragOver(e, itemKey) : undefined}
-                    onDragLeave={editMode ? handleDragLeave : undefined}
-                    onDrop={editMode && p.id ? (e) => handleDrop(e, p, hiddenProjects) : undefined}
-                  >
-                    <span className={styles.thumb}>
+              {hiddenProjects.map((p, i) => (
+                <li key={p.slug} className={styles.item}>
+                  {editMode && (
+                    <div className={styles.projectReorder}>
+                      <button
+                        type="button"
+                        className={styles.projectReorderBtn}
+                        onClick={() => handleMoveProject(hiddenProjects, i, 'up')}
+                        disabled={i === 0 || !p.id || !!actionLoading}
+                        aria-label={`Move ${p.title} up`}
+                        title="Move up"
+                      >
+                        <IconChevronUp />
+                      </button>
+                      <button
+                        type="button"
+                        className={styles.projectReorderBtn}
+                        onClick={() => handleMoveProject(hiddenProjects, i, 'down')}
+                        disabled={i === hiddenProjects.length - 1 || !p.id || !!actionLoading}
+                        aria-label={`Move ${p.title} down`}
+                        title="Move down"
+                      >
+                        <IconChevronDown />
+                      </button>
+                    </div>
+                  )}
+                  <span className={styles.thumb}>
                       {p.cover.type === 'video' ? (
                         <video src={p.cover.src} poster={p.cover.poster} muted width={48} height={48} aria-hidden />
                       ) : (
@@ -504,25 +466,6 @@ export function AdminProjectsPage() {
                     </Link>
                     {editMode && (
                       <div className={styles.itemActions}>
-                        <span
-                          className={styles.dragHandle}
-                          draggable={!!p.id}
-                          onDragStart={p.id ? (e) => handleDragStart(e, p) : undefined}
-                          onDragEnd={handleDragEnd}
-                          role="button"
-                          tabIndex={p.id ? 0 : -1}
-                          aria-label={p.id ? 'Reorder project' : 'Reorder (database projects only)'}
-                          aria-disabled={!p.id}
-                          title={!p.id ? 'Only database projects can be reordered' : undefined}
-                          onKeyDown={p.id ? (e) => {
-                            if (e.key === 'Enter' || e.key === ' ') {
-                              e.preventDefault()
-                              e.currentTarget.focus()
-                            }
-                          } : undefined}
-                        >
-                          <IconDragHandle />
-                        </span>
                         <button
                           type="button"
                           className={styles.iconBtn}
@@ -545,9 +488,8 @@ export function AdminProjectsPage() {
                         </button>
                       </div>
                     )}
-                  </li>
-                )
-              })}
+                </li>
+              ))}
             </ul>
             {hiddenProjects.length === 0 && (
               <p className={styles.sectionEmpty}>No hidden projects. Use the eye icon above to hide a project and it will appear here.</p>

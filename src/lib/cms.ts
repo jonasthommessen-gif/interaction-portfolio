@@ -4,6 +4,13 @@
  */
 
 import { supabase } from './supabase'
+import type { AboutPortrait, AboutSkill } from './aboutContent'
+import {
+  normalizeAboutBody,
+  normalizeAboutPortraits,
+  normalizeAboutSkills,
+  normalizeAboutTitle,
+} from './aboutContent'
 import type { Project, ArchiveProject, ProjectRow, ProjectSectionRow, ArchivePostRow, ArchiveMediaRow } from '../types/cms'
 import { projects as staticProjectsRaw } from '../content/projects'
 import { archiveProjects as staticArchive } from '../content/archiveProjects'
@@ -345,6 +352,32 @@ const staticArchiveNormalized: ArchiveProject[] = staticArchive.map((a, i) => ({
 export type SiteSettings = {
   about_portrait_src: string | null
   about_portrait_alt: string | null
+  about_title: string
+  about_body: string[]
+  about_portraits: AboutPortrait[]
+  about_skills: AboutSkill[]
+}
+
+type SiteSettingsRow = {
+  about_portrait_src: string | null
+  about_portrait_alt: string | null
+  about_title?: string | null
+  about_body?: unknown
+  about_portraits?: unknown
+  about_skills?: unknown
+}
+
+function rowToSiteSettings(row: SiteSettingsRow): SiteSettings {
+  const legacySrc = row.about_portrait_src
+  const legacyAlt = row.about_portrait_alt
+  return {
+    about_portrait_src: legacySrc,
+    about_portrait_alt: legacyAlt,
+    about_title: normalizeAboutTitle(row.about_title),
+    about_body: normalizeAboutBody(row.about_body),
+    about_portraits: normalizeAboutPortraits(row.about_portraits, legacySrc, legacyAlt),
+    about_skills: normalizeAboutSkills(row.about_skills),
+  }
 }
 
 /** Fetch site settings (single row). Returns null if no Supabase or error. */
@@ -352,7 +385,7 @@ export async function fetchSiteSettings(): Promise<SiteSettings | null> {
   if (!supabase) return null
   const { data, error } = await supabase
     .from('site_settings')
-    .select('about_portrait_src, about_portrait_alt')
+    .select('about_portrait_src, about_portrait_alt, about_title, about_body, about_portraits, about_skills')
     .eq('id', 1)
     .maybeSingle()
   if (error) {
@@ -360,16 +393,17 @@ export async function fetchSiteSettings(): Promise<SiteSettings | null> {
     return null
   }
   if (!data) return null
-  return {
-    about_portrait_src: (data as { about_portrait_src: string | null }).about_portrait_src ?? null,
-    about_portrait_alt: (data as { about_portrait_alt: string | null }).about_portrait_alt ?? null,
-  }
+  return rowToSiteSettings(data as SiteSettingsRow)
 }
 
 /** Admin: update site settings (single row). */
 export async function updateSiteSettings(patch: {
   about_portrait_src?: string
   about_portrait_alt?: string
+  about_title?: string
+  about_body?: string[]
+  about_portraits?: AboutPortrait[]
+  about_skills?: AboutSkill[]
 }): Promise<{ error: string | null }> {
   if (!supabase) return { error: 'Database not configured' }
   const { error } = await supabase

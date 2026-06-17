@@ -1,0 +1,61 @@
+.orbitRoot {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: auto;
+}
+
+.satWrap {
+  position: absolute;
+  left: 0;
+  top: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  will-change: transform;
+  pointer-events: auto;
+}
+
+.satIcon {
+  display: block;
+  flex-shrink: 0;
+  width: 61px;
+  height: 33px;
+  pointer-events: none;
+}
+
+.skillLabel {
+  font-size: clamp(14px, 2.2vmin, 20px);
+  font-weight: 400;
+  letter-spacing: -0.01em;
+  color: white;
+  white-space: nowrap;
+  transition: opacity 0.35s ease;
+  pointer-events: none;
+}
+
+.revealBtn {
+  position: absolute;
+  left: 0;
+  bottom: 0.5rem;
+  z-index: 2;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: var(--text-sm);
+  font-family: inherit;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.revealBtn:hover {
+  color: white;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skillLabel {
+    opacity: 1 !important;
+  }
+}

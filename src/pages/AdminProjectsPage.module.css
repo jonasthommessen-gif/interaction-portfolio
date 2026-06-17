@@ -130,13 +130,35 @@
   border-color: rgba(255, 255, 255, 0.12);
 }
 
-.item[data-dragging='true'] {
-  opacity: 0.5;
+.projectReorder {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex-shrink: 0;
 }
 
-.item[data-drag-over='true'] {
-  border-color: rgba(255, 255, 255, 0.3);
+.projectReorderBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.25rem;
+  padding: 0;
+  color: var(--muted);
+  background: transparent;
+  border: 1px solid var(--frost-border);
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.projectReorderBtn:hover:not(:disabled) {
+  color: var(--fg);
   background: rgba(255, 255, 255, 0.08);
+}
+
+.projectReorderBtn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
 }
 
 .itemActions {
@@ -152,37 +174,6 @@
   width: 5.5rem;
   margin-left: auto;
   flex-shrink: 0;
-}
-
-.dragHandle {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 2rem;
-  height: 2rem;
-  padding: 0;
-  border: none;
-  border-radius: 4px;
-  background: transparent;
-  color: var(--fg);
-  cursor: grab;
-}
-
-.dragHandle:active {
-  cursor: grabbing;
-}
-
-.dragHandle:hover {
-  background: rgba(255, 255, 255, 0.08);
-}
-
-.dragHandle[aria-disabled="true"] {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.dragHandle[aria-disabled="true"]:hover {
-  background: transparent;
 }
 
 .iconBtn {

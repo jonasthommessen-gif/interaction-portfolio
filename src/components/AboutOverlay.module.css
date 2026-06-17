@@ -213,12 +213,6 @@
     margin-left: 0;
     margin-right: 0;
   }
-  .title {
-    display: none;
-  }
-  .titleDesktop {
-    display: block;
-  }
   .location {
     display: none;
   }
@@ -242,7 +236,7 @@
   margin-bottom: 0;
 }
 
-/* Section 1: keywords as plain text, positioned in lower area (below mid line) */
+/* Section 1: orbital skills (desktop) */
 .keywordsSection1 {
   position: absolute;
   left: clamp(56px, 6vw, 120px);
@@ -250,7 +244,7 @@
   bottom: 2rem;
   top: var(--about-midLineY);
   margin-top: 2rem;
-  pointer-events: none;
+  pointer-events: auto;
 }
 
 /* Floating keywords in Panel 2: position set by JS */
@@ -360,6 +354,7 @@
 }
 
 .imageWrap {
+  position: relative;
   flex: 1 1 auto;
   min-height: 0;
   min-width: 0;
