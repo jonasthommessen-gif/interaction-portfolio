@@ -11,7 +11,7 @@ import {
   updateProjectSection,
 } from '../lib/cms'
 import { applyBoldMarkdownToSelection, isBoldShortcut } from '../lib/textareaBoldMarkdown'
-import { normalizeParticipants, participantsForEdit } from '../lib/sectionParticipants'
+import { participantsForEdit } from '../lib/sectionParticipants'
 import type {
   ProjectRow,
   ProjectSectionRow,
