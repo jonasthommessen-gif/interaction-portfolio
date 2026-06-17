@@ -52,7 +52,7 @@ function ParticipantsValue({ participants }: { participants: SectionSideInfoPart
         <span key={`${p.name}-${i}`}>
           {i > 0 ? ', ' : null}
           {p.url ? (
-            <a href={p.url} rel="noopener noreferrer" target="_blank" className={styles.overviewLink}>
+            <a href={p.url} rel="noopener noreferrer" target="_blank" className={styles.overviewCollabName}>
               {p.name}
             </a>
           ) : (
