@@ -13,6 +13,7 @@ import editStyles from './AdminProjectEditPage.module.css'
 
 export function AdminAboutPage() {
   const [loading, setLoading] = useState(true)
+  const [dbMissing, setDbMissing] = useState(false)
   const [title, setTitle] = useState(DEFAULT_ABOUT_TITLE)
   const [body, setBody] = useState<string[]>([...DEFAULT_ABOUT_BODY])
   const [portraits, setPortraits] = useState<AboutPortrait[]>([])
@@ -25,12 +26,14 @@ export function AdminAboutPage() {
     setLoading(true)
     fetchSiteSettings()
       .then((settings) => {
-        if (settings) {
-          setTitle(settings.about_title)
-          setBody(settings.about_body.length ? settings.about_body : [...DEFAULT_ABOUT_BODY])
-          setPortraits(settings.about_portraits)
-          setSkills(settings.about_skills)
+        if (!settings) {
+          setDbMissing(true)
+          return
         }
+        setTitle(settings.about_title)
+        setBody(settings.about_body.length ? settings.about_body : [...DEFAULT_ABOUT_BODY])
+        setPortraits(settings.about_portraits)
+        setSkills(settings.about_skills)
       })
       .finally(() => setLoading(false))
   }, [])
@@ -76,6 +79,12 @@ export function AdminAboutPage() {
   return (
     <div className={styles.page}>
       <h2 className={styles.heading}>About page</h2>
+      {dbMissing && (
+        <p className={styles.error}>
+          Could not load settings — migration may not be applied. Run{' '}
+          <code>014_about_content.sql</code> in the Supabase SQL Editor, then reload.
+        </p>
+      )}
       <form onSubmit={handleSubmit} className={editStyles.form}>
         <div className={editStyles.field}>
           <label htmlFor="about-title" className={editStyles.label}>

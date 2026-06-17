@@ -88,11 +88,26 @@
     min-height: min(88dvh, calc(100dvh - var(--nav-height) - var(--nav-offset) - 48px));
   }
 
+  /* full-bleed-media: give the wrap an explicit height so absolutely-positioned
+     media has a reliable reference block (min-height alone is not sufficient in
+     all browsers when the only child is position:absolute). */
+  .fullBleedMedia .mediaColumn {
+    width: 100%;
+  }
+  .fullBleedMedia .mediaWrapHero {
+    height: min(88dvh, calc(100dvh - var(--nav-height) - var(--nav-offset) - 48px));
+  }
+
   .mediaHero {
     position: absolute;
     inset: 0;
     width: 100%;
     height: 100%;
+    object-fit: cover;
+  }
+
+  /* Explicit override for <video> — some browsers need this on the element directly */
+  video.mediaHero {
     object-fit: cover;
   }
 

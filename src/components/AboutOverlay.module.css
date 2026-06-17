@@ -360,6 +360,7 @@
   min-width: 0;
   aspect-ratio: 3 / 4;
   background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.18);
   overflow: hidden;
 }
 

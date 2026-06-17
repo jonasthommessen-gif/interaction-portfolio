@@ -44,11 +44,11 @@ export function buildOrbitParams(
   width: number,
   height: number,
 ): OrbitParams {
-  const cx = width * (0.35 + (index % 3) * 0.15)
-  const cy = height * (0.45 + (index % 2) * 0.12)
-  const rx = width * (0.12 + (index % 4) * 0.04)
-  const ry = height * (0.1 + (index % 3) * 0.035)
+  const cx = width * 0.5
+  const cy = height * 0.5
+  const rx = width * 0.42
+  const ry = height * 0.32
   const phase = (index / Math.max(count, 1)) * 2 * Math.PI
-  const omega = 0.35 + (index % 5) * 0.06
+  const omega = 0.28 + (index % 3) * 0.05
   return { cx, cy, rx, ry, phase, omega }
 }

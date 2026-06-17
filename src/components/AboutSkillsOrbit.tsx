@@ -151,9 +151,24 @@ export function AboutSkillsOrbit({ skills }: Props) {
   }
 
   const positions = renderPositions()
+  const orbitRx = size.w > 0 ? size.w * 0.42 : 0
+  const orbitRy = size.h > 0 ? size.h * 0.32 : 0
 
   return (
     <div ref={containerRef} className={styles.orbitRoot}>
+      {orbitRx > 0 && (
+        <svg className={styles.orbitSvg} aria-hidden>
+          <ellipse
+            cx="50%"
+            cy="50%"
+            rx={orbitRx}
+            ry={orbitRy}
+            stroke="rgba(255,255,255,0.07)"
+            strokeWidth="1"
+            fill="none"
+          />
+        </svg>
+      )}
       {positions.map((p, i) => (
         <div
           key={`${p.label}-${i}`}
