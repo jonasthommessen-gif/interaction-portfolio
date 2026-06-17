@@ -3,9 +3,11 @@ import type {
   SectionLayoutKey,
   SectionSideInfo,
   SectionSideInfoCollaborator,
+  SectionSideInfoParticipant,
   SectionSubBlock,
 } from '../types/cms'
 import { formatSectionBody } from '../lib/formatSectionBody'
+import { normalizeParticipants, participantsHasData } from '../lib/sectionParticipants'
 import { VideoInView } from './VideoInView'
 import styles from './SectionBlock.module.css'
 
@@ -14,7 +16,7 @@ function hasSideInfoData(info: SectionSideInfo | undefined): boolean {
   const t = (s?: string) => Boolean(s?.trim())
   if (t(info.overview)) return true
   if (t(info.timeframe)) return true
-  if (t(info.participants)) return true
+  if (participantsHasData(info.participants)) return true
   if (t(info.role)) return true
   if (t(info.tools)) return true
   if (t(info.methods)) return true
@@ -43,12 +45,23 @@ function collaboratorLogoAlt(c: SectionSideInfoCollaborator): string {
   return (c.logo?.alt ?? c.logoAlt ?? '').trim()
 }
 
-function participantsOneLine(raw: string): string {
-  return raw
-    .split(/\n/)
-    .map((s) => s.trim())
-    .filter(Boolean)
-    .join(', ')
+function ParticipantsValue({ participants }: { participants: SectionSideInfoParticipant[] }) {
+  return (
+    <>
+      {participants.map((p, i) => (
+        <span key={`${p.name}-${i}`}>
+          {i > 0 ? ', ' : null}
+          {p.url ? (
+            <a href={p.url} rel="noopener noreferrer" target="_blank" className={styles.overviewLink}>
+              {p.name}
+            </a>
+          ) : (
+            p.name
+          )}
+        </span>
+      ))}
+    </>
+  )
 }
 
 function OverviewRow({
@@ -82,6 +95,7 @@ function OverviewFactsPanel({ info }: { info: SectionSideInfo }) {
     Boolean(collaboratorLogoSrc(c)),
   )
   const links = (info.links ?? []).filter((l) => l.label?.trim() && l.href?.trim())
+  const participants = normalizeParticipants(info.participants)
   const hasAside = collaboratorsWithLogo.length > 0
 
   return (
@@ -100,8 +114,10 @@ function OverviewFactsPanel({ info }: { info: SectionSideInfo }) {
           {info.location?.trim() ? (
             <OverviewRow label="Location">{info.location.trim()}</OverviewRow>
           ) : null}
-          {info.participants?.trim() ? (
-            <OverviewRow label="Participants">{participantsOneLine(info.participants)}</OverviewRow>
+          {participants.length > 0 ? (
+            <OverviewRow label="Participants">
+              <ParticipantsValue participants={participants} />
+            </OverviewRow>
           ) : null}
           {info.tools?.trim() ? <OverviewRow label="Tools">{info.tools.trim()}</OverviewRow> : null}
           {info.methods?.trim() ? <OverviewRow label="Methods">{info.methods.trim()}</OverviewRow> : null}

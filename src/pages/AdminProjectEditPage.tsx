@@ -11,7 +11,14 @@ import {
   updateProjectSection,
 } from '../lib/cms'
 import { applyBoldMarkdownToSelection, isBoldShortcut } from '../lib/textareaBoldMarkdown'
-import type { ProjectRow, ProjectSectionRow, SectionDisplayOptions, SectionSideInfo } from '../types/cms'
+import { normalizeParticipants, participantsForEdit } from '../lib/sectionParticipants'
+import type {
+  ProjectRow,
+  ProjectSectionRow,
+  SectionDisplayOptions,
+  SectionSideInfo,
+  SectionSideInfoParticipant,
+} from '../types/cms'
 import type { SectionContent, SectionLayoutKey, SectionSubBlock, SectionSubBlockLayoutKey } from '../types/cms'
 import { SECTION_LAYOUTS, SECTION_SUBBLOCK_LAYOUTS } from '../types/cms'
 import { SectionGalleryUpload } from '../components/SectionGalleryUpload'
@@ -1142,20 +1149,68 @@ export function AdminProjectEditPage() {
                         </div>
                       </div>
                       <div className={styles.field}>
-                        <label className={styles.label} htmlFor={`side-part-${s.id}`}>
-                          Participants (one per line or comma-separated)
-                        </label>
-                        <textarea
-                          id={`side-part-${s.id}`}
-                          className={styles.textarea}
-                          rows={3}
-                          value={s.content?.sideInfo?.participants ?? ''}
-                          onChange={(e) =>
-                            patchSectionSideInfo(s.id, {
-                              participants: e.target.value.trim() ? e.target.value : undefined,
-                            })
-                          }
-                        />
+                        <div className={styles.sideInfoListHeader}>
+                          <span className={styles.label}>Participants</span>
+                          <button
+                            type="button"
+                            className={styles.textButton}
+                            onClick={() => {
+                              const participants: SectionSideInfoParticipant[] = [
+                                ...participantsForEdit(s.content?.sideInfo?.participants),
+                                { name: '' },
+                              ]
+                              patchSectionSideInfo(s.id, { participants })
+                            }}
+                          >
+                            Add participant
+                          </button>
+                        </div>
+                        <p className={styles.displayHint}>
+                          Portfolio link is optional — leave the URL empty when someone has no site.
+                        </p>
+                        {participantsForEdit(s.content?.sideInfo?.participants).map((p, i) => (
+                          <div key={`part-${s.id}-${i}`} className={styles.sideInfoRepeatRow}>
+                            <input
+                              className={styles.input}
+                              aria-label={`Participant ${i + 1} name`}
+                              placeholder="Name"
+                              value={p.name}
+                              onChange={(e) => {
+                                const participants = [...participantsForEdit(s.content?.sideInfo?.participants)]
+                                participants[i] = { ...participants[i], name: e.target.value }
+                                patchSectionSideInfo(s.id, { participants })
+                              }}
+                            />
+                            <input
+                              className={styles.input}
+                              aria-label={`Participant ${i + 1} portfolio URL`}
+                              placeholder="Portfolio URL (optional)"
+                              value={p.url ?? ''}
+                              onChange={(e) => {
+                                const participants = [...participantsForEdit(s.content?.sideInfo?.participants)]
+                                participants[i] = {
+                                  ...participants[i],
+                                  url: e.target.value.trim() ? e.target.value : undefined,
+                                }
+                                patchSectionSideInfo(s.id, { participants })
+                              }}
+                            />
+                            <button
+                              type="button"
+                              className={styles.textButton}
+                              onClick={() => {
+                                const participants = participantsForEdit(s.content?.sideInfo?.participants).filter(
+                                  (_, j) => j !== i,
+                                )
+                                patchSectionSideInfo(s.id, {
+                                  participants: participants.length ? participants : undefined,
+                                })
+                              }}
+                            >
+                              Remove
+                            </button>
+                          </div>
+                        ))}
                       </div>
                       <div className={styles.field}>
                         <div className={styles.sideInfoListHeader}>

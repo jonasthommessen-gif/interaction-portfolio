@@ -63,12 +63,18 @@ export type SectionSideInfoLink = {
   href: string
 }
 
+export type SectionSideInfoParticipant = {
+  name: string
+  /** Optional portfolio or personal site URL. */
+  url?: string
+}
+
 /** Structured facts for `project-overview` sections (stored in `content.sideInfo`). */
 export type SectionSideInfo = {
   overview?: string
   timeframe?: string
-  /** Shown on one line; newlines become comma-space for compact display. */
-  participants?: string
+  /** Array preferred; legacy string (comma/newline separated names) still supported when reading. */
+  participants?: string | SectionSideInfoParticipant[]
   collaborators?: SectionSideInfoCollaborator[]
   role?: string
   tools?: string
