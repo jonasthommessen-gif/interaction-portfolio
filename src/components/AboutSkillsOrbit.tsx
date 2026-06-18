@@ -36,8 +36,8 @@ type SatState = {
 function buildRevealedLayout(count: number, effectiveW: number, h: number) {
   const cols = count <= 4 ? 2 : 3
   const rows = Math.ceil(count / cols)
-  const padX = effectiveW * 0.08
-  const padY = h * 0.15
+  const padX = effectiveW * 0.06
+  const padY = h * 0.08
   const cellW = (effectiveW - padX * 2) / cols
   const cellH = (h - padY * 2) / rows
   return Array.from({ length: count }, (_, i) => ({
