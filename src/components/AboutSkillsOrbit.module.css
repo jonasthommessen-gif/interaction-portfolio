@@ -1,12 +1,7 @@
 .orbitRoot {
   position: absolute;
   inset: 0;
-  /* Extend left edge to the leftColumn left edge (x=0 of viewport) so that
-     getBoundingClientRect().left = 0 and the orbit math's xOffset becomes 0.
-     overflow: hidden gives a bounded paint rect, which allows the browser to
-     promote satellite layers (will-change: transform) to the GPU compositor. */
-  margin-left: calc(-1 * clamp(56px, 6vw, 120px));
-  overflow: hidden;
+  overflow: visible;
   pointer-events: auto;
   user-select: none;
 }
@@ -44,9 +39,6 @@
 
 .revealBtn {
   position: absolute;
-  /* left: 12px aligns with bio text (sectionFirstCard padding-left: 12px).
-     With the extended orbitRoot the container now starts at x=0 of leftColumn,
-     so left: 12px lands at the same x as the bio text above the separator. */
   left: 12px;   /* matches sectionFirstCard { padding-left: 12px } — bio text left edge */
   top: 1rem;
   z-index: 100;
