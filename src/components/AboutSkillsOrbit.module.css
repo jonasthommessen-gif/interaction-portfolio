@@ -39,7 +39,12 @@
 
 .revealBtn {
   position: absolute;
-  left: 12px;   /* matches sectionFirstCard { padding-left: 12px } — bio text left edge */
+  /*
+   * Bio text sits at sectionFirstCard.padding-left (12px) + separatorGapBlock.padding-left (16px) = 28px
+   * from leftColumn. orbitRoot starts at the orbit section's padding-left = clamp(56px,6vw,120px).
+   * To land on the same x: left = 28px - clamp(56px,6vw,120px)  →  button at 28px regardless of vw.
+   */
+  left: calc(28px - clamp(56px, 6vw, 120px));
   top: 1rem;
   z-index: 100;
   transform: translateZ(0);
@@ -50,7 +55,6 @@
   font-size: var(--text-sm);
   font-family: inherit;
   cursor: pointer;
-  /* No underline by default — visible on hover only */
 }
 
 .revealBtn:hover {
