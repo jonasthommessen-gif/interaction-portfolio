@@ -28,33 +28,19 @@ type SatState = {
   revY: number
 }
 
-const CONSTELLATION_OFFSETS = [
-  { dx: 0.08, dy: -0.10 },
-  { dx: -0.05, dy: 0.12 },
-  { dx: 0.10, dy: 0.06 },
-  { dx: -0.08, dy: -0.13 },
-  { dx: 0.06, dy: 0.11 },
-  { dx: -0.09, dy: -0.05 },
-  { dx: 0.04, dy: 0.13 },
-  { dx: -0.03, dy: -0.08 },
-]
-
 function buildRevealedLayout(count: number, w: number, h: number) {
-  const rows = count <= 4 ? 1 : count <= 8 ? 2 : 3
-  const cols = Math.ceil(count / rows)
-  const padX = w * 0.07
-  const padY = h * 0.14
+  const cols = count <= 4 ? 2 : 3
+  const rows = Math.ceil(count / cols)
+  const padX = w * 0.08
+  const padY = h * 0.15
   const cellW = (w - padX * 2) / cols
   const cellH = (h - padY * 2) / rows
-  return Array.from({ length: count }, (_, i) => {
-    const col = i % cols
-    const row = Math.floor(i / cols)
-    const off = CONSTELLATION_OFFSETS[i % CONSTELLATION_OFFSETS.length]!
-    return {
-      x: padX + col * cellW + cellW * 0.15 + off.dx * cellW,
-      y: padY + row * cellH + cellH * 0.35 + off.dy * cellH,
-    }
-  })
+  return Array.from({ length: count }, (_, i) => ({
+    // x: 0.35 of cell width offsets for the satellite icon so labels read
+    // left-to-right from a consistent position across each column.
+    x: padX + (i % cols) * cellW + cellW * 0.35,
+    y: padY + Math.floor(i / cols) * cellH + cellH * 0.5,
+  }))
 }
 
 function lerp(a: number, b: number, t: number) {
