@@ -27,19 +27,13 @@ export function orbitPosition(params: OrbitParams, theta: number): OrbitPoint {
 export const ZENITH_THETA = -Math.PI / 2
 
 /**
- * Proximity to zenith. sigma = 0.28 gives a tight window so that with
- * 6 satellites spaced 2π/6 ≈ 1.047 rad apart, only one exceeds the
- * auto-reveal threshold (0.88) at any moment.
+ * Proximity to zenith. sigma = 0.28 keeps the reveal window tight enough
+ * that only one satellite can exceed ZENITH_THRESHOLD (0.88) at a time.
  */
 export function zenithProximity(theta: number): number {
   const d = Math.abs(normalizeAngle(theta - ZENITH_THETA))
   const sigma = 0.28
   return Math.exp(-(d * d) / (2 * sigma * sigma))
-}
-
-/** Speed multiplier near zenith: slows to ~35% at peak. */
-export function zenithSpeedFactor(theta: number): number {
-  return 1 - zenithProximity(theta) * 0.65
 }
 
 export function normalizeAngle(a: number): number {
@@ -50,23 +44,22 @@ export function normalizeAngle(a: number): number {
 }
 
 /**
- * True circle orbit centered below the section.
+ * Circle orbit centered below the section so only the upper arc is visible.
  *
- * Geometry:
- *   R  = max(w * 0.65, h * 1.1)   — scales with both axes
- *   cy = R + h * ZENITH_Y_FRACTION — places the mathematical zenith inside section
+ * cx = 0.46 × width  — slight left shift keeps the orbit away from the right
+ *                       contact column without touching layout or section widths.
  *
- * For w=600, h=300: R=390, cy=426, zenith y=36 (12% from top) ✓
- * At x=section edge: satellite appears at ~59% section height ✓
+ * PHASE_OFFSET = 3π/2 + 0.3  — places sat 0 just past zenith at startup so the
+ *                               animation is immediately alive, and distributes the
+ *                               remaining satellites around the hidden circle with
+ *                               no initial zenith crowding.
  *
- * Full-circle phase distribution (2π spacing): section overflow:hidden clips
- * the below-section portion. Satellites genuinely orbit the full circle;
- * only the top arc is ever visible.
+ * omega 0.20 / 0.26 / 0.32  — wide speed spread prevents re-clustering over time.
  *
- * Negative omega → counterclockwise in screen coords → right-to-left across top arc.
+ * Speed is constant (no zenith slow-down). The zenith hold (ZENITH_HOLD_MS) in
+ * the component provides the dwell; variable speed was causing satellites to bunch.
  */
-// 54° offset — breaks the 4π/3 / 5π/3 mirror symmetry that caused clustering
-const PHASE_OFFSET = Math.PI * 0.3
+const PHASE_OFFSET = Math.PI * 1.5 + 0.3   // ≈ 5.012 rad
 
 export function buildOrbitParams(
   index: number,
@@ -75,10 +68,10 @@ export function buildOrbitParams(
   height: number,
 ): OrbitParams {
   const R = Math.max(width * 0.65, height * 1.1)
-  const cx = width / 2
+  const cx = width * 0.46
   const cy = R + height * ZENITH_Y_FRACTION
   const phase = (index / Math.max(count, 1)) * 2 * Math.PI + PHASE_OFFSET
-  const omega = -(0.20 + (index % 3) * 0.06)  // 0.20 / 0.26 / 0.32 — wider spread prevents re-clustering
+  const omega = -(0.20 + (index % 3) * 0.06)   // 0.20 / 0.26 / 0.32
   return { cx, cy, rx: R, ry: R, phase, omega }
 }
 

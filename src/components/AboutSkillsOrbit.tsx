@@ -5,13 +5,10 @@ import {
   easeInOutCubic,
   orbitPosition,
   zenithProximity,
-  zenithSpeedFactor,
-  ZENITH_Y_FRACTION,
 } from '../lib/aboutOrbitMath'
 import styles from './AboutSkillsOrbit.module.css'
 
 const SAT_SRC = '/Other/Base.satelite.svg'
-const ZENITH_HOLD_MS = 3000
 const ZENITH_THRESHOLD = 0.88
 const TRANSITION_MS = 2000
 
@@ -21,24 +18,18 @@ type SatState = {
   theta: number
   omega: number
   labelOpacity: number
-  zenithHoldUntil: number
-  zenithArmed: boolean
-  // rendered position (updated every RAF frame)
   currentX: number
   currentY: number
-  // snapshot at transition start
   snapX: number
   snapY: number
-  // fixed orbit target position for to-orbit (θ frozen at button click)
   targetX: number
   targetY: number
-  // constellation target position
   revX: number
   revY: number
 }
 
-// Deterministic constellation offsets (fraction of grid cell) — keeps the
-// revealed layout from looking like a strict grid/menu.
+// Deterministic constellation offsets — prevents the revealed state from
+// reading as a rigid grid/menu.
 const CONSTELLATION_OFFSETS = [
   { dx: 0.08, dy: -0.10 },
   { dx: -0.05, dy: 0.12 },
@@ -77,15 +68,16 @@ type Props = { skills: AboutSkill[] }
 export function AboutSkillsOrbit({ skills }: Props) {
   const containerRef = useRef<HTMLDivElement>(null)
   const [size, setSize] = useState({ w: 0, h: 0 })
-  // Only used for button label — avoids re-rendering the whole loop on state changes
   const [revealedUI, setRevealedUI] = useState(false)
   const [, tick] = useState(0)
 
   const statesRef = useRef<SatState[]>([])
   const phaseRef = useRef<Phase>('orbit')
   const transitionStartRef = useRef(0)
-  // Ref-based hover: no effect restart on hover, no flicker
   const hoverIndexRef = useRef<number | null>(null)
+  // Zone-based reveal: only one satellite holds the zenith slot at a time.
+  // The slot is claimed on zone-entry and released on zone-exit — no timer.
+  const activeZenithRef = useRef<number>(-1)
 
   const reducedMotion = useRef(
     typeof window !== 'undefined' &&
@@ -117,8 +109,6 @@ export function AboutSkillsOrbit({ skills }: Props) {
         theta: params.phase,
         omega: params.omega,
         labelOpacity: 0,
-        zenithHoldUntil: 0,
-        zenithArmed: true,
         currentX: pos.x,
         currentY: pos.y,
         snapX: pos.x,
@@ -129,6 +119,7 @@ export function AboutSkillsOrbit({ skills }: Props) {
         revY: layout[i]!.y,
       }
     })
+    activeZenithRef.current = -1
     phaseRef.current = 'orbit'
     setRevealedUI(false)
   }, [size.w, size.h, labels.length])
@@ -137,14 +128,12 @@ export function AboutSkillsOrbit({ skills }: Props) {
   useEffect(() => {
     if (size.w <= 0 || size.h <= 0) return
 
-    // Shared orbit geometry (all satellites use the same circle)
     const sharedParams = buildOrbitParams(0, 1, size.w, size.h)
     const oCx = sharedParams.cx
     const oCy = sharedParams.cy
     const oR = sharedParams.rx
 
     if (reducedMotion.current) {
-      // Static constellation; labels shown on hover only (see handlers below)
       for (const s of statesRef.current) {
         s.currentX = s.revX
         s.currentY = s.revY
@@ -170,45 +159,41 @@ export function AboutSkillsOrbit({ skills }: Props) {
       const hi = hoverIndexRef.current
 
       if (phase === 'orbit') {
-        // ── Find satellite closest to zenith (explicit single-reveal coordination)
-        let maxProx = 0
-        let maxIdx = -1
-        for (let i = 0; i < states.length; i++) {
-          const p = zenithProximity(states[i]!.theta)
-          if (p > maxProx) {
-            maxProx = p
-            maxIdx = i
+        const az = activeZenithRef
+
+        // Release the slot when the active satellite exits the zone
+        if (az.current >= 0 && zenithProximity(states[az.current]!.theta) < ZENITH_THRESHOLD) {
+          az.current = -1
+        }
+
+        // Claim the slot for the best candidate (if the slot is free)
+        if (az.current < 0) {
+          let maxProx = 0
+          let candidate = -1
+          for (let i = 0; i < states.length; i++) {
+            const p = zenithProximity(states[i]!.theta)
+            if (p > maxProx) { maxProx = p; candidate = i }
           }
+          if (candidate >= 0 && maxProx > ZENITH_THRESHOLD) az.current = candidate
         }
 
         for (let i = 0; i < states.length; i++) {
           const s = states[i]!
-          const holding = now < s.zenithHoldUntil
 
-          // Advance angle (paused while holding)
-          if (!holding) {
-            s.theta += zenithSpeedFactor(s.theta) * s.omega * dt
-          }
-
-          // Update rendered position from orbit math
+          // All satellites move at constant speed — no pause at zenith.
+          // The label follows the satellite through the zone naturally.
+          s.theta += s.omega * dt
           s.currentX = oCx + oR * Math.cos(s.theta)
           s.currentY = oCy + oR * Math.sin(s.theta)
 
-          // Only the single closest satellite may auto-reveal
-          const isLeader = i === maxIdx && maxProx > ZENITH_THRESHOLD
-          const targetOp = isLeader || holding || hi === i ? 1 : 0
-          s.labelOpacity += (targetOp - s.labelOpacity) * Math.min(1, dt * 2.5)
-
-          // Trigger zenith hold
-          if (isLeader && s.zenithArmed && !holding) {
-            s.zenithHoldUntil = now + ZENITH_HOLD_MS
-            s.zenithArmed = false
-          }
-          // Re-arm when clearly past zenith zone
-          if (zenithProximity(s.theta) < 0.12 && now >= s.zenithHoldUntil) {
-            s.zenithArmed = true
-          }
+          // A label is visible only while this satellite holds the zenith slot
+          // AND is inside the zone, or the user is hovering it directly.
+          const inZone = i === az.current && zenithProximity(s.theta) > ZENITH_THRESHOLD
+          const targetOp = inZone || hi === i ? 1 : 0
+          s.labelOpacity += (targetOp - s.labelOpacity) * Math.min(1, dt * 5)
+          if (s.labelOpacity < 0.01) s.labelOpacity = 0
         }
+
       } else if (phase === 'to-reveal') {
         for (const s of states) {
           s.currentX = lerp(s.snapX, s.revX, t)
@@ -216,14 +201,16 @@ export function AboutSkillsOrbit({ skills }: Props) {
           s.labelOpacity = t
         }
         if (t >= 1) phaseRef.current = 'revealed'
+
       } else if (phase === 'revealed') {
         for (const s of states) {
           s.currentX = s.revX
           s.currentY = s.revY
           s.labelOpacity = 1
         }
+
       } else {
-        // 'to-orbit' — interpolate to the fixed orbit target captured at click time
+        // 'to-orbit' — interpolate toward fixed orbit positions captured at click
         for (const s of states) {
           s.currentX = lerp(s.snapX, s.targetX, t)
           s.currentY = lerp(s.snapY, s.targetY, t)
@@ -231,6 +218,7 @@ export function AboutSkillsOrbit({ skills }: Props) {
         }
         if (t >= 1) {
           for (const s of states) s.labelOpacity = 0
+          activeZenithRef.current = -1
           phaseRef.current = 'orbit'
         }
       }
@@ -248,7 +236,6 @@ export function AboutSkillsOrbit({ skills }: Props) {
     const phase = phaseRef.current
 
     if (phase === 'orbit' || phase === 'to-orbit') {
-      // → reveal: snapshot current positions, compute constellation targets
       const layout = buildRevealedLayout(labels.length, size.w, size.h)
       for (let i = 0; i < statesRef.current.length; i++) {
         const s = statesRef.current[i]!
@@ -261,16 +248,12 @@ export function AboutSkillsOrbit({ skills }: Props) {
       transitionStartRef.current = now
       setRevealedUI(true)
     } else {
-      // → orbit: capture fixed orbit targets at current frozen θ
-      const sharedParams = buildOrbitParams(0, 1, size.w, size.h)
-      const cx = sharedParams.cx
-      const cy = sharedParams.cy
-      const R = sharedParams.rx
+      const sp = buildOrbitParams(0, 1, size.w, size.h)
       for (const s of statesRef.current) {
         s.snapX = s.currentX
         s.snapY = s.currentY
-        s.targetX = cx + R * Math.cos(s.theta)
-        s.targetY = cy + R * Math.sin(s.theta)
+        s.targetX = sp.cx + sp.rx * Math.cos(s.theta)
+        s.targetY = sp.cy + sp.ry * Math.sin(s.theta)
       }
       phaseRef.current = 'to-orbit'
       transitionStartRef.current = now
@@ -283,25 +266,18 @@ export function AboutSkillsOrbit({ skills }: Props) {
     hoverIndexRef.current = i
     if (reducedMotion.current) {
       const s = statesRef.current[i]
-      if (s) {
-        s.labelOpacity = 1
-        tick((n) => n + 1)
-      }
+      if (s) { s.labelOpacity = 1; tick((n) => n + 1) }
     }
   }
   const onLeave = (i: number) => {
     if (hoverIndexRef.current === i) hoverIndexRef.current = null
     if (reducedMotion.current) {
       const s = statesRef.current[i]
-      if (s) {
-        s.labelOpacity = 0
-        tick((n) => n + 1)
-      }
+      if (s) { s.labelOpacity = 0; tick((n) => n + 1) }
     }
   }
 
   // ── SVG orbit ring ─────────────────────────────────────────────────────────
-  // Derived from buildOrbitParams so the ring always matches the actual orbit.
   const { cx: orbitCx, cy: orbitCy, rx: orbitR } =
     size.w > 0 ? buildOrbitParams(0, 1, size.w, size.h) : { cx: 0, cy: 0, rx: 0 }
 
@@ -313,7 +289,7 @@ export function AboutSkillsOrbit({ skills }: Props) {
             cx={orbitCx}
             cy={orbitCy}
             r={orbitR}
-            stroke="rgba(255,255,255,0.06)"
+            stroke="rgba(255,255,255,0.02)"
             strokeWidth="1"
             fill="none"
           />
