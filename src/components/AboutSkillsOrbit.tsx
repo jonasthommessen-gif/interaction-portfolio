@@ -14,11 +14,11 @@ const TRANSITION_MS = 2000
 
 type Phase = 'orbit' | 'to-reveal' | 'revealed' | 'to-orbit'
 
+/** Mutable per-satellite state — lives in a ref, never triggers React renders. */
 type SatState = {
   theta: number
   omega: number
-  labelOpacity: number
-  currentX: number
+  currentX: number    // viewport coords
   currentY: number
   snapX: number
   snapY: number
@@ -28,8 +28,6 @@ type SatState = {
   revY: number
 }
 
-// Deterministic constellation offsets — prevents the revealed state from
-// reading as a rigid grid/menu.
 const CONSTELLATION_OFFSETS = [
   { dx: 0.08, dy: -0.10 },
   { dx: -0.05, dy: 0.12 },
@@ -67,17 +65,23 @@ type Props = { skills: AboutSkill[] }
 
 export function AboutSkillsOrbit({ skills }: Props) {
   const containerRef = useRef<HTMLDivElement>(null)
-  const [size, setSize] = useState({ w: 0, h: 0 })
-  const [revealedUI, setRevealedUI] = useState(false)
-  const [, tick] = useState(0)
 
+  // size includes xOffset = container's left distance from viewport left edge.
+  // effectiveW = w + xOffset ≈ the left-column viewport width used for orbit math.
+  const [size, setSize] = useState({ w: 0, h: 0, xOffset: 0 })
+
+  const [revealedUI, setRevealedUI] = useState(false)
+
+  // Mutable animation state — never touches React state
   const statesRef = useRef<SatState[]>([])
   const phaseRef = useRef<Phase>('orbit')
   const transitionStartRef = useRef(0)
   const hoverIndexRef = useRef<number | null>(null)
-  // Zone-based reveal: only one satellite holds the zenith slot at a time.
-  // The slot is claimed on zone-entry and released on zone-exit — no timer.
   const activeZenithRef = useRef<number>(-1)
+
+  // Direct DOM refs — positions and opacities written without React renders
+  const satDivRefs = useRef<(HTMLDivElement | null)[]>([])
+  const labelSpanRefs = useRef<(HTMLSpanElement | null)[]>([])
 
   const reducedMotion = useRef(
     typeof window !== 'undefined' &&
@@ -86,13 +90,13 @@ export function AboutSkillsOrbit({ skills }: Props) {
 
   const labels = skills.map((s) => s.label)
 
-  // ── Observe container size ─────────────────────────────────────────────────
+  // ── Observe container size + viewport offset ───────────────────────────────
   useEffect(() => {
     const el = containerRef.current
     if (!el) return
     const ro = new ResizeObserver(() => {
-      const { width, height } = el.getBoundingClientRect()
-      setSize({ w: width, h: height })
+      const rect = el.getBoundingClientRect()
+      setSize({ w: rect.width, h: rect.height, xOffset: rect.left })
     })
     ro.observe(el)
     return () => ro.disconnect()
@@ -101,45 +105,52 @@ export function AboutSkillsOrbit({ skills }: Props) {
   // ── Initialise satellite states ────────────────────────────────────────────
   useEffect(() => {
     if (size.w <= 0 || size.h <= 0) return
+    const effectiveW = size.w + size.xOffset
     const layout = buildRevealedLayout(labels.length, size.w, size.h)
     statesRef.current = labels.map((_, i) => {
-      const params = buildOrbitParams(i, labels.length, size.w, size.h)
+      const params = buildOrbitParams(i, labels.length, effectiveW, size.h)
       const pos = orbitPosition(params, params.phase)
       return {
         theta: params.phase,
         omega: params.omega,
-        labelOpacity: 0,
         currentX: pos.x,
         currentY: pos.y,
         snapX: pos.x,
         snapY: pos.y,
         targetX: pos.x,
         targetY: pos.y,
-        revX: layout[i]!.x,
+        revX: layout[i]!.x + size.xOffset,   // store in viewport coords
         revY: layout[i]!.y,
       }
     })
     activeZenithRef.current = -1
     phaseRef.current = 'orbit'
     setRevealedUI(false)
-  }, [size.w, size.h, labels.length])
+    // Ensure all labels start hidden
+    for (const span of labelSpanRefs.current) {
+      if (span) span.style.opacity = '0'
+    }
+  }, [size.w, size.h, size.xOffset, labels.length])
 
-  // ── Single RAF loop — all phases ───────────────────────────────────────────
+  // ── RAF loop ───────────────────────────────────────────────────────────────
   useEffect(() => {
     if (size.w <= 0 || size.h <= 0) return
 
-    const sharedParams = buildOrbitParams(0, 1, size.w, size.h)
-    const oCx = sharedParams.cx
-    const oCy = sharedParams.cy
-    const oR = sharedParams.rx
+    const { w, h, xOffset } = size
+    const effectiveW = w + xOffset
+    const params0 = buildOrbitParams(0, 1, effectiveW, h)
+    const oCx = params0.cx       // viewport coords
+    const oCy = params0.cy
+    const oR = params0.rx
 
     if (reducedMotion.current) {
-      for (const s of statesRef.current) {
-        s.currentX = s.revX
-        s.currentY = s.revY
-        s.labelOpacity = 0
+      // Reduced motion: static constellation, labels hidden until hover
+      for (let i = 0; i < statesRef.current.length; i++) {
+        const s = statesRef.current[i]!
+        const renderX = s.revX - xOffset    // viewport → container coords
+        const div = satDivRefs.current[i]
+        if (div) div.style.transform = `translate(${renderX}px, ${s.revY}px)`
       }
-      tick((n) => n + 1)
       return
     }
 
@@ -153,20 +164,15 @@ export function AboutSkillsOrbit({ skills }: Props) {
 
       const states = statesRef.current
       const phase = phaseRef.current
-      const t = easeInOutCubic(
-        Math.min(1, (now - transitionStartRef.current) / TRANSITION_MS),
-      )
       const hi = hoverIndexRef.current
+      const az = activeZenithRef
 
       if (phase === 'orbit') {
-        const az = activeZenithRef
-
-        // Release the slot when the active satellite exits the zone
+        // Zone-based zenith release
         if (az.current >= 0 && zenithProximity(states[az.current]!.theta) < ZENITH_THRESHOLD) {
           az.current = -1
         }
-
-        // Claim the slot for the best candidate (if the slot is free)
+        // Claim slot for the deepest-in-zone satellite
         if (az.current < 0) {
           let maxProx = 0
           let candidate = -1
@@ -179,81 +185,107 @@ export function AboutSkillsOrbit({ skills }: Props) {
 
         for (let i = 0; i < states.length; i++) {
           const s = states[i]!
-
-          // All satellites move at constant speed — no pause at zenith.
-          // The label follows the satellite through the zone naturally.
           s.theta += s.omega * dt
           s.currentX = oCx + oR * Math.cos(s.theta)
           s.currentY = oCy + oR * Math.sin(s.theta)
 
-          // A label is visible only while this satellite holds the zenith slot
-          // AND is inside the zone, or the user is hovering it directly.
+          const renderX = s.currentX - xOffset
+          const div = satDivRefs.current[i]
+          if (div) div.style.transform = `translate(${renderX}px, ${s.currentY}px)`
+
+          // Label: visible only in zenith zone or on hover — CSS transition handles smoothing
           const inZone = i === az.current && zenithProximity(s.theta) > ZENITH_THRESHOLD
-          const targetOp = inZone || hi === i ? 1 : 0
-          s.labelOpacity += (targetOp - s.labelOpacity) * Math.min(1, dt * 5)
-          if (s.labelOpacity < 0.01) s.labelOpacity = 0
+          const targetOp = inZone || hi === i ? '1' : '0'
+          const span = labelSpanRefs.current[i]
+          if (span && span.style.opacity !== targetOp) span.style.opacity = targetOp
         }
 
       } else if (phase === 'to-reveal') {
-        for (const s of states) {
-          s.currentX = lerp(s.snapX, s.revX, t)
-          s.currentY = lerp(s.snapY, s.revY, t)
-          s.labelOpacity = t
-        }
-        if (t >= 1) phaseRef.current = 'revealed'
-
-      } else if (phase === 'revealed') {
-        for (const s of states) {
-          s.currentX = s.revX
-          s.currentY = s.revY
-          s.labelOpacity = 1
-        }
-
-      } else {
-        // 'to-orbit' — interpolate toward fixed orbit positions captured at click
-        for (const s of states) {
-          s.currentX = lerp(s.snapX, s.targetX, t)
-          s.currentY = lerp(s.snapY, s.targetY, t)
-          s.labelOpacity = 1 - t
+        const t = easeInOutCubic(Math.min(1, (now - transitionStartRef.current) / TRANSITION_MS))
+        for (let i = 0; i < states.length; i++) {
+          const s = states[i]!
+          const vpX = lerp(s.snapX, s.revX, t)
+          const vpY = lerp(s.snapY, s.revY, t)
+          s.currentX = vpX
+          s.currentY = vpY
+          const div = satDivRefs.current[i]
+          if (div) div.style.transform = `translate(${vpX - xOffset}px, ${vpY}px)`
+          // Labels stay hidden during movement (staged reveal)
+          const span = labelSpanRefs.current[i]
+          if (span && span.style.opacity !== '0') span.style.opacity = '0'
         }
         if (t >= 1) {
-          for (const s of states) s.labelOpacity = 0
+          phaseRef.current = 'revealed'
+          // Satellites have settled — now reveal labels (CSS 200ms transition)
+          for (const span of labelSpanRefs.current) {
+            if (span) span.style.opacity = '1'
+          }
+        }
+
+      } else if (phase === 'revealed') {
+        // Static — nothing to update per frame
+
+      } else {
+        // 'to-orbit'
+        const t = easeInOutCubic(Math.min(1, (now - transitionStartRef.current) / TRANSITION_MS))
+        for (let i = 0; i < states.length; i++) {
+          const s = states[i]!
+          const vpX = lerp(s.snapX, s.targetX, t)
+          const vpY = lerp(s.snapY, s.targetY, t)
+          s.currentX = vpX
+          s.currentY = vpY
+          const div = satDivRefs.current[i]
+          if (div) div.style.transform = `translate(${vpX - xOffset}px, ${vpY}px)`
+        }
+        if (t >= 1) {
+          for (const s of states) {
+            s.currentX = s.targetX
+            s.currentY = s.targetY
+          }
           activeZenithRef.current = -1
           phaseRef.current = 'orbit'
         }
       }
-
-      tick((n) => n + 1)
     }
 
     raf = requestAnimationFrame(loop)
     return () => cancelAnimationFrame(raf)
-  }, [size.w, size.h, labels.length])
+  }, [size.w, size.h, size.xOffset, labels.length])
 
   // ── Button handler ─────────────────────────────────────────────────────────
   const handleToggle = () => {
     const now = performance.now()
     const phase = phaseRef.current
+    const { w, h, xOffset } = size
+    const effectiveW = w + xOffset
 
     if (phase === 'orbit' || phase === 'to-orbit') {
-      const layout = buildRevealedLayout(labels.length, size.w, size.h)
+      const layout = buildRevealedLayout(labels.length, w, h)
       for (let i = 0; i < statesRef.current.length; i++) {
         const s = statesRef.current[i]!
         s.snapX = s.currentX
         s.snapY = s.currentY
-        s.revX = layout[i]!.x
+        s.revX = layout[i]!.x + xOffset
         s.revY = layout[i]!.y
+      }
+      // Hide all labels immediately before satellite movement starts
+      for (const span of labelSpanRefs.current) {
+        if (span) span.style.opacity = '0'
       }
       phaseRef.current = 'to-reveal'
       transitionStartRef.current = now
       setRevealedUI(true)
     } else {
-      const sp = buildOrbitParams(0, 1, size.w, size.h)
+      const sp = buildOrbitParams(0, 1, effectiveW, h)
       for (const s of statesRef.current) {
         s.snapX = s.currentX
         s.snapY = s.currentY
         s.targetX = sp.cx + sp.rx * Math.cos(s.theta)
         s.targetY = sp.cy + sp.ry * Math.sin(s.theta)
+      }
+      // Hide labels immediately — satellites move after labels are gone (CSS 200ms fade)
+      for (const span of labelSpanRefs.current) {
+        if (span) span.style.opacity = '0'
       }
       phaseRef.current = 'to-orbit'
       transitionStartRef.current = now
@@ -265,41 +297,25 @@ export function AboutSkillsOrbit({ skills }: Props) {
   const onEnter = (i: number) => {
     hoverIndexRef.current = i
     if (reducedMotion.current) {
-      const s = statesRef.current[i]
-      if (s) { s.labelOpacity = 1; tick((n) => n + 1) }
+      const span = labelSpanRefs.current[i]
+      if (span) span.style.opacity = '1'
     }
   }
   const onLeave = (i: number) => {
     if (hoverIndexRef.current === i) hoverIndexRef.current = null
     if (reducedMotion.current) {
-      const s = statesRef.current[i]
-      if (s) { s.labelOpacity = 0; tick((n) => n + 1) }
+      const span = labelSpanRefs.current[i]
+      if (span) span.style.opacity = '0'
     }
   }
 
-  // ── SVG orbit ring ─────────────────────────────────────────────────────────
-  const { cx: orbitCx, cy: orbitCy, rx: orbitR } =
-    size.w > 0 ? buildOrbitParams(0, 1, size.w, size.h) : { cx: 0, cy: 0, rx: 0 }
-
   return (
     <div ref={containerRef} className={styles.orbitRoot}>
-      {orbitR > 0 && (
-        <svg className={styles.orbitSvg} aria-hidden>
-          <circle
-            cx={orbitCx}
-            cy={orbitCy}
-            r={orbitR}
-            stroke="rgba(255,255,255,0.02)"
-            strokeWidth="1"
-            fill="none"
-          />
-        </svg>
-      )}
-      {statesRef.current.map((s, i) => (
+      {labels.map((label, i) => (
         <div
           key={`sat-${i}`}
+          ref={el => { satDivRefs.current[i] = el }}
           className={styles.satWrap}
-          style={{ transform: `translate(${s.currentX}px, ${s.currentY}px)` }}
           onMouseEnter={() => onEnter(i)}
           onMouseLeave={() => onLeave(i)}
         >
@@ -312,14 +328,10 @@ export function AboutSkillsOrbit({ skills }: Props) {
             draggable={false}
           />
           <span
+            ref={el => { labelSpanRefs.current[i] = el }}
             className={styles.skillLabel}
-            style={{
-              opacity: s.labelOpacity,
-              transform: `translateY(${(1 - s.labelOpacity) * 5}px)`,
-            }}
-            aria-hidden={s.labelOpacity < 0.1}
           >
-            {labels[i]}
+            {label}
           </span>
         </div>
       ))}

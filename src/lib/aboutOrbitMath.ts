@@ -9,13 +9,9 @@ export type OrbitParams = {
 
 export type OrbitPoint = { x: number; y: number }
 
-/**
- * The zenith fraction controls where the mathematical top of the circle sits
- * inside the visible section. 0.12 = 12% from the section top.
- */
 export const ZENITH_Y_FRACTION = 0.12
 
-/** Parametric circle/ellipse position. θ = 0 → rightmost, increasing θ → clockwise. */
+/** Parametric position on the orbit circle. */
 export function orbitPosition(params: OrbitParams, theta: number): OrbitPoint {
   return {
     x: params.cx + params.rx * Math.cos(theta),
@@ -23,12 +19,12 @@ export function orbitPosition(params: OrbitParams, theta: number): OrbitPoint {
   }
 }
 
-/** Zenith is the top of the circle: sin(θ) = −1, i.e. θ = −π/2. */
 export const ZENITH_THETA = -Math.PI / 2
 
 /**
- * Proximity to zenith. sigma = 0.28 keeps the reveal window tight enough
- * that only one satellite can exceed ZENITH_THRESHOLD (0.88) at a time.
+ * Zenith proximity: Gaussian bell centered at the top of the circle.
+ * sigma=0.28 → zone width ≈ ±0.14 rad; at ORBIT_OMEGA the satellite
+ * crosses the zone in ~2.4 s.
  */
 export function zenithProximity(theta: number): number {
   const d = Math.abs(normalizeAngle(theta - ZENITH_THETA))
@@ -44,35 +40,34 @@ export function normalizeAngle(a: number): number {
 }
 
 /**
- * Circle orbit centered below the section so only the upper arc is visible.
+ * All satellites share the same angular speed so the orbit feels like a
+ * single coherent stream, not a jittery scatter of independent objects.
+ * Full orbit ≈ 52 s — slow and graceful at this setting.
+ */
+export const ORBIT_OMEGA = -0.12   // rad/s (negative = counter-clockwise when viewed normally)
+
+/**
+ * Phase offset places sat-0 just past the zenith at startup so the
+ * section is immediately alive. Even spacing around the full hidden
+ * circle keeps the visible arc from ever being crowded.
  *
- * cx = 0.46 × width  — slight left shift keeps the orbit away from the right
- *                       contact column without touching layout or section widths.
- *
- * PHASE_OFFSET = 3π/2 + 0.3  — places sat 0 just past zenith at startup so the
- *                               animation is immediately alive, and distributes the
- *                               remaining satellites around the hidden circle with
- *                               no initial zenith crowding.
- *
- * omega 0.20 / 0.26 / 0.32  — wide speed spread prevents re-clustering over time.
- *
- * Speed is constant (no zenith slow-down). The zenith hold (ZENITH_HOLD_MS) in
- * the component provides the dwell; variable speed was causing satellites to bunch.
+ * cx = effectiveWidth × 0.46 is computed in the component using the
+ * viewport-relative left-column width so the orbit reaches the left
+ * viewport edge.
  */
 const PHASE_OFFSET = Math.PI * 1.5 + 0.3   // ≈ 5.012 rad
 
 export function buildOrbitParams(
   index: number,
   count: number,
-  width: number,
+  effectiveWidth: number,   // viewport-relative left-column width (container.left + container.width)
   height: number,
 ): OrbitParams {
-  const R = Math.max(width * 0.65, height * 1.1)
-  const cx = width * 0.46
+  const R = Math.max(effectiveWidth * 0.65, height * 1.1)
+  const cx = effectiveWidth * 0.46    // viewport coords; component converts to container coords for rendering
   const cy = R + height * ZENITH_Y_FRACTION
   const phase = (index / Math.max(count, 1)) * 2 * Math.PI + PHASE_OFFSET
-  const omega = -(0.20 + (index % 3) * 0.06)   // 0.20 / 0.26 / 0.32
-  return { cx, cy, rx: R, ry: R, phase, omega }
+  return { cx, cy, rx: R, ry: R, phase, omega: ORBIT_OMEGA }
 }
 
 export function easeInOutCubic(t: number): number {

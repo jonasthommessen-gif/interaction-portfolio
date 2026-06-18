@@ -1,17 +1,9 @@
 .orbitRoot {
   position: absolute;
   inset: 0;
-  overflow: hidden;
+  overflow: visible;
   pointer-events: auto;
   user-select: none;
-}
-
-.orbitSvg {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
 }
 
 .satWrap {
@@ -39,8 +31,9 @@
   letter-spacing: -0.01em;
   color: white;
   white-space: nowrap;
-  transition: opacity 0.35s ease, transform 0.35s ease;
-  will-change: opacity, transform;
+  opacity: 0;
+  transition: opacity 200ms ease;
+  will-change: opacity;
   pointer-events: none;
 }
 
