@@ -66,8 +66,12 @@ type Props = { skills: AboutSkill[] }
 export function AboutSkillsOrbit({ skills }: Props) {
   const containerRef = useRef<HTMLDivElement>(null)
 
-  // size includes xOffset = container's left distance from viewport left edge.
-  // effectiveW = w + xOffset ≈ the left-column viewport width used for orbit math.
+  // sizeRef is updated synchronously in the ResizeObserver callback so the
+  // RAF loop always reads the latest dimensions without needing to restart.
+  const sizeRef = useRef({ w: 0, h: 0, xOffset: 0 })
+
+  // size state is kept only to trigger the init effect when dimensions first
+  // become available or when skill count changes. The RAF never closes over it.
   const [size, setSize] = useState({ w: 0, h: 0, xOffset: 0 })
 
   const [revealedUI, setRevealedUI] = useState(false)
@@ -96,7 +100,11 @@ export function AboutSkillsOrbit({ skills }: Props) {
     if (!el) return
     const ro = new ResizeObserver(() => {
       const rect = el.getBoundingClientRect()
-      setSize({ w: rect.width, h: rect.height, xOffset: rect.left })
+      const next = { w: rect.width, h: rect.height, xOffset: rect.left }
+      // Update ref immediately so the running RAF loop sees the new values
+      // without needing to restart.
+      sizeRef.current = next
+      setSize(next)
     })
     ro.observe(el)
     return () => ro.disconnect()
@@ -105,10 +113,11 @@ export function AboutSkillsOrbit({ skills }: Props) {
   // ── Initialise satellite states ────────────────────────────────────────────
   useEffect(() => {
     if (size.w <= 0 || size.h <= 0) return
-    const effectiveW = size.w + size.xOffset
-    const layout = buildRevealedLayout(labels.length, size.w, size.h)
+    const { w, h, xOffset } = size
+    const effectiveW = w + xOffset
+    const layout = buildRevealedLayout(labels.length, w, h)
     statesRef.current = labels.map((_, i) => {
-      const params = buildOrbitParams(i, labels.length, effectiveW, size.h)
+      const params = buildOrbitParams(i, labels.length, effectiveW, h)
       const pos = orbitPosition(params, params.phase)
       return {
         theta: params.phase,
@@ -119,13 +128,22 @@ export function AboutSkillsOrbit({ skills }: Props) {
         snapY: pos.y,
         targetX: pos.x,
         targetY: pos.y,
-        revX: layout[i]!.x + size.xOffset,   // store in viewport coords
+        revX: layout[i]!.x + xOffset,   // store in viewport coords
         revY: layout[i]!.y,
       }
     })
     activeZenithRef.current = -1
     phaseRef.current = 'orbit'
     setRevealedUI(false)
+
+    // Set initial transforms immediately so satellites never flash at origin.
+    for (let i = 0; i < statesRef.current.length; i++) {
+      const s = statesRef.current[i]!
+      const renderX = s.currentX - xOffset
+      const div = satDivRefs.current[i]
+      if (div) div.style.transform = `translate(${renderX}px, ${s.currentY}px)`
+    }
+
     // Ensure all labels start hidden
     for (const span of labelSpanRefs.current) {
       if (span) span.style.opacity = '0'
@@ -133,18 +151,13 @@ export function AboutSkillsOrbit({ skills }: Props) {
   }, [size.w, size.h, size.xOffset, labels.length])
 
   // ── RAF loop ───────────────────────────────────────────────────────────────
+  // Depends only on labels.length — never restarts due to resize.
+  // Reads sizeRef.current every frame for always-current dimensions.
   useEffect(() => {
-    if (size.w <= 0 || size.h <= 0) return
-
-    const { w, h, xOffset } = size
-    const effectiveW = w + xOffset
-    const params0 = buildOrbitParams(0, 1, effectiveW, h)
-    const oCx = params0.cx       // viewport coords
-    const oCy = params0.cy
-    const oR = params0.rx
-
     if (reducedMotion.current) {
       // Reduced motion: static constellation, labels hidden until hover
+      const { w, h, xOffset } = sizeRef.current
+      if (w <= 0 || h <= 0) return
       for (let i = 0; i < statesRef.current.length; i++) {
         const s = statesRef.current[i]!
         const renderX = s.revX - xOffset    // viewport → container coords
@@ -159,8 +172,19 @@ export function AboutSkillsOrbit({ skills }: Props) {
 
     const loop = (now: number) => {
       raf = requestAnimationFrame(loop)
+
+      // Read current size every frame — no closure, no restart needed.
+      const { w, h, xOffset } = sizeRef.current
+      if (w <= 0 || h <= 0) return
+
       const dt = last ? Math.min((now - last) / 1000, 0.05) : 0.016
       last = now
+
+      const effectiveW = w + xOffset
+      const params0 = buildOrbitParams(0, 1, effectiveW, h)
+      const oCx = params0.cx       // viewport coords
+      const oCy = params0.cy
+      const oR = params0.rx
 
       const states = statesRef.current
       const phase = phaseRef.current
@@ -250,13 +274,13 @@ export function AboutSkillsOrbit({ skills }: Props) {
 
     raf = requestAnimationFrame(loop)
     return () => cancelAnimationFrame(raf)
-  }, [size.w, size.h, size.xOffset, labels.length])
+  }, [labels.length])   // ← no size dependency: RAF never restarts on resize
 
   // ── Button handler ─────────────────────────────────────────────────────────
   const handleToggle = () => {
     const now = performance.now()
     const phase = phaseRef.current
-    const { w, h, xOffset } = size
+    const { w, h, xOffset } = sizeRef.current
     const effectiveW = w + xOffset
 
     if (phase === 'orbit' || phase === 'to-orbit') {

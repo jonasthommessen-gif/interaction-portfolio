@@ -40,8 +40,11 @@
 .revealBtn {
   position: absolute;
   left: 0;
-  bottom: 0.5rem;
-  z-index: 2;
+  top: 1rem;
+  /* Promote to its own compositor layer so GPU-composited satellites
+     (will-change: transform) cannot paint over this button. */
+  z-index: 100;
+  transform: translateZ(0);
   padding: 0;
   border: none;
   background: transparent;

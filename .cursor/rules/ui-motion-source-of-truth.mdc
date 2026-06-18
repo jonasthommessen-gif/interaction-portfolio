@@ -1,0 +1,160 @@
+---
+description: UI animation and motion design source of truth. Apply whenever creating, editing, debugging, or reviewing UI animations, transitions, motion graphics, scroll effects, canvas renderers, CSS animations, Framer Motion, page transitions, loading states, hover/press states, or animated state changes.
+globs:
+  - "src/**/*.{ts,tsx,js,jsx,css,scss}"
+  - "app/**/*.{ts,tsx,js,jsx,css,scss}"
+  - "components/**/*.{ts,tsx,js,jsx,css,scss}"
+  - "styles/**/*.{css,scss}"
+alwaysApply: false
+---
+
+# UI Motion Source of Truth
+
+Motion is not decoration. Motion is a communication layer.
+
+Every animation must make the interface easier to understand, easier to operate, or easier to trust. If motion does not clarify feedback, state, hierarchy, spatial relationship, progress, or causality, remove it.
+
+## Non-negotiable principles
+
+### 1. Purpose before motion
+
+Before adding an animation, identify its job.
+
+Allowed motion purposes:
+
+- Feedback: confirms that the user did something.
+- State change: shows that something changed.
+- Spatial continuity: explains where an element came from or went.
+- Hierarchy: guides attention to the next relevant thing.
+- Progress: communicates that the system is working.
+- Data behaviour: translates system state into readable visual behaviour.
+- Brand/atmosphere: only when it does not interfere with task completion.
+
+Forbidden motion purposes:
+
+- "Make it feel more alive."
+- "Make it cooler."
+- "Add polish" without a concrete UX reason.
+- Distract from weak layout, unclear copy, or broken hierarchy.
+- Hide latency without honestly showing progress.
+- Create spectacle during frequent task interactions.
+
+If the purpose cannot be stated in one sentence, do not animate.
+
+---
+
+### 2. Motion must clarify cause and effect
+
+Motion should help users understand what caused what.
+
+Good:
+
+- Button press gives immediate feedback.
+- Menu opens from the trigger that caused it.
+- Card expansion keeps the same object visually continuous.
+- Deleted item exits in a direction that supports removal.
+- Progress indicator shows the system has received the request.
+
+Bad:
+
+- Elements appear from unrelated directions.
+- Multiple things animate at once with no hierarchy.
+- A transition hides what changed.
+- Motion suggests a relationship that does not exist.
+- Decorative movement competes with important content.
+
+When elements belong together, they should move together.
+When elements are unrelated, they should not share identical motion.
+
+---
+
+### 3. Motion must respect attention
+
+Motion attracts attention. Use it carefully.
+
+Rules:
+
+- Only one primary attention-seeking motion may happen in a region at a time.
+- Do not animate around text the user is expected to read.
+- Do not loop motion near form fields, critical buttons, warnings, or dense information.
+- Do not animate peripheral elements unless they are currently relevant.
+- Do not use constant pulsing to compensate for poor hierarchy.
+- Do not animate every item in a list unless the sequence helps comprehension.
+- Stagger only when it improves reading order or spatial understanding.
+
+If everything moves, nothing is important.
+
+---
+
+### 4. Motion must be fast enough to keep control, slow enough to understand
+
+Default timing scale:
+
+- 50–100ms: press, hover, active, tiny feedback.
+- 100–150ms: small component state changes.
+- 150–250ms: dropdowns, popovers, small entrances/exits.
+- 200–300ms: cards, panels, medium layout transitions.
+- 250–400ms: modals, large surfaces, page-level transitions.
+- 400ms+: only for rare expressive moments, onboarding, brand moments, or complex spatial transitions.
+
+Hard rules:
+
+- Do not make users wait for animation before they can continue.
+- Do not block input while an animation finishes unless technically unavoidable.
+- Frequent interactions must be shorter and calmer than rare transitions.
+- Larger travel distance or larger surface may justify longer duration.
+- Small UI feedback should feel immediate.
+- Avoid animation longer than 400ms in normal product UI unless explicitly justified.
+
+---
+
+### 5. Easing must feel intentional
+
+Default easing rules:
+
+- Use ease-out for entrances and feedback: fast start, soft landing.
+- Use ease-in for exits: soft start, quick departure.
+- Use ease-in-out for spatial transformations between stable states.
+- Use linear only for continuous mechanical motion such as spinners, progress loops, or constant rotation.
+- Avoid bounce, elastic, spring overshoot, wobble, or cartoon easing unless the product language explicitly calls for it.
+
+Motion should feel responsive and physical, not random, floaty, or theatrical.
+
+---
+
+### 6. Reduced motion is mandatory
+
+Every non-essential animation must support reduced motion.
+
+Implementation requirements:
+
+- Respect `prefers-reduced-motion`.
+- Provide a reduced-motion path for large movement, scaling, parallax, zooming, background motion, looping decorative motion, and scroll-linked animation.
+- Reduced motion does not always mean "no feedback." Prefer replacing spatial movement with opacity, instant state changes, or very short fades.
+- Loading/progress indicators must still communicate state when motion is reduced.
+- Canvas/WebGL/SVG renderers must expose a reduced-motion mode and stop unnecessary loops.
+- Do not make essential information available only through animation.
+
+Reduced-motion fallback:
+
+- Disable parallax.
+- Disable large translate/scale/rotate motion.
+- Disable background/ambient loops.
+- Replace spatial transitions with opacity or instant changes.
+- Keep durations around 0–100ms.
+- Preserve state clarity.
+
+Example CSS:
+
+```css
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+```
