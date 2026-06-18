@@ -65,6 +65,9 @@ export function normalizeAngle(a: number): number {
  *
  * Negative omega → counterclockwise in screen coords → right-to-left across top arc.
  */
+// 54° offset — breaks the 4π/3 / 5π/3 mirror symmetry that caused clustering
+const PHASE_OFFSET = Math.PI * 0.3
+
 export function buildOrbitParams(
   index: number,
   count: number,
@@ -74,8 +77,8 @@ export function buildOrbitParams(
   const R = Math.max(width * 0.65, height * 1.1)
   const cx = width / 2
   const cy = R + height * ZENITH_Y_FRACTION
-  const phase = (index / Math.max(count, 1)) * 2 * Math.PI
-  const omega = -(0.24 + (index % 3) * 0.02)
+  const phase = (index / Math.max(count, 1)) * 2 * Math.PI + PHASE_OFFSET
+  const omega = -(0.20 + (index % 3) * 0.06)  // 0.20 / 0.26 / 0.32 — wider spread prevents re-clustering
   return { cx, cy, rx: R, ry: R, phase, omega }
 }
 

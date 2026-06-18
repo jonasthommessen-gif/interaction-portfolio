@@ -301,16 +301,16 @@ export function AboutSkillsOrbit({ skills }: Props) {
   }
 
   // ── SVG orbit ring ─────────────────────────────────────────────────────────
-  // Circle center is below the section; SVG clips the invisible bottom portion.
-  const orbitR = size.w > 0 ? Math.max(size.w * 0.65, size.h * 1.1) : 0
-  const orbitCy = orbitR + size.h * ZENITH_Y_FRACTION
+  // Derived from buildOrbitParams so the ring always matches the actual orbit.
+  const { cx: orbitCx, cy: orbitCy, rx: orbitR } =
+    size.w > 0 ? buildOrbitParams(0, 1, size.w, size.h) : { cx: 0, cy: 0, rx: 0 }
 
   return (
     <div ref={containerRef} className={styles.orbitRoot}>
       {orbitR > 0 && (
         <svg className={styles.orbitSvg} aria-hidden>
           <circle
-            cx={size.w / 2}
+            cx={orbitCx}
             cy={orbitCy}
             r={orbitR}
             stroke="rgba(255,255,255,0.06)"
