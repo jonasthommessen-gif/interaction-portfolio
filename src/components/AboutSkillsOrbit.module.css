@@ -26,7 +26,7 @@
 }
 
 .skillLabel {
-  font-size: clamp(14px, 2.2vmin, 20px);
+  font-size: clamp(11px, 1.5vmin, 14px);
   font-weight: 400;
   letter-spacing: -0.01em;
   color: white;
