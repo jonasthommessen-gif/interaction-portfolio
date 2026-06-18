@@ -9,7 +9,13 @@ export type OrbitParams = {
 
 export type OrbitPoint = { x: number; y: number }
 
-/** Ellipse position; θ = 0 is right, increasing θ moves clockwise (screen y-down). */
+/**
+ * The zenith fraction controls where the mathematical top of the circle sits
+ * inside the visible section. 0.12 = 12% from the section top.
+ */
+export const ZENITH_Y_FRACTION = 0.12
+
+/** Parametric circle/ellipse position. θ = 0 → rightmost, increasing θ → clockwise. */
 export function orbitPosition(params: OrbitParams, theta: number): OrbitPoint {
   return {
     x: params.cx + params.rx * Math.cos(theta),
@@ -17,18 +23,23 @@ export function orbitPosition(params: OrbitParams, theta: number): OrbitPoint {
   }
 }
 
-/** Zenith is top of ellipse (minimum y): sin(θ) ≈ -1 → θ ≈ -π/2. */
+/** Zenith is the top of the circle: sin(θ) = −1, i.e. θ = −π/2. */
 export const ZENITH_THETA = -Math.PI / 2
 
+/**
+ * Proximity to zenith. sigma = 0.28 gives a tight window so that with
+ * 6 satellites spaced 2π/6 ≈ 1.047 rad apart, only one exceeds the
+ * auto-reveal threshold (0.88) at any moment.
+ */
 export function zenithProximity(theta: number): number {
   const d = Math.abs(normalizeAngle(theta - ZENITH_THETA))
-  const sigma = 0.55
+  const sigma = 0.28
   return Math.exp(-(d * d) / (2 * sigma * sigma))
 }
 
+/** Speed multiplier near zenith: slows to ~35% at peak. */
 export function zenithSpeedFactor(theta: number): number {
-  const prox = zenithProximity(theta)
-  return 1 - prox * 0.75
+  return 1 - zenithProximity(theta) * 0.65
 }
 
 export function normalizeAngle(a: number): number {
@@ -38,17 +49,36 @@ export function normalizeAngle(a: number): number {
   return x
 }
 
+/**
+ * True circle orbit centered below the section.
+ *
+ * Geometry:
+ *   R  = max(w * 0.65, h * 1.1)   — scales with both axes
+ *   cy = R + h * ZENITH_Y_FRACTION — places the mathematical zenith inside section
+ *
+ * For w=600, h=300: R=390, cy=426, zenith y=36 (12% from top) ✓
+ * At x=section edge: satellite appears at ~59% section height ✓
+ *
+ * Full-circle phase distribution (2π spacing): section overflow:hidden clips
+ * the below-section portion. Satellites genuinely orbit the full circle;
+ * only the top arc is ever visible.
+ *
+ * Negative omega → counterclockwise in screen coords → right-to-left across top arc.
+ */
 export function buildOrbitParams(
   index: number,
   count: number,
   width: number,
   height: number,
 ): OrbitParams {
-  const cx = width * 0.5
-  const cy = height * 0.5
-  const rx = width * 0.42
-  const ry = height * 0.32
+  const R = Math.max(width * 0.65, height * 1.1)
+  const cx = width / 2
+  const cy = R + height * ZENITH_Y_FRACTION
   const phase = (index / Math.max(count, 1)) * 2 * Math.PI
-  const omega = 0.28 + (index % 3) * 0.05
-  return { cx, cy, rx, ry, phase, omega }
+  const omega = -(0.24 + (index % 3) * 0.02)
+  return { cx, cy, rx: R, ry: R, phase, omega }
+}
+
+export function easeInOutCubic(t: number): number {
+  return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2
 }

@@ -3,6 +3,7 @@
   inset: 0;
   overflow: hidden;
   pointer-events: auto;
+  user-select: none;
 }
 
 .orbitSvg {
@@ -38,7 +39,8 @@
   letter-spacing: -0.01em;
   color: white;
   white-space: nowrap;
-  transition: opacity 0.35s ease;
+  transition: opacity 0.35s ease, transform 0.35s ease;
+  will-change: opacity, transform;
   pointer-events: none;
 }
 
@@ -60,10 +62,4 @@
 
 .revealBtn:hover {
   color: white;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .skillLabel {
-    opacity: 1 !important;
-  }
 }
