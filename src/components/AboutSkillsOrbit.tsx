@@ -35,7 +35,6 @@ type SatState = {
  */
 function buildRevealedLayout(count: number, effectiveW: number) {
   const cols = count <= 4 ? 2 : 3
-  const rows = Math.ceil(count / cols)
   const padX = effectiveW * 0.06
   const padY = 16                                   // small fixed top/bottom margin
   const cellW = (effectiveW - padX * 2) / cols
