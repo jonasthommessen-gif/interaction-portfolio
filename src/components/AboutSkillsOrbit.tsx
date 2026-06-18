@@ -28,17 +28,21 @@ type SatState = {
   revY: number
 }
 
-function buildRevealedLayout(count: number, w: number, h: number) {
+/**
+ * Returns satellite positions in VIEWPORT coords (x measured from leftColumn x=0),
+ * using effectiveW (= w + xOffset = full leftColumn usable width) so the grid is
+ * centred within the visible section rather than within the narrower orbitRoot box.
+ */
+function buildRevealedLayout(count: number, effectiveW: number, h: number) {
   const cols = count <= 4 ? 2 : 3
   const rows = Math.ceil(count / cols)
-  const padX = w * 0.08
+  const padX = effectiveW * 0.08
   const padY = h * 0.15
-  const cellW = (w - padX * 2) / cols
+  const cellW = (effectiveW - padX * 2) / cols
   const cellH = (h - padY * 2) / rows
   return Array.from({ length: count }, (_, i) => ({
-    // x: 0.35 of cell width offsets for the satellite icon so labels read
-    // left-to-right from a consistent position across each column.
-    x: padX + (i % cols) * cellW + cellW * 0.35,
+    // Satellite sits at 25% into the cell — leaves 75% room for label to the right.
+    x: padX + (i % cols) * cellW + cellW * 0.25,
     y: padY + Math.floor(i / cols) * cellH + cellH * 0.5,
   }))
 }
@@ -101,7 +105,8 @@ export function AboutSkillsOrbit({ skills }: Props) {
     if (size.w <= 0 || size.h <= 0) return
     const { w, h, xOffset } = size
     const effectiveW = w + xOffset
-    const layout = buildRevealedLayout(labels.length, w, h)
+    // buildRevealedLayout now returns viewport coords (from x=0 of leftColumn)
+    const layout = buildRevealedLayout(labels.length, effectiveW, h)
     statesRef.current = labels.map((_, i) => {
       const params = buildOrbitParams(i, labels.length, effectiveW, h)
       const pos = orbitPosition(params, params.phase)
@@ -114,7 +119,7 @@ export function AboutSkillsOrbit({ skills }: Props) {
         snapY: pos.y,
         targetX: pos.x,
         targetY: pos.y,
-        revX: layout[i]!.x + xOffset,   // store in viewport coords
+        revX: layout[i]!.x,   // already viewport coords — no xOffset addition
         revY: layout[i]!.y,
       }
     })
@@ -270,12 +275,12 @@ export function AboutSkillsOrbit({ skills }: Props) {
     const effectiveW = w + xOffset
 
     if (phase === 'orbit' || phase === 'to-orbit') {
-      const layout = buildRevealedLayout(labels.length, w, h)
+      const layout = buildRevealedLayout(labels.length, effectiveW, h)
       for (let i = 0; i < statesRef.current.length; i++) {
         const s = statesRef.current[i]!
         s.snapX = s.currentX
         s.snapY = s.currentY
-        s.revX = layout[i]!.x + xOffset
+        s.revX = layout[i]!.x   // already viewport coords — no xOffset addition
         s.revY = layout[i]!.y
       }
       // Hide all labels immediately before satellite movement starts
