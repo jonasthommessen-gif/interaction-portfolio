@@ -33,7 +33,7 @@ type SatState = {
  * using effectiveW (= w + xOffset = full leftColumn usable width) so the grid is
  * centred within the visible section rather than within the narrower orbitRoot box.
  */
-function buildRevealedLayout(count: number, effectiveW: number, h: number) {
+function buildRevealedLayout(count: number, effectiveW: number) {
   const cols = count <= 4 ? 2 : 3
   const rows = Math.ceil(count / cols)
   const padX = effectiveW * 0.06
@@ -106,7 +106,7 @@ export function AboutSkillsOrbit({ skills }: Props) {
     const { w, h, xOffset } = size
     const effectiveW = w + xOffset
     // buildRevealedLayout now returns viewport coords (from x=0 of leftColumn)
-    const layout = buildRevealedLayout(labels.length, effectiveW, h)
+    const layout = buildRevealedLayout(labels.length, effectiveW)
     statesRef.current = labels.map((_, i) => {
       const params = buildOrbitParams(i, labels.length, effectiveW, h)
       const pos = orbitPosition(params, params.phase)
@@ -275,7 +275,7 @@ export function AboutSkillsOrbit({ skills }: Props) {
     const effectiveW = w + xOffset
 
     if (phase === 'orbit' || phase === 'to-orbit') {
-      const layout = buildRevealedLayout(labels.length, effectiveW, h)
+      const layout = buildRevealedLayout(labels.length, effectiveW)
       for (let i = 0; i < statesRef.current.length; i++) {
         const s = statesRef.current[i]!
         s.snapX = s.currentX
