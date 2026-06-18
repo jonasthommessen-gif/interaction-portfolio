@@ -38,7 +38,7 @@ function buildRevealedLayout(count: number, effectiveW: number) {
   const padX = effectiveW * 0.06
   const padY = 16                                   // small fixed top/bottom margin
   const cellW = (effectiveW - padX * 2) / cols
-  const cellH = 80                                  // fixed 80 px row spacing
+  const cellH = 44                                  // fixed 44 px row spacing (33px icon + 11px gap)
   return Array.from({ length: count }, (_, i) => ({
     // Satellite sits at 25% into the cell — leaves 75% room for label to the right.
     x: padX + (i % cols) * cellW + cellW * 0.25,
