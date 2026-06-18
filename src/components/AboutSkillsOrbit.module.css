@@ -47,8 +47,8 @@
   /* left: 12px aligns with bio text (sectionFirstCard padding-left: 12px).
      With the extended orbitRoot the container now starts at x=0 of leftColumn,
      so left: 12px lands at the same x as the bio text above the separator. */
-  left: 12px;
-  bottom: 1.5rem;
+  left: 12px;   /* matches sectionFirstCard { padding-left: 12px } — bio text left edge */
+  top: 1rem;
   z-index: 100;
   transform: translateZ(0);
   padding: 0;
