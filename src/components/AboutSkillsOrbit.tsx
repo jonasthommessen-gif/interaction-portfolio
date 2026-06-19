@@ -57,6 +57,9 @@ function lerp(a: number, b: number, t: number) {
   return a + (b - a) * t
 }
 
+/** Cached orbit geometry — recomputed only when size changes, not every RAF frame. */
+type OrbitGeom = { oCx: number; oCy: number; oR: number }
+
 type Props = { skills: AboutSkill[] }
 
 export function AboutSkillsOrbit({ skills }: Props) {
@@ -79,6 +82,9 @@ export function AboutSkillsOrbit({ skills }: Props) {
   const hoverIndexRef = useRef<number | null>(null)
   const activeZenithRef = useRef<number>(-1)
 
+  // Cached orbit geometry — computed once on size change, read every RAF frame.
+  const orbitGeomRef = useRef<OrbitGeom>({ oCx: 0, oCy: 0, oR: 0 })
+
   // Direct DOM refs — positions and opacities written without React renders
   const satDivRefs = useRef<(HTMLDivElement | null)[]>([])
   const labelSpanRefs = useRef<(HTMLSpanElement | null)[]>([])
@@ -97,8 +103,6 @@ export function AboutSkillsOrbit({ skills }: Props) {
     const ro = new ResizeObserver(() => {
       const rect = el.getBoundingClientRect()
       const next = { w: rect.width, h: rect.height, xOffset: rect.left }
-      // Update ref immediately so the running RAF loop sees the new values
-      // without needing to restart.
       sizeRef.current = next
       setSize(next)
     })
@@ -111,6 +115,11 @@ export function AboutSkillsOrbit({ skills }: Props) {
     if (size.w <= 0 || size.h <= 0) return
     const { w, h, xOffset } = size
     const effectiveW = w + xOffset
+
+    // Cache orbit geometry so the RAF loop never needs to call buildOrbitParams.
+    const params0 = buildOrbitParams(0, 1, effectiveW, h)
+    orbitGeomRef.current = { oCx: params0.cx, oCy: params0.cy, oR: params0.rx }
+
     // buildRevealedLayout now returns viewport coords (from x=0 of leftColumn)
     const layout = buildRevealedLayout(labels.length, effectiveW)
     // Anchor phase0 so theta(t) = phase0 + ORBIT_OMEGA * t gives params.phase right now.
@@ -172,17 +181,14 @@ export function AboutSkillsOrbit({ skills }: Props) {
       raf = requestAnimationFrame(loop)
 
       // Read current size every frame — no closure, no restart needed.
-      const { w, h, xOffset } = sizeRef.current
-      if (w <= 0 || h <= 0) return
+      const { w, h: _h, xOffset } = sizeRef.current
+      if (w <= 0 || _h <= 0) return
 
       // Wall-clock seconds — used for absolute orbit position (no dt accumulation).
       const tSec = now / 1000
 
-      const effectiveW = w + xOffset
-      const params0 = buildOrbitParams(0, 1, effectiveW, h)
-      const oCx = params0.cx       // viewport coords
-      const oCy = params0.cy
-      const oR = params0.rx
+      // Read cached orbit geometry — computed once in the init effect, not per frame.
+      const { oCx, oCy, oR } = orbitGeomRef.current
 
       const states = statesRef.current
       const phase = phaseRef.current

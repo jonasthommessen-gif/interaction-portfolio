@@ -17,6 +17,7 @@ import type {
   ProjectSectionRow,
   SectionDisplayOptions,
   SectionSideInfo,
+  SectionSideInfoAward,
   SectionSideInfoParticipant,
 } from '../types/cms'
 import type { SectionContent, SectionLayoutKey, SectionSubBlock, SectionSubBlockLayoutKey } from '../types/cms'
@@ -1257,6 +1258,78 @@ export function AdminProjectEditPage() {
                                 const links = (s.content?.sideInfo?.links ?? []).filter((_, j) => j !== i)
                                 patchSectionSideInfo(s.id, {
                                   links: links.length ? links : undefined,
+                                })
+                              }}
+                            >
+                              Remove
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                      <div className={styles.field}>
+                        <div className={styles.sideInfoListHeader}>
+                          <span className={styles.label}>Awards &amp; Nominations</span>
+                          <button
+                            type="button"
+                            className={styles.textButton}
+                            onClick={() => {
+                              const awards: SectionSideInfoAward[] = [
+                                ...(s.content?.sideInfo?.awards ?? []),
+                                { type: 'awarded', label: '', href: '' },
+                              ]
+                              patchSectionSideInfo(s.id, { awards })
+                            }}
+                          >
+                            Add award
+                          </button>
+                        </div>
+                        {(s.content?.sideInfo?.awards ?? []).map((award, i) => (
+                          <div key={`award-${s.id}-${i}`} className={styles.sideInfoRepeatRow}>
+                            <select
+                              className={styles.input}
+                              aria-label={`Award ${i + 1} type`}
+                              value={award.type}
+                              onChange={(e) => {
+                                const awards = [...(s.content?.sideInfo?.awards ?? [])]
+                                awards[i] = { ...awards[i], type: e.target.value as SectionSideInfoAward['type'] }
+                                patchSectionSideInfo(s.id, { awards })
+                              }}
+                            >
+                              <option value="awarded">Awarded</option>
+                              <option value="nominated">Nominated</option>
+                            </select>
+                            <input
+                              className={styles.input}
+                              aria-label={`Award ${i + 1} name`}
+                              placeholder="Award name"
+                              value={award.label}
+                              onChange={(e) => {
+                                const awards = [...(s.content?.sideInfo?.awards ?? [])]
+                                awards[i] = { ...awards[i], label: e.target.value }
+                                patchSectionSideInfo(s.id, { awards })
+                              }}
+                            />
+                            <input
+                              className={styles.input}
+                              aria-label={`Award ${i + 1} URL (optional)`}
+                              placeholder="https:// (optional)"
+                              value={award.href ?? ''}
+                              onChange={(e) => {
+                                const awards = [...(s.content?.sideInfo?.awards ?? [])]
+                                awards[i] = {
+                                  ...awards[i],
+                                  href: e.target.value.trim() ? e.target.value : undefined,
+                                }
+                                patchSectionSideInfo(s.id, { awards })
+                              }}
+                            />
+                            <button
+                              type="button"
+                              className={styles.textButton}
+                              onClick={() => {
+                                const awards = (s.content?.sideInfo?.awards ?? []).filter((_, j) => j !== i)
+                                patchSectionSideInfo(s.id, {
+                                  awards: awards.length ? awards : undefined,
                                 })
                               }}
                             >

@@ -2,6 +2,7 @@ import type {
   SectionContent,
   SectionLayoutKey,
   SectionSideInfo,
+  SectionSideInfoAward,
   SectionSideInfoCollaborator,
   SectionSideInfoParticipant,
   SectionSubBlock,
@@ -22,6 +23,7 @@ function hasSideInfoData(info: SectionSideInfo | undefined): boolean {
   if (t(info.methods)) return true
   if (t(info.location)) return true
   if (info.links?.some((l) => t(l.label) && t(l.href))) return true
+  if (info.awards?.some((a) => t(a.label))) return true
   if (
     info.collaborators?.some(
       (c) =>
@@ -154,6 +156,23 @@ function OverviewFactsPanel({ info }: { info: SectionSideInfo }) {
               </a>
             </OverviewRow>
           ))}
+
+          {(info.awards ?? [])
+            .filter((a): a is SectionSideInfoAward => Boolean(a.label?.trim()))
+            .map((a, i) => (
+              <OverviewRow
+                key={`award-${i}-${a.label}`}
+                label={a.type === 'nominated' ? 'Nominated' : 'Awarded'}
+              >
+                {a.href?.trim() ? (
+                  <a href={a.href.trim()} rel="noopener noreferrer" target="_blank" className={styles.overviewLink}>
+                    {a.label.trim()}
+                  </a>
+                ) : (
+                  a.label.trim()
+                )}
+              </OverviewRow>
+            ))}
         </div>
 
         {hasAside ? (

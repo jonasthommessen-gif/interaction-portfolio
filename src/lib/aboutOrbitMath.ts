@@ -44,7 +44,7 @@ export function normalizeAngle(a: number): number {
  * single coherent stream, not a jittery scatter of independent objects.
  * Full orbit ≈ 52 s — slow and graceful at this setting.
  */
-export const ORBIT_OMEGA = -0.12   // rad/s (negative = counter-clockwise when viewed normally)
+export const ORBIT_OMEGA = -0.30   // rad/s — ~21 s/orbit; fast enough for smooth visual perception (~2.5 px/frame)
 
 /**
  * Phase offset places sat-0 just past the zenith at startup so the

@@ -63,6 +63,15 @@ export type SectionSideInfoLink = {
   href: string
 }
 
+export type SectionSideInfoAward = {
+  /** 'awarded' renders the row label as "Awarded"; 'nominated' renders it as "Nominated". */
+  type: 'awarded' | 'nominated'
+  /** Text shown as the clickable award/nomination name. */
+  label: string
+  /** Optional URL — when set the label becomes a link. */
+  href?: string
+}
+
 export type SectionSideInfoParticipant = {
   name: string
   /** Optional portfolio or personal site URL. */
@@ -81,6 +90,7 @@ export type SectionSideInfo = {
   methods?: string
   location?: string
   links?: SectionSideInfoLink[]
+  awards?: SectionSideInfoAward[]
 }
 
 /** Extra content blocks inside the same section (same nav entry); optional per-block layout. */
