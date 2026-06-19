@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import type { AboutSkill } from '../lib/aboutContent'
 import {
+  ORBIT_OMEGA,
   buildOrbitParams,
   easeInOutCubic,
   orbitPosition,
@@ -16,8 +17,14 @@ type Phase = 'orbit' | 'to-reveal' | 'revealed' | 'to-orbit'
 
 /** Mutable per-satellite state — lives in a ref, never triggers React renders. */
 type SatState = {
-  theta: number
-  omega: number
+  /**
+   * phase0: anchor so theta(t) = phase0 + ORBIT_OMEGA * t_seconds.
+   * Using wall-clock time instead of accumulated dt means one dropped
+   * frame never shifts the satellite — the next frame simply lands at the
+   * geometrically correct position, giving glass-smooth orbit motion.
+   */
+  phase0: number
+  theta: number       // current theta (derived from wall clock each frame)
   currentX: number    // viewport coords
   currentY: number
   snapX: number
@@ -106,12 +113,14 @@ export function AboutSkillsOrbit({ skills }: Props) {
     const effectiveW = w + xOffset
     // buildRevealedLayout now returns viewport coords (from x=0 of leftColumn)
     const layout = buildRevealedLayout(labels.length, effectiveW)
+    // Anchor phase0 so theta(t) = phase0 + ORBIT_OMEGA * t gives params.phase right now.
+    const t0 = performance.now() / 1000
     statesRef.current = labels.map((_, i) => {
       const params = buildOrbitParams(i, labels.length, effectiveW, h)
       const pos = orbitPosition(params, params.phase)
       return {
+        phase0: params.phase - ORBIT_OMEGA * t0,
         theta: params.phase,
-        omega: params.omega,
         currentX: pos.x,
         currentY: pos.y,
         snapX: pos.x,
@@ -158,7 +167,6 @@ export function AboutSkillsOrbit({ skills }: Props) {
     }
 
     let raf = 0
-    let last = 0
 
     const loop = (now: number) => {
       raf = requestAnimationFrame(loop)
@@ -167,8 +175,8 @@ export function AboutSkillsOrbit({ skills }: Props) {
       const { w, h, xOffset } = sizeRef.current
       if (w <= 0 || h <= 0) return
 
-      const dt = last ? Math.min((now - last) / 1000, 0.05) : 0.016
-      last = now
+      // Wall-clock seconds — used for absolute orbit position (no dt accumulation).
+      const tSec = now / 1000
 
       const effectiveW = w + xOffset
       const params0 = buildOrbitParams(0, 1, effectiveW, h)
@@ -199,7 +207,8 @@ export function AboutSkillsOrbit({ skills }: Props) {
 
         for (let i = 0; i < states.length; i++) {
           const s = states[i]!
-          s.theta += s.omega * dt
+          // Absolute wall-clock position — never accumulates dt error.
+          s.theta = s.phase0 + ORBIT_OMEGA * tSec
           s.currentX = oCx + oR * Math.cos(s.theta)
           s.currentY = oCy + oR * Math.sin(s.theta)
 
@@ -255,6 +264,9 @@ export function AboutSkillsOrbit({ skills }: Props) {
           for (const s of states) {
             s.currentX = s.targetX
             s.currentY = s.targetY
+            // Re-anchor phase0 so the orbit resumes from s.theta at this
+            // exact wall-clock moment — no position jump on phase handoff.
+            s.phase0 = s.theta - ORBIT_OMEGA * tSec
           }
           activeZenithRef.current = -1
           phaseRef.current = 'orbit'
