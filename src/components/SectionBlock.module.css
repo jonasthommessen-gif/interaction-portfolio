@@ -299,7 +299,7 @@
   flex-direction: column;
   gap: 0.625rem;
   min-width: 0;
-  max-width: min(72ch, 100%);
+  max-width: 100%;
 }
 
 @media (min-width: 720px) {
@@ -436,6 +436,10 @@
 
 .overviewLink {
   color: var(--fg);
+  text-decoration: none;
+}
+
+.overviewLink:hover {
   text-decoration: underline;
   text-underline-offset: 2px;
 }

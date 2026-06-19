@@ -6,7 +6,7 @@ export type PortraitSlide = {
   alt?: string
 }
 
-const INTERVAL_MS = 4000
+const INTERVAL_MS = 8000
 
 type Props = {
   portraits: PortraitSlide[]

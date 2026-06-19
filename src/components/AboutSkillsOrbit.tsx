@@ -102,8 +102,16 @@ export function AboutSkillsOrbit({ skills }: Props) {
     if (!el) return
     const ro = new ResizeObserver(() => {
       const rect = el.getBoundingClientRect()
-      const next = { w: rect.width, h: rect.height, xOffset: rect.left }
+      // Round to whole pixels — prevents float-point noise from triggering
+      // the init effect (which resets all phase0 anchors and causes a visible jump).
+      const next = {
+        w: Math.round(rect.width),
+        h: Math.round(rect.height),
+        xOffset: Math.round(rect.left),
+      }
+      const prev = sizeRef.current
       sizeRef.current = next
+      if (next.w === prev.w && next.h === prev.h && next.xOffset === prev.xOffset) return
       setSize(next)
     })
     ro.observe(el)
@@ -149,7 +157,7 @@ export function AboutSkillsOrbit({ skills }: Props) {
       const s = statesRef.current[i]!
       const renderX = s.currentX - xOffset
       const div = satDivRefs.current[i]
-      if (div) div.style.transform = `translate(${renderX}px, ${s.currentY}px)`
+      if (div) div.style.transform = `translate3d(${renderX}px, ${s.currentY}px, 0)`
     }
 
     // Ensure all labels start hidden
@@ -170,7 +178,7 @@ export function AboutSkillsOrbit({ skills }: Props) {
         const s = statesRef.current[i]!
         const renderX = s.revX - xOffset    // viewport → container coords
         const div = satDivRefs.current[i]
-        if (div) div.style.transform = `translate(${renderX}px, ${s.revY}px)`
+        if (div) div.style.transform = `translate3d(${renderX}px, ${s.revY}px, 0)`
       }
       return
     }
@@ -220,7 +228,7 @@ export function AboutSkillsOrbit({ skills }: Props) {
 
           const renderX = s.currentX - xOffset
           const div = satDivRefs.current[i]
-          if (div) div.style.transform = `translate(${renderX}px, ${s.currentY}px)`
+          if (div) div.style.transform = `translate3d(${renderX}px, ${s.currentY}px, 0)`
 
           // Label: visible only in zenith zone or on hover — CSS transition handles smoothing
           const inZone = i === az.current && zenithProximity(s.theta) > ZENITH_THRESHOLD
@@ -238,7 +246,7 @@ export function AboutSkillsOrbit({ skills }: Props) {
           s.currentX = vpX
           s.currentY = vpY
           const div = satDivRefs.current[i]
-          if (div) div.style.transform = `translate(${vpX - xOffset}px, ${vpY}px)`
+          if (div) div.style.transform = `translate3d(${vpX - xOffset}px, ${vpY}px, 0)`
           // Labels stay hidden during movement (staged reveal)
           const span = labelSpanRefs.current[i]
           if (span && span.style.opacity !== '0') span.style.opacity = '0'
@@ -264,7 +272,7 @@ export function AboutSkillsOrbit({ skills }: Props) {
           s.currentX = vpX
           s.currentY = vpY
           const div = satDivRefs.current[i]
-          if (div) div.style.transform = `translate(${vpX - xOffset}px, ${vpY}px)`
+          if (div) div.style.transform = `translate3d(${vpX - xOffset}px, ${vpY}px, 0)`
         }
         if (t >= 1) {
           for (const s of states) {

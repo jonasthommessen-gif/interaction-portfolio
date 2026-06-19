@@ -4,6 +4,8 @@
   overflow: visible;
   pointer-events: auto;
   user-select: none;
+  /* Isolate layout/style recalculations to this subtree */
+  contain: layout style;
 }
 
 .satWrap {
@@ -14,6 +16,8 @@
   align-items: center;
   gap: 0.5rem;
   will-change: transform;
+  /* Force a 3-D compositing layer for guaranteed GPU-driven animation */
+  backface-visibility: hidden;
   pointer-events: auto;
 }
 
