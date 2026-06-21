@@ -126,7 +126,7 @@
     align-self: stretch;
     position: relative;
     min-width: 0;
-    min-height: 0;
+    min-height: clamp(260px, 34vw, 520px);
     display: flex;
     flex-direction: column;
   }

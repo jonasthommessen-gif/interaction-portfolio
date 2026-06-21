@@ -200,7 +200,7 @@ export function AdminProjectEditPage() {
     const { error } = await createProjectSection(row.id, {
       label: addSectionLabel.trim(),
       layout: addSectionLayout,
-      order: sections.length,
+      order: sections.length > 0 ? Math.max(...sections.map(s => s.order)) + 1 : 0,
       content: { body: '' },
     })
     setAddingSection(false)
@@ -324,27 +324,37 @@ export function AdminProjectEditPage() {
     const targetIndex = direction === 'up' ? index - 1 : index + 1
     if (targetIndex < 0 || targetIndex >= sorted.length) return
 
-    const current = sorted[index]!
-    const neighbor = sorted[targetIndex]!
-    setSectionError(null)
-    setReorderingSectionId(current.id)
+    // Build a new ordering by moving the item and assigning sequential orders 0,1,2…
+    // This is idempotent and heals any pre-existing duplicate order values.
+    const reordered = [...sorted]
+    const [moved] = reordered.splice(index, 1)
+    reordered.splice(targetIndex, 0, moved!)
+    const reassigned = reordered.map((s, newIdx) => ({ ...s, order: newIdx }))
 
+    setSectionError(null)
+    setReorderingSectionId(moved!.id)
+
+    // Optimistic update
     setSections((prev) =>
       prev.map((s) => {
-        if (s.id === current.id) return { ...s, order: neighbor.order }
-        if (s.id === neighbor.id) return { ...s, order: current.order }
-        return s
+        const updated = reassigned.find((r) => r.id === s.id)
+        return updated ? { ...s, order: updated.order } : s
       }),
     )
 
-    const [currentResult, neighborResult] = await Promise.all([
-      updateProjectSection(current.id, { order: neighbor.order }),
-      updateProjectSection(neighbor.id, { order: current.order }),
-    ])
+    // Persist only the sections whose order actually changed
+    const changed = reassigned.filter((r) => {
+      const original = sections.find((s) => s.id === r.id)
+      return original && original.order !== r.order
+    })
+    const results = await Promise.all(
+      changed.map((s) => updateProjectSection(s.id, { order: s.order })),
+    )
     setReorderingSectionId(null)
 
-    if (currentResult.error || neighborResult.error) {
-      setSectionError(currentResult.error ?? neighborResult.error ?? 'Failed to reorder section')
+    const firstError = results.find((r) => r.error)
+    if (firstError?.error) {
+      setSectionError(firstError.error)
       loadSections(row.id)
     }
   }

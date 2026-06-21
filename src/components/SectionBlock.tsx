@@ -550,11 +550,10 @@ function SectionLayoutSlice({
 
 export function SectionBlock({ layout, content, sectionLabel, imageLoading = 'lazy' }: Props) {
   if (layout === 'project-overview') {
-    const showTitleWithText = content?.display?.showSectionTitle === true
     const si = content?.sideInfo
     return (
       <div className={styles.projectOverview}>
-        <SectionTitle label={sectionLabel} visible={showTitleWithText} />
+        <SectionTitle label={sectionLabel} visible={true} />
         {hasSideInfoData(si) ? (
           <OverviewFactsPanel info={si!} />
         ) : (
