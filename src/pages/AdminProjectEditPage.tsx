@@ -107,16 +107,17 @@ export function AdminProjectEditPage() {
   const loadSections = useCallback((projectId: string) => {
     setSectionsLoading(true)
     fetchProjectSections(projectId)
-      .then((rows) => {
+      .then(async (rows) => {
         // Heal duplicate / gap order values left by the old swap-based reorder.
-        // Sections are sorted by order then id so the intended sequence is
-        // preserved and tie-breaking is deterministic.
+        // Sorted by order then id so the intended sequence is preserved and
+        // tie-breaking is deterministic.
         const sorted = [...rows].sort((a, b) => a.order - b.order || a.id.localeCompare(b.id))
         const needsFix = sorted.some((s, i) => s.order !== i)
         if (needsFix) {
           const healed = sorted.map((s, i) => ({ ...s, order: i }))
           setSections(healed)
-          Promise.all(
+          // Await so we know if the heal succeeded — fire-and-forget hid failures.
+          await Promise.all(
             healed
               .filter((s, i) => rows.find((r) => r.id === s.id)!.order !== i)
               .map((s) => updateProjectSection(s.id, { order: s.order })),
@@ -342,7 +343,6 @@ export function AdminProjectEditPage() {
     if (targetIndex < 0 || targetIndex >= sorted.length) return
 
     // Build a new ordering by moving the item and assigning sequential orders 0,1,2…
-    // This is idempotent and heals any pre-existing duplicate order values.
     const reordered = [...sorted]
     const [moved] = reordered.splice(index, 1)
     reordered.splice(targetIndex, 0, moved!)
@@ -351,7 +351,7 @@ export function AdminProjectEditPage() {
     setSectionError(null)
     setReorderingSectionId(moved!.id)
 
-    // Optimistic update
+    // Optimistic update — show new order immediately before the DB round-trip
     setSections((prev) =>
       prev.map((s) => {
         const updated = reassigned.find((r) => r.id === s.id)
@@ -359,20 +359,26 @@ export function AdminProjectEditPage() {
       }),
     )
 
-    // Persist only the sections whose order actually changed
-    const changed = reassigned.filter((r) => {
-      const original = sections.find((s) => s.id === r.id)
-      return original && original.order !== r.order
-    })
-    const results = await Promise.all(
-      changed.map((s) => updateProjectSection(s.id, { order: s.order })),
-    )
-    setReorderingSectionId(null)
-
-    const firstError = results.find((r) => r.error)
-    if (firstError?.error) {
-      setSectionError(firstError.error)
+    // Snapshot of pre-optimistic orders for the diff (sections is already stale here)
+    const snapshot = sections
+    try {
+      const changed = reassigned.filter((r) => {
+        const original = snapshot.find((s) => s.id === r.id)
+        return original && original.order !== r.order
+      })
+      const results = await Promise.all(
+        changed.map((s) => updateProjectSection(s.id, { order: s.order })),
+      )
+      const firstError = results.find((r) => r.error)
+      if (firstError?.error) {
+        setSectionError(firstError.error)
+        loadSections(row.id)
+      }
+    } catch (err) {
+      setSectionError(String(err))
       loadSections(row.id)
+    } finally {
+      setReorderingSectionId(null)
     }
   }
 
