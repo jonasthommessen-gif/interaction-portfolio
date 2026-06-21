@@ -107,7 +107,24 @@ export function AdminProjectEditPage() {
   const loadSections = useCallback((projectId: string) => {
     setSectionsLoading(true)
     fetchProjectSections(projectId)
-      .then(setSections)
+      .then((rows) => {
+        // Heal duplicate / gap order values left by the old swap-based reorder.
+        // Sections are sorted by order then id so the intended sequence is
+        // preserved and tie-breaking is deterministic.
+        const sorted = [...rows].sort((a, b) => a.order - b.order || a.id.localeCompare(b.id))
+        const needsFix = sorted.some((s, i) => s.order !== i)
+        if (needsFix) {
+          const healed = sorted.map((s, i) => ({ ...s, order: i }))
+          setSections(healed)
+          Promise.all(
+            healed
+              .filter((s, i) => rows.find((r) => r.id === s.id)!.order !== i)
+              .map((s) => updateProjectSection(s.id, { order: s.order })),
+          )
+        } else {
+          setSections(rows)
+        }
+      })
       .finally(() => setSectionsLoading(false))
   }, [])
 

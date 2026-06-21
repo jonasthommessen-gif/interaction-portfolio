@@ -139,6 +139,8 @@ export async function fetchProjects(): Promise<Project[]> {
     .from('project_sections')
     .select('*')
     .in('project_id', projectIds)
+    .order('order', { ascending: true })
+    .order('id',    { ascending: true })
   const sections = (sectionRows ?? []) as ProjectSectionRow[]
   return (rows as ProjectRow[]).map((r) =>
     projectRowToProject(r, sections.filter((s) => s.project_id === r.id))
