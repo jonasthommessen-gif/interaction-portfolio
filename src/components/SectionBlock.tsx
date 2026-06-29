@@ -622,16 +622,16 @@ function SectionLayoutSlice({
     return (
       <div className={styles.mediaScrollX}>
         <SectionTitle label={sectionLabel} visible={showTitleWithText} />
+        {hasText && (
+          <div className={styles.textBlock}>
+            <ContentHeading text={headingStr} />
+            {hasBody ? <div className={styles.body}>{formatSectionBody(bodyStr)}</div> : null}
+          </div>
+        )}
         {hasSingleMedia ? (
           <ScrollMediaWrap media={media} loading={imageLoading} />
         ) : (
           <p className={styles.placeholder}>Add a wide image in admin.</p>
-        )}
-        {hasText && (
-          <div className={styles.caption}>
-            <ContentHeading text={headingStr} />
-            {hasBody ? <div className={styles.body}>{formatSectionBody(bodyStr)}</div> : null}
-          </div>
         )}
       </div>
     )
@@ -681,16 +681,16 @@ function SectionLayoutSlice({
     return (
       <div className={styles.mediaScrollX}>
         <SectionTitle label={sectionLabel} visible={showTitleWithText} />
+        {hasText && (
+          <div className={styles.textBlock}>
+            <ContentHeading text={headingStr} />
+            {hasBody ? <div className={styles.body}>{formatSectionBody(bodyStr)}</div> : null}
+          </div>
+        )}
         {hasGallery ? (
           <SectionCarousel items={gallery} loading={imageLoading} />
         ) : (
           <p className={styles.placeholder}>Add carousel images in admin.</p>
-        )}
-        {hasText && (
-          <div className={styles.caption}>
-            <ContentHeading text={headingStr} />
-            {hasBody ? <div className={styles.body}>{formatSectionBody(bodyStr)}</div> : null}
-          </div>
         )}
       </div>
     )
