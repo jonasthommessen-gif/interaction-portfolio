@@ -33,6 +33,18 @@ const LAYOUTS_WITH_SINGLE_MEDIA: SectionLayoutKey[] = [
   'media-wide-above-text',
   'full-bleed-media',
   'full-bleed-media-natural',
+  // Horizontal pan layouts (single wide image)
+  'media-scroll-x',
+  'text-left-scroll-media-right',
+  'scroll-media-left-text-right',
+]
+
+const LAYOUTS_WITH_GALLERY: SectionLayoutKey[] = [
+  'gallery-strip',
+  // Carousel layouts (multiple images)
+  'media-carousel',
+  'text-left-carousel-right',
+  'carousel-left-text-right',
 ]
 
 const ICON_SIZE = 16
@@ -63,6 +75,12 @@ const SECTION_LAYOUT_LABELS: Record<SectionLayoutKey, string> = {
   'media-wide-above-text': 'Media above text (wide, natural height)',
   'gallery-strip': 'Gallery strip',
   'project-overview': 'Project overview (facts)',
+  'media-scroll-x': 'Wide image — full width, pan horizontally',
+  'text-left-scroll-media-right': 'Text left, wide image right (pan)',
+  'scroll-media-left-text-right': 'Wide image left (pan), text right',
+  'media-carousel': 'Carousel — full width',
+  'text-left-carousel-right': 'Text left, carousel right',
+  'carousel-left-text-right': 'Carousel left, text right',
 }
 
 function hasTrimmedText(s: string | undefined) {
@@ -834,7 +852,7 @@ export function AdminProjectEditPage() {
                           />
                         </>
                       )}
-                      {s.layout === 'gallery-strip' && (
+                      {LAYOUTS_WITH_GALLERY.includes(s.layout) && (
                         <SectionGalleryUpload
                           value={s.content?.gallery}
                           onChange={(gallery) => updateSectionContent(s.id, { gallery })}
@@ -1019,7 +1037,7 @@ export function AdminProjectEditPage() {
                                 />
                               </>
                             )}
-                            {rowLayout === 'gallery-strip' && (
+                            {LAYOUTS_WITH_GALLERY.includes(rowLayout as SectionLayoutKey) && (
                               <SectionGalleryUpload
                                 value={sub.gallery}
                                 onChange={(gallery) => {
@@ -1066,7 +1084,7 @@ export function AdminProjectEditPage() {
                                 Boolean(s.content?.media?.src || s.content?.mediaMobile?.src) &&
                                 !hasTrimmedText(s.content?.body) &&
                                 !hasTrimmedText(s.content?.heading)) ||
-                              (s.layout === 'gallery-strip' &&
+                              (LAYOUTS_WITH_GALLERY.includes(s.layout) &&
                                 (s.content?.gallery?.length ?? 0) > 0 &&
                                 !hasTrimmedText(s.content?.body) &&
                                 !hasTrimmedText(s.content?.heading))

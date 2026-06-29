@@ -1,0 +1,97 @@
+.carousel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  width: 100%;
+}
+
+.track {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  border-radius: 4px;
+}
+
+.slides {
+  display: flex;
+  transition: transform 320ms ease;
+  will-change: transform;
+}
+
+.slide {
+  flex: 0 0 100%;
+  min-width: 0;
+}
+
+.img {
+  display: block;
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+  user-select: none;
+}
+
+/* Arrow buttons */
+.arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(0, 0, 0, 0.45);
+  color: #fff;
+  cursor: pointer;
+  z-index: 2;
+  transition: background 160ms ease, border-color 160ms ease;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+.arrow:hover {
+  background: rgba(0, 0, 0, 0.7);
+  border-color: rgba(255, 255, 255, 0.35);
+}
+
+.arrowPrev {
+  left: 0.6rem;
+}
+
+.arrowNext {
+  right: 0.6rem;
+}
+
+/* Dot indicators */
+.dots {
+  display: flex;
+  justify-content: center;
+  gap: 0.4rem;
+}
+
+.dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.25);
+  cursor: pointer;
+  padding: 0;
+  transition: background 200ms ease, transform 200ms ease;
+}
+
+.dotActive {
+  background: rgba(255, 255, 255, 0.85);
+  transform: scale(1.25);
+}
+
+/* Caption */
+.caption {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.5);
+  margin: 0;
+  text-align: center;
+}

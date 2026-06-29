@@ -12,6 +12,14 @@ export const SECTION_LAYOUTS = [
   'media-wide-above-text',
   'gallery-strip',
   'project-overview',
+  // Horizontal pan — single wide image, scroll left/right to read
+  'media-scroll-x',
+  'text-left-scroll-media-right',
+  'scroll-media-left-text-right',
+  // Carousel — multiple images, prev/next arrows + dot indicators
+  'media-carousel',
+  'text-left-carousel-right',
+  'carousel-left-text-right',
 ] as const
 
 export type SectionLayoutKey = (typeof SECTION_LAYOUTS)[number]

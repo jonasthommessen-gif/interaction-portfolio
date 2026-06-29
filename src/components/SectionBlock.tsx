@@ -1,3 +1,4 @@
+import { useRef } from 'react'
 import type {
   SectionContent,
   SectionLayoutKey,
@@ -10,6 +11,7 @@ import type {
 import { formatSectionBody } from '../lib/formatSectionBody'
 import { normalizeParticipants, participantsHasData } from '../lib/sectionParticipants'
 import { VideoInView } from './VideoInView'
+import { SectionCarousel } from './SectionCarousel'
 import styles from './SectionBlock.module.css'
 
 function hasSideInfoData(info: SectionSideInfo | undefined): boolean {
@@ -329,6 +331,13 @@ function effectiveSubLayout(sub: SectionSubBlock, parentLayout: SectionLayoutKey
   return sub.layout ?? parentLayout
 }
 
+const GALLERY_LAYOUTS: SectionLayoutKey[] = [
+  'gallery-strip',
+  'media-carousel',
+  'text-left-carousel-right',
+  'carousel-left-text-right',
+]
+
 function sliceHasRenderable(slice: SectionSubBlock, layout: SectionLayoutKey): boolean {
   const bodyStr = trimText(slice.body)
   const headingStr = trimText(slice.heading)
@@ -336,8 +345,74 @@ function sliceHasRenderable(slice: SectionSubBlock, layout: SectionLayoutKey): b
   const hasSingleMedia = Boolean(slice.media?.src || slice.mediaMobile?.src)
   const hasGallery = (slice.gallery?.length ?? 0) > 0
   if (layout === 'text-only') return hasText
-  if (layout === 'gallery-strip') return hasGallery || hasText
+  if (GALLERY_LAYOUTS.includes(layout)) return hasGallery || hasText
   return hasText || hasSingleMedia
+}
+
+/** Horizontally scrollable container for a single wide image. Supports drag-to-pan on desktop. */
+function ScrollMediaWrap({
+  media,
+  loading,
+}: {
+  media: SectionContent['media']
+  loading?: 'eager' | 'lazy'
+}) {
+  const wrapRef = useRef<HTMLDivElement>(null)
+  const dragging = useRef(false)
+  const startX = useRef(0)
+  const scrollLeft = useRef(0)
+
+  if (!media?.src) return null
+
+  const onMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!wrapRef.current) return
+    dragging.current = true
+    startX.current = e.pageX - wrapRef.current.getBoundingClientRect().left
+    scrollLeft.current = wrapRef.current.scrollLeft
+    wrapRef.current.dataset.grabbing = '1'
+  }
+  const onMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!dragging.current || !wrapRef.current) return
+    e.preventDefault()
+    const x = e.pageX - wrapRef.current.getBoundingClientRect().left
+    wrapRef.current.scrollLeft = scrollLeft.current - (x - startX.current) * 1.2
+  }
+  const onMouseUp = () => {
+    dragging.current = false
+    if (wrapRef.current) delete wrapRef.current.dataset.grabbing
+  }
+
+  return (
+    <div className={styles.scrollXOuter}>
+      <div
+        ref={wrapRef}
+        className={styles.scrollXWrap}
+        onMouseDown={onMouseDown}
+        onMouseMove={onMouseMove}
+        onMouseUp={onMouseUp}
+        onMouseLeave={onMouseUp}
+      >
+        {media.type === 'video' ? (
+          <VideoInView
+            src={media.src}
+            poster={media.poster}
+            className={styles.scrollXMedia}
+            ariaLabel={media.alt?.trim() || undefined}
+          />
+        ) : (
+          <img
+            src={media.src}
+            alt={media.alt ?? ''}
+            className={styles.scrollXMedia}
+            loading={loading}
+            decoding={loading === 'eager' ? 'sync' : 'async'}
+            draggable={false}
+          />
+        )}
+      </div>
+      <div className={styles.scrollXFade} aria-hidden="true" />
+    </div>
+  )
 }
 
 function SectionLayoutSlice({
@@ -537,6 +612,124 @@ function SectionLayoutSlice({
             ) : null}
           </div>
         ) : null}
+      </div>
+    )
+  }
+
+  // ── Horizontal pan layouts ────────────────────────────────────────────────
+
+  if (layout === 'media-scroll-x') {
+    return (
+      <div className={styles.mediaScrollX}>
+        <SectionTitle label={sectionLabel} visible={showTitleWithText} />
+        {hasSingleMedia ? (
+          <ScrollMediaWrap media={media} loading={imageLoading} />
+        ) : (
+          <p className={styles.placeholder}>Add a wide image in admin.</p>
+        )}
+        {hasText && (
+          <div className={styles.caption}>
+            <ContentHeading text={headingStr} />
+            {hasBody ? <div className={styles.body}>{formatSectionBody(bodyStr)}</div> : null}
+          </div>
+        )}
+      </div>
+    )
+  }
+
+  if (layout === 'text-left-scroll-media-right') {
+    return (
+      <div className={styles.textLeftMediaRight}>
+        <div className={styles.textBlock}>
+          <SectionTitle label={sectionLabel} visible={showTitleWithText} />
+          <ContentHeading text={headingStr} />
+          {hasBody ? <div className={styles.body}>{formatSectionBody(bodyStr)}</div> : <p className={styles.placeholder}>Add content in admin.</p>}
+        </div>
+        <div className={styles.mediaColumn}>
+          {hasSingleMedia ? (
+            <ScrollMediaWrap media={media} loading={imageLoading} />
+          ) : (
+            <p className={styles.placeholder}>Add a wide image in admin.</p>
+          )}
+        </div>
+      </div>
+    )
+  }
+
+  if (layout === 'scroll-media-left-text-right') {
+    return (
+      <div className={styles.mediaLeftTextRight}>
+        <div className={styles.mediaColumn}>
+          {hasSingleMedia ? (
+            <ScrollMediaWrap media={media} loading={imageLoading} />
+          ) : (
+            <p className={styles.placeholder}>Add a wide image in admin.</p>
+          )}
+        </div>
+        <div className={styles.textBlock}>
+          <SectionTitle label={sectionLabel} visible={showTitleWithText} />
+          <ContentHeading text={headingStr} />
+          {hasBody ? <div className={styles.body}>{formatSectionBody(bodyStr)}</div> : <p className={styles.placeholder}>Add content in admin.</p>}
+        </div>
+      </div>
+    )
+  }
+
+  // ── Carousel layouts ──────────────────────────────────────────────────────
+
+  if (layout === 'media-carousel') {
+    return (
+      <div className={styles.mediaScrollX}>
+        <SectionTitle label={sectionLabel} visible={showTitleWithText} />
+        {hasGallery ? (
+          <SectionCarousel items={gallery} loading={imageLoading} />
+        ) : (
+          <p className={styles.placeholder}>Add carousel images in admin.</p>
+        )}
+        {hasText && (
+          <div className={styles.caption}>
+            <ContentHeading text={headingStr} />
+            {hasBody ? <div className={styles.body}>{formatSectionBody(bodyStr)}</div> : null}
+          </div>
+        )}
+      </div>
+    )
+  }
+
+  if (layout === 'text-left-carousel-right') {
+    return (
+      <div className={styles.textLeftMediaRight}>
+        <div className={styles.textBlock}>
+          <SectionTitle label={sectionLabel} visible={showTitleWithText} />
+          <ContentHeading text={headingStr} />
+          {hasBody ? <div className={styles.body}>{formatSectionBody(bodyStr)}</div> : <p className={styles.placeholder}>Add content in admin.</p>}
+        </div>
+        <div className={styles.mediaColumn}>
+          {hasGallery ? (
+            <SectionCarousel items={gallery} loading={imageLoading} />
+          ) : (
+            <p className={styles.placeholder}>Add carousel images in admin.</p>
+          )}
+        </div>
+      </div>
+    )
+  }
+
+  if (layout === 'carousel-left-text-right') {
+    return (
+      <div className={styles.mediaLeftTextRight}>
+        <div className={styles.mediaColumn}>
+          {hasGallery ? (
+            <SectionCarousel items={gallery} loading={imageLoading} />
+          ) : (
+            <p className={styles.placeholder}>Add carousel images in admin.</p>
+          )}
+        </div>
+        <div className={styles.textBlock}>
+          <SectionTitle label={sectionLabel} visible={showTitleWithText} />
+          <ContentHeading text={headingStr} />
+          {hasBody ? <div className={styles.body}>{formatSectionBody(bodyStr)}</div> : <p className={styles.placeholder}>Add content in admin.</p>}
+        </div>
       </div>
     )
   }

@@ -487,3 +487,60 @@
   font-size: var(--text-sm);
   color: var(--muted);
 }
+
+/* ── Horizontal pan (media-scroll-x) ──────────────────────────────────────── */
+
+/* Full-width pan layout root — mirrors .fullBleedMedia column structure */
+.mediaScrollX {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+/* Relative wrapper so the right-edge fade pseudo-element is positioned against it */
+.scrollXOuter {
+  position: relative;
+  width: 100%;
+  overflow: hidden; /* clip the fade layer */
+}
+
+/* The actual scrollable container */
+.scrollXWrap {
+  overflow-x: auto;
+  overflow-y: hidden;
+  cursor: grab;
+  -webkit-overflow-scrolling: touch;
+  /* Hide scrollbar visually but keep scrollability */
+  scrollbar-width: none;
+}
+
+.scrollXWrap::-webkit-scrollbar {
+  display: none;
+}
+
+/* Switch to grabbing cursor while dragging (set via data-grabbing in JS) */
+.scrollXWrap[data-grabbing] {
+  cursor: grabbing;
+  user-select: none;
+}
+
+/* The image renders at natural width so wide maps / diagrams stay readable */
+.scrollXMedia {
+  display: block;
+  width: auto;
+  max-width: none;
+  height: clamp(260px, 48vw, 680px);
+  object-fit: contain;
+  vertical-align: top;
+}
+
+/* Right-edge fade hint — signals that content continues to the right */
+.scrollXFade {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 4rem;
+  pointer-events: none;
+  background: linear-gradient(to right, transparent, var(--bg, #0d0d0d));
+}
