@@ -142,6 +142,7 @@
   .textLeftMediaRight .mediaColumn.carouselInColumn,
   .mediaLeftTextRight .mediaColumn.carouselInColumn {
     justify-content: center;
+    min-height: clamp(380px, 58vh, 680px);
   }
 
   .textLeftMediaRight .mediaColumn .mediaResponsiveDesktop,
