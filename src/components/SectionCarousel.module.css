@@ -5,9 +5,23 @@
   width: 100%;
 }
 
+/* Arrows sit outside the image track — never overlay content */
+.carouselRow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.arrowSpacer {
+  flex: 0 0 2rem;
+  width: 2rem;
+}
+
 .track {
   position: relative;
-  width: 100%;
+  flex: 1 1 auto;
+  min-width: 0;
   overflow: hidden;
   border-radius: 4px;
 }
@@ -31,22 +45,19 @@
   user-select: none;
 }
 
-/* Arrow buttons */
+/* Arrow buttons — outside track */
 .arrow {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
+  flex: 0 0 2rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 2.25rem;
-  height: 2.25rem;
+  width: 2rem;
+  height: 2rem;
   border-radius: 50%;
   border: 1px solid rgba(255, 255, 255, 0.18);
   background: rgba(0, 0, 0, 0.45);
   color: #fff;
   cursor: pointer;
-  z-index: 2;
   transition: background 160ms ease, border-color 160ms ease;
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
@@ -57,12 +68,19 @@
   border-color: rgba(255, 255, 255, 0.35);
 }
 
-.arrowPrev {
-  left: 0.6rem;
+.arrowOutside {
+  align-self: center;
 }
 
-.arrowNext {
-  right: 0.6rem;
+/* 50/50 side-by-side: smaller carousel so diagram stays contained */
+.carouselSplit .track {
+  max-height: clamp(200px, 26vw, 340px);
+}
+
+.carouselSplit .img {
+  max-height: clamp(200px, 26vw, 340px);
+  width: 100%;
+  margin-inline: auto;
 }
 
 /* Dot indicators */

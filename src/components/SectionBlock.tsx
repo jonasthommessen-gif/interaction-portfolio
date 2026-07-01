@@ -619,8 +619,15 @@ function SectionLayoutSlice({
   // ── Horizontal pan layouts ────────────────────────────────────────────────
 
   if (layout === 'media-scroll-x') {
+    const scrollWithTitle = hasHeading
     return (
-      <div className={styles.mediaScrollX}>
+      <div
+        className={
+          scrollWithTitle
+            ? `${styles.mediaScrollX} ${styles.scrollBlockWithTitle}`
+            : styles.mediaScrollX
+        }
+      >
         <SectionTitle label={sectionLabel} visible={showTitleWithText} />
         {hasText && (
           <div className={styles.textBlock}>
@@ -706,7 +713,7 @@ function SectionLayoutSlice({
         </div>
         <div className={styles.mediaColumn}>
           {hasGallery ? (
-            <SectionCarousel items={gallery} loading={imageLoading} />
+            <SectionCarousel items={gallery} loading={imageLoading} variant="split" />
           ) : (
             <p className={styles.placeholder}>Add carousel images in admin.</p>
           )}
@@ -720,7 +727,7 @@ function SectionLayoutSlice({
       <div className={styles.mediaLeftTextRight}>
         <div className={styles.mediaColumn}>
           {hasGallery ? (
-            <SectionCarousel items={gallery} loading={imageLoading} />
+            <SectionCarousel items={gallery} loading={imageLoading} variant="split" />
           ) : (
             <p className={styles.placeholder}>Add carousel images in admin.</p>
           )}
