@@ -711,7 +711,7 @@ function SectionLayoutSlice({
           <ContentHeading text={headingStr} />
           {hasBody ? <div className={styles.body}>{formatSectionBody(bodyStr)}</div> : <p className={styles.placeholder}>Add content in admin.</p>}
         </div>
-        <div className={styles.mediaColumn}>
+        <div className={`${styles.mediaColumn} ${styles.carouselInColumn}`}>
           {hasGallery ? (
             <SectionCarousel items={gallery} loading={imageLoading} variant="split" />
           ) : (
@@ -725,7 +725,7 @@ function SectionLayoutSlice({
   if (layout === 'carousel-left-text-right') {
     return (
       <div className={styles.mediaLeftTextRight}>
-        <div className={styles.mediaColumn}>
+        <div className={`${styles.mediaColumn} ${styles.carouselInColumn}`}>
           {hasGallery ? (
             <SectionCarousel items={gallery} loading={imageLoading} variant="split" />
           ) : (

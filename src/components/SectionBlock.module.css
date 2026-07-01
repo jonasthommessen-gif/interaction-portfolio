@@ -139,6 +139,11 @@
     min-height: var(--scroll-media-height);
   }
 
+  .textLeftMediaRight .mediaColumn.carouselInColumn,
+  .mediaLeftTextRight .mediaColumn.carouselInColumn {
+    justify-content: center;
+  }
+
   .textLeftMediaRight .mediaColumn .mediaResponsiveDesktop,
   .mediaLeftTextRight .mediaColumn .mediaResponsiveDesktop {
     flex: 1 1 auto;
@@ -502,6 +507,12 @@
 
 :root {
   --scroll-media-height: clamp(380px, 62vw, 880px);
+}
+
+@media (max-width: 819px) {
+  :root {
+    --scroll-media-height: clamp(300px, 52dvh, 560px);
+  }
 }
 
 /* Full-width pan layout root — mirrors .fullBleedMedia column structure */

@@ -72,15 +72,23 @@
   align-self: center;
 }
 
-/* 50/50 side-by-side: smaller carousel so diagram stays contained */
+/* 50/50 side-by-side: taller diagram, dots-only navigation */
 .carouselSplit .track {
-  max-height: clamp(200px, 26vw, 340px);
+  max-height: clamp(280px, 38vw, 460px);
 }
 
 .carouselSplit .img {
-  max-height: clamp(200px, 26vw, 340px);
+  max-height: clamp(280px, 38vw, 460px);
   width: 100%;
   margin-inline: auto;
+  object-fit: contain;
+}
+
+@media (max-width: 819px) {
+  .carouselSplit .track,
+  .carouselSplit .img {
+    max-height: none;
+  }
 }
 
 /* Dot indicators */
