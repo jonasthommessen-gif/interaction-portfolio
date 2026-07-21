@@ -174,7 +174,7 @@ export function ProjectsPage() {
       try {
         const data = await fetchVisibleProjects()
         if (cancelled) return
-        setProjects(data)
+        // Prefetch before committing projects — setProjects kicks off pill/color work.
         await preloadMedia(
           data.map((p) =>
             p.cover.type === 'video'
@@ -182,6 +182,8 @@ export function ProjectsPage() {
               : { src: p.cover.src, type: 'image' as const },
           ),
         )
+        if (cancelled) return
+        setProjects(data)
       } catch {
         if (!cancelled) setProjects([])
       } finally {

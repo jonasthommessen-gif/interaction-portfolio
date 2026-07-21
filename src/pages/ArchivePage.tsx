@@ -144,12 +144,14 @@ export function ArchivePage() {
       try {
         const data = await fetchArchiveProjects()
         if (cancelled) return
-        setProjects(data)
+        // Prefetch before committing projects — setProjects rebuilds gallery layouts.
         const covers = buildArchiveGalleryEntries(data).map((entry) => ({
           src: entry.cover,
           type: entry.coverType,
         }))
         await preloadMedia(covers)
+        if (cancelled) return
+        setProjects(data)
       } catch {
         if (!cancelled) setProjects([])
       } finally {

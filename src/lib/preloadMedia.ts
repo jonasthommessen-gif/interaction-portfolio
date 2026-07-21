@@ -8,6 +8,8 @@ export type PreloadTarget = {
 }
 
 const DEFAULT_TIMEOUT_MS = 8000
+/** Keep Rive/canvas responsive — never open the floodgates. */
+const DEFAULT_CONCURRENCY = 2
 
 function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T | void> {
   return new Promise((resolve) => {
@@ -25,17 +27,24 @@ function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T | voi
   })
 }
 
+/** Yield so the browser can paint / run the Rive rAF loop. */
+function yieldToBrowser(): Promise<void> {
+  return new Promise((resolve) => {
+    if (typeof window.requestAnimationFrame === 'function') {
+      window.requestAnimationFrame(() => {
+        window.setTimeout(resolve, 0)
+      })
+      return
+    }
+    window.setTimeout(resolve, 0)
+  })
+}
+
 function preloadImage(src: string): Promise<void> {
   return new Promise((resolve, reject) => {
     const img = new Image()
-    img.decoding = 'async'
-    img.onload = () => {
-      if (typeof img.decode === 'function') {
-        img.decode().then(() => resolve(), () => resolve())
-      } else {
-        resolve()
-      }
-    }
+    // Avoid img.decode() — it can stall the main thread while Rive is animating.
+    img.onload = () => resolve()
     img.onerror = () => reject(new Error(`Failed to load image: ${src}`))
     img.src = src
   })
@@ -44,13 +53,17 @@ function preloadImage(src: string): Promise<void> {
 function preloadVideo(src: string): Promise<void> {
   return new Promise((resolve, reject) => {
     const video = document.createElement('video')
-    video.preload = 'auto'
+    video.preload = 'metadata'
     video.muted = true
     video.playsInline = true
 
     const cleanup = () => {
       video.removeAttribute('src')
-      video.load()
+      try {
+        video.load()
+      } catch {
+        /* ignore */
+      }
       video.remove()
     }
 
@@ -63,7 +76,8 @@ function preloadVideo(src: string): Promise<void> {
       reject(new Error(`Failed to load video: ${src}`))
     }
 
-    video.addEventListener('loadeddata', onReady, { once: true })
+    // metadata is enough to prove the asset is reachable without decoding frames.
+    video.addEventListener('loadedmetadata', onReady, { once: true })
     video.addEventListener('error', onError, { once: true })
     video.src = src
     video.load()
@@ -87,15 +101,42 @@ async function preloadOne(target: PreloadTarget): Promise<void> {
   await preloadImage(src)
 }
 
+async function mapPool<T>(
+  items: T[],
+  concurrency: number,
+  worker: (item: T) => Promise<void>,
+): Promise<void> {
+  if (items.length === 0) return
+  const limit = Math.max(1, Math.min(concurrency, items.length))
+  let next = 0
+
+  async function run(): Promise<void> {
+    while (next < items.length) {
+      const index = next
+      next += 1
+      try {
+        await worker(items[index]!)
+      } catch {
+        /* ignore individual failures */
+      }
+      await yieldToBrowser()
+    }
+  }
+
+  await Promise.all(Array.from({ length: limit }, () => run()))
+}
+
 /**
  * Wait until the given media URLs are ready (or timeout).
  * Failures are ignored so one bad asset cannot trap the loader.
+ * Concurrency is capped so the loading animation stays smooth.
  */
 export async function preloadMedia(
   targets: PreloadTarget[],
-  options?: { timeoutMs?: number },
+  options?: { timeoutMs?: number; concurrency?: number },
 ): Promise<void> {
   const timeoutMs = options?.timeoutMs ?? DEFAULT_TIMEOUT_MS
+  const concurrency = options?.concurrency ?? DEFAULT_CONCURRENCY
   const seen = new Set<string>()
   const unique: PreloadTarget[] = []
 
@@ -109,8 +150,5 @@ export async function preloadMedia(
 
   if (unique.length === 0) return
 
-  await withTimeout(
-    Promise.allSettled(unique.map((t) => preloadOne(t))).then(() => undefined),
-    timeoutMs,
-  )
+  await withTimeout(mapPool(unique, concurrency, preloadOne), timeoutMs)
 }
