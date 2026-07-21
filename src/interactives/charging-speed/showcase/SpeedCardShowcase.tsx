@@ -50,6 +50,7 @@ export function SpeedCardShowcase(props: SpeedCardShowcaseProps) {
   const derived = useMemo(() => deriveChargingState(inputs), [inputs])
   const scaledW = SPEED_CARD_DESIGN_W * scale
   const scaledH = SPEED_CARD_DESIGN_H * scale
+  const sliderProgress = `${(kw / CHARGER_MAX_KW) * 100}%`
 
   return (
     <div
@@ -96,6 +97,7 @@ export function SpeedCardShowcase(props: SpeedCardShowcaseProps) {
             max={CHARGER_MAX_KW}
             value={kw}
             aria-label="Charging speed in kilowatts"
+            style={{ ['--cs-slider-progress' as string]: sliderProgress }}
             onChange={(event) => setKw(Number(event.target.value))}
           />
         </div>

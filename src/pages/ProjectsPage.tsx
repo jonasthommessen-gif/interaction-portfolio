@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { fetchVisibleProjects } from '../lib/cms'
+import { preloadMedia } from '../lib/preloadMedia'
 import type { Project } from '../types/cms'
 import { VideoInView } from '../components/VideoInView'
 import { InlinePageLoader } from '../components/InlinePageLoader'
@@ -167,10 +168,31 @@ export function ProjectsPage() {
   }, [cancelClearActive])
 
   useEffect(() => {
-    fetchVisibleProjects()
-      .then(setProjects)
-      .catch(() => setProjects([]))
-      .finally(() => setLoading(false))
+    let cancelled = false
+
+    async function load() {
+      try {
+        const data = await fetchVisibleProjects()
+        if (cancelled) return
+        setProjects(data)
+        await preloadMedia(
+          data.map((p) =>
+            p.cover.type === 'video'
+              ? { src: p.cover.src, type: 'video' as const, poster: p.cover.poster }
+              : { src: p.cover.src, type: 'image' as const },
+          ),
+        )
+      } catch {
+        if (!cancelled) setProjects([])
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
+    }
+
+    void load()
+    return () => {
+      cancelled = true
+    }
   }, [])
 
   useEffect(() => {

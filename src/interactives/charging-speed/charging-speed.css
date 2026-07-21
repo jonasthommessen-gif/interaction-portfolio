@@ -1,10 +1,11 @@
 /* Scoped tokens + styles for the portfolio-embedded charging speed card */
 
 .speedCardShowcase {
-  --cs-bg0: #061018;
+  /* Match site --bg so the card edge is border-only, not a second plane */
+  --cs-bg0: #0b0c10;
   --cs-cardBorder: rgba(224, 245, 255, 0.25);
   --cs-cardBorderSoft: rgba(224, 245, 255, 0.25);
-  --cs-cardFill: rgba(6, 16, 22, 0.18);
+  --cs-cardFill: #0b0c10;
   --cs-text-high: rgba(245, 252, 255, 0.9);
   --cs-text-muted: rgba(229, 247, 255, 0.65);
   --cs-faint: rgba(229, 247, 255, 0.45);
@@ -12,6 +13,12 @@
   --cs-radius-card: 20px;
   --cs-tracking-label: 0.04em;
   --cs-content-w: 662px;
+  /* Quiet control-row tokens (not motion cyan) */
+  --cs-slider-track: #1e2529;
+  --cs-slider-track-hi: #2a3236;
+  --cs-slider-fill: rgba(120, 150, 170, 0.35);
+  --cs-slider-thumb: rgba(210, 216, 220, 0.55);
+  --cs-control-label: rgba(255, 255, 255, 0.45);
 
   color-scheme: dark;
   display: flex;
@@ -73,7 +80,9 @@
   flex-shrink: 0;
   display: flex;
   justify-content: center;
-  padding: 1rem 0 0.25rem;
+  /* Separate tool strip under the hero card */
+  padding: 1.75rem 0 0.5rem;
+  margin-top: 0.25rem;
   box-sizing: border-box;
 }
 
@@ -84,7 +93,7 @@
 .speedCardShowcase .cpRow {
   display: flex;
   flex-direction: column;
-  gap: 0.45rem;
+  gap: 0.35rem;
 }
 
 .speedCardShowcase .cpRowLabel {
@@ -92,20 +101,90 @@
   justify-content: space-between;
   align-items: baseline;
   gap: 1rem;
-  font-size: 0.8125rem;
-  color: var(--cs-text-muted);
-  letter-spacing: 0.02em;
+  font-family: var(--font-sans, inherit);
+  font-size: 0.6875rem;
+  font-weight: 400;
+  color: var(--cs-control-label);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 
 .speedCardShowcase .cpRowLabel span:last-child {
-  color: var(--cs-text-high);
+  color: var(--cs-control-label);
   font-variant-numeric: tabular-nums;
+  text-transform: none;
+  letter-spacing: 0.02em;
 }
 
+/* Custom quiet range — track/fill/thumb; progress via --cs-slider-progress */
 .speedCardShowcase input[type='range'] {
+  --cs-slider-progress: 0%;
+  -webkit-appearance: none;
+  appearance: none;
   width: 100%;
-  accent-color: #18b7ff;
+  height: 16px;
+  margin: 0;
+  background: transparent;
   cursor: pointer;
+}
+
+.speedCardShowcase input[type='range']:focus {
+  outline: none;
+}
+
+.speedCardShowcase input[type='range']:focus-visible::-webkit-slider-thumb {
+  box-shadow: 0 0 0 2px rgba(210, 216, 220, 0.25);
+}
+
+.speedCardShowcase input[type='range']:focus-visible::-moz-range-thumb {
+  box-shadow: 0 0 0 2px rgba(210, 216, 220, 0.25);
+}
+
+.speedCardShowcase input[type='range']::-webkit-slider-runnable-track {
+  height: 2px;
+  border-radius: 999px;
+  background: linear-gradient(
+    to right,
+    var(--cs-slider-fill) 0%,
+    var(--cs-slider-fill) var(--cs-slider-progress),
+    var(--cs-slider-track) var(--cs-slider-progress),
+    var(--cs-slider-track-hi) 100%
+  );
+}
+
+.speedCardShowcase input[type='range']::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 10px;
+  height: 10px;
+  margin-top: -4px;
+  border-radius: 50%;
+  border: none;
+  background: var(--cs-slider-thumb);
+  box-shadow: none;
+}
+
+.speedCardShowcase input[type='range']::-moz-range-track {
+  height: 2px;
+  border: none;
+  border-radius: 999px;
+  background: var(--cs-slider-track);
+}
+
+.speedCardShowcase input[type='range']::-moz-range-progress {
+  height: 2px;
+  border: none;
+  border-radius: 999px;
+  background: var(--cs-slider-fill);
+}
+
+.speedCardShowcase input[type='range']::-moz-range-thumb {
+  width: 10px;
+  height: 10px;
+  border: none;
+  border-radius: 50%;
+  background: var(--cs-slider-thumb);
+  box-shadow: none;
 }
 
 /* Card layout */

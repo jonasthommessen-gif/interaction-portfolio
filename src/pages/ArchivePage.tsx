@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { AnimatePresence, useMotionValue } from 'framer-motion'
 import { fetchArchiveProjects } from '../lib/cms'
+import { preloadMedia } from '../lib/preloadMedia'
 import {
   buildArchiveGalleryEntries,
   getArchiveLoopWidth,
@@ -137,10 +138,29 @@ export function ArchivePage() {
   const [projects, setProjects] = useState<ArchiveProject[]>([])
   const [loading, setLoading] = useState(true)
   useEffect(() => {
-    fetchArchiveProjects()
-      .then(setProjects)
-      .catch(() => setProjects([]))
-      .finally(() => setLoading(false))
+    let cancelled = false
+
+    async function load() {
+      try {
+        const data = await fetchArchiveProjects()
+        if (cancelled) return
+        setProjects(data)
+        const covers = buildArchiveGalleryEntries(data).map((entry) => ({
+          src: entry.cover,
+          type: entry.coverType,
+        }))
+        await preloadMedia(covers)
+      } catch {
+        if (!cancelled) setProjects([])
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
+    }
+
+    void load()
+    return () => {
+      cancelled = true
+    }
   }, [])
 
   const TOTAL = projects.length
