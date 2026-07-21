@@ -1,0 +1,367 @@
+/* Scoped tokens + styles for the portfolio-embedded charging speed card */
+
+.speedCardShowcase {
+  --cs-bg0: #061018;
+  --cs-cardBorder: rgba(224, 245, 255, 0.25);
+  --cs-cardBorderSoft: rgba(224, 245, 255, 0.25);
+  --cs-cardFill: rgba(6, 16, 22, 0.18);
+  --cs-text-high: rgba(245, 252, 255, 0.9);
+  --cs-text-muted: rgba(229, 247, 255, 0.65);
+  --cs-faint: rgba(229, 247, 255, 0.45);
+  --cs-muted: rgba(229, 247, 255, 0.65);
+  --cs-radius-card: 20px;
+  --cs-tracking-label: 0.04em;
+  --cs-content-w: 662px;
+
+  color-scheme: dark;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+  overflow: hidden;
+  font-family: inherit;
+  color: var(--cs-text-high);
+}
+
+.speedCardShowcaseViewport {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  box-sizing: border-box;
+  min-height: 0;
+}
+
+.speedCardShowcaseCardWrap {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.speedCardShowcaseStage {
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform-origin: top left;
+  background: var(--cs-bg0);
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.speedCardShowcaseStage.chargingScreen--portrait,
+.speedCardShowcaseStage.chargingScreen--largePortrait {
+  width: 662px;
+  height: 241px;
+  min-height: 241px;
+  max-height: 241px;
+  padding: 0;
+  margin: 0;
+  background: var(--cs-bg0);
+}
+
+.speedCardShowcaseStage .speedCard {
+  background: var(--cs-bg0);
+  border: 1px solid var(--cs-cardBorder);
+}
+
+.speedCardShowcaseStage .speedCardParticleField {
+  background: transparent;
+}
+
+.speedCardShowcaseControls {
+  flex-shrink: 0;
+  display: flex;
+  justify-content: center;
+  padding: 1rem 0 0.25rem;
+  box-sizing: border-box;
+}
+
+.speedCardShowcaseSlider {
+  min-width: 0;
+}
+
+.speedCardShowcase .cpRow {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.speedCardShowcase .cpRowLabel {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 1rem;
+  font-size: 0.8125rem;
+  color: var(--cs-text-muted);
+  letter-spacing: 0.02em;
+}
+
+.speedCardShowcase .cpRowLabel span:last-child {
+  color: var(--cs-text-high);
+  font-variant-numeric: tabular-nums;
+}
+
+.speedCardShowcase input[type='range'] {
+  width: 100%;
+  accent-color: #18b7ff;
+  cursor: pointer;
+}
+
+/* Card layout */
+.speedCardShowcase .speedCard {
+  display: grid;
+  grid-template-columns: minmax(0, 6fr) minmax(0, 2.5fr) minmax(88px, 1.5fr);
+  padding: 0;
+  background: var(--cs-cardFill);
+  border: 1px solid var(--cs-cardBorder);
+  border-radius: var(--cs-radius-card);
+  box-shadow: none;
+  overflow: hidden;
+  min-width: 0;
+  align-items: stretch;
+}
+
+.speedCardShowcase .chargingScreen--portrait .speedCard,
+.speedCardShowcase .chargingScreen--largePortrait .speedCard {
+  grid-template-columns: 352px 1fr 110px;
+  width: var(--cs-content-w);
+  height: 241px;
+  flex-shrink: 0;
+}
+
+.speedCardShowcase .speedCardLeft {
+  grid-column: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  padding: 16px;
+  box-sizing: border-box;
+}
+
+.speedCardShowcase .chargingScreen--portrait .speedCardLeft,
+.speedCardShowcase .chargingScreen--largePortrait .speedCardLeft {
+  width: 352px;
+  height: 241px;
+}
+
+.speedCardShowcase .speedCardCategory {
+  margin: 0;
+  width: 173px;
+  height: 20px;
+  flex-shrink: 0;
+  font-size: 13px;
+  letter-spacing: var(--cs-tracking-label);
+  text-transform: uppercase;
+  color: var(--cs-text-muted);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.speedCardShowcase .speedCardCategory svg,
+.speedCardShowcase .speedCardCategory svg path {
+  color: var(--cs-muted);
+  fill: currentColor;
+  stroke: none;
+  flex-shrink: 0;
+}
+
+.speedCardShowcase .speedCardMainText {
+  margin: 0;
+  width: auto;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+.speedCardShowcase .speedCardTitle {
+  margin: 32px 0 0;
+  padding: 0;
+  font-size: 40px;
+  line-height: 1.05;
+  letter-spacing: 0;
+  color: var(--cs-text-high);
+  font-weight: 400;
+}
+
+.speedCardShowcase .speedCardKw {
+  margin: 0;
+  font-size: 18px;
+  line-height: 1.1;
+  color: var(--cs-text-high);
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+.speedCardShowcase .speedCardDescription {
+  margin: 0;
+  font-size: 16px;
+  line-height: 1.35;
+  color: var(--cs-text-muted);
+  max-width: 320px;
+  width: 320px;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  overflow: hidden;
+  white-space: pre-line;
+}
+
+.speedCardShowcase .chargingScreen--portrait .speedCardMainText,
+.speedCardShowcase .chargingScreen--largePortrait .speedCardMainText {
+  width: 320px;
+}
+
+.speedCardShowcase .speedCardParticleField {
+  grid-column: 2;
+  position: relative;
+  min-width: 0;
+  align-self: stretch;
+  padding: 0;
+  overflow: hidden;
+  background: transparent;
+  border: none;
+}
+
+.speedCardShowcase .chargingScreen--portrait .speedCardParticleField,
+.speedCardShowcase .chargingScreen--largePortrait .speedCardParticleField {
+  height: 241px;
+}
+
+.speedCardShowcase .speedCardMeter {
+  grid-column: 3;
+  position: relative;
+  min-height: 0;
+  min-width: 88px;
+  box-sizing: border-box;
+  padding: 0;
+  overflow: visible;
+}
+
+.speedCardShowcase .chargingScreen--portrait .speedCardMeter,
+.speedCardShowcase .chargingScreen--largePortrait .speedCardMeter {
+  width: 110px;
+  height: 241px;
+}
+
+.speedCardShowcase .motionCanvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* Power meter */
+.speedCardShowcase .powerMeter {
+  position: relative;
+  height: 100%;
+  width: 100%;
+  min-height: 0;
+  overflow: visible;
+}
+
+.speedCardShowcase .powerMeterRail,
+.speedCardShowcase .powerMeterLabel,
+.speedCardShowcase .powerMeterMarker {
+  --railX: clamp(10px, 14%, 16px);
+}
+
+.speedCardShowcase .powerMeterRail {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: var(--railX);
+  width: 1px;
+  background: var(--cs-cardBorderSoft);
+}
+
+.speedCardShowcase .powerMeterLabel {
+  position: absolute;
+  left: var(--railX);
+  transform: translateX(-50%);
+  color: var(--cs-faint);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+  line-height: 1;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.speedCardShowcase .speedCardMeter .powerMeter {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  --meterRailWidth: 1px;
+  --meterRailInsetY: calc((100% - 160px) / 2);
+  --meterRailX: clamp(24px, 34%, 40px);
+  --meterMarkerGap: clamp(2px, 0.5cqw, 5px);
+  --meterValueGap: clamp(8px, 1cqw, 12px);
+}
+
+.speedCardShowcase .speedCardMeter .powerMeterRail {
+  position: absolute;
+  left: var(--meterRailX);
+  right: auto;
+  top: var(--meterRailInsetY);
+  bottom: var(--meterRailInsetY);
+  width: var(--meterRailWidth);
+}
+
+.speedCardShowcase .speedCardMeter .powerMeterLabel {
+  left: calc(var(--meterRailX) + (var(--meterRailWidth) * 0.5));
+  right: auto;
+  transform: translateX(-50%);
+  text-align: center;
+  font-size: 16px;
+}
+
+.speedCardShowcase .speedCardMeter .powerMeterMarker {
+  left: calc(var(--meterRailX) + var(--meterMarkerGap));
+  right: auto;
+  max-width: none;
+  display: inline-flex;
+  flex-direction: row;
+  align-items: center;
+  gap: var(--meterValueGap);
+  white-space: nowrap;
+  transform: translateY(0);
+  position: absolute;
+  color: #fff;
+  font-weight: 600;
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.speedCardShowcase .speedCardMeter .powerMeterTriangle {
+  width: 16px;
+  height: 20px;
+  background: #199fff;
+  clip-path: polygon(0 50%, 100% 0, 100% 100%);
+  flex-shrink: 0;
+}
+
+.speedCardShowcase .speedCardMeter .powerMeterLabel--top {
+  top: var(--meterRailInsetY);
+  transform: translate(-50%, -100%);
+}
+
+.speedCardShowcase .speedCardMeter .powerMeterLabel--bottom {
+  bottom: var(--meterRailInsetY);
+  transform: translate(-50%, 100%);
+}
+
+.speedCardShowcase .powerMeterLabel--top {
+  top: 0;
+}
+
+.speedCardShowcase .powerMeterLabel--bottom {
+  bottom: 0;
+}

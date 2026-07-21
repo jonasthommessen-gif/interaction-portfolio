@@ -10,6 +10,7 @@ import type { ArchiveProject } from '../types/cms'
 import { ArchiveCard } from '../components/ArchiveCard'
 import type { DepthLayer } from '../components/ArchiveCard'
 import { FeedOverlay } from '../components/FeedOverlay'
+import { InlinePageLoader } from '../components/InlinePageLoader'
 import { useNavbarInvert } from '../contexts/NavbarInvertContext'
 import { useMediaQuery } from '../hooks/useMediaQuery'
 import styles from './ArchivePage.module.css'
@@ -409,7 +410,7 @@ export function ArchivePage() {
   if (loading) {
     return (
       <main ref={pageRef} className={styles.page}>
-        <p className={styles.statusLeft}>Loading archive…</p>
+        <InlinePageLoader label="Loading archive" />
       </main>
     )
   }

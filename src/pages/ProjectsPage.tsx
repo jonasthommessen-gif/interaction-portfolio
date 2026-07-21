@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { fetchVisibleProjects } from '../lib/cms'
 import type { Project } from '../types/cms'
 import { VideoInView } from '../components/VideoInView'
+import { InlinePageLoader } from '../components/InlinePageLoader'
 import styles from './ProjectsPage.module.css'
 
 type RGB = readonly [number, number, number]
@@ -233,10 +234,7 @@ export function ProjectsPage() {
   if (loading) {
     return (
       <main className="page">
-        <div className="container">
-          <h1 className="title">Projects</h1>
-          <p className={styles.skeleton}>Loading projects…</p>
-        </div>
+        <InlinePageLoader label="Loading projects" />
       </main>
     )
   }

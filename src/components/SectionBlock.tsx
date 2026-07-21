@@ -12,6 +12,7 @@ import { formatSectionBody } from '../lib/formatSectionBody'
 import { normalizeParticipants, participantsHasData } from '../lib/sectionParticipants'
 import { VideoInView } from './VideoInView'
 import { SectionCarousel } from './SectionCarousel'
+import { INTERACTIVE_REGISTRY, isInteractiveId } from '../interactives/registry'
 import styles from './SectionBlock.module.css'
 
 function hasSideInfoData(info: SectionSideInfo | undefined): boolean {
@@ -324,6 +325,7 @@ function rootSliceFromContent(content?: SectionContent): SectionSubBlock {
     media: content?.media,
     mediaMobile: content?.mediaMobile,
     gallery: content?.gallery,
+    interactive: content?.interactive,
   }
 }
 
@@ -344,7 +346,9 @@ function sliceHasRenderable(slice: SectionSubBlock, layout: SectionLayoutKey): b
   const hasText = Boolean(bodyStr || headingStr)
   const hasSingleMedia = Boolean(slice.media?.src || slice.mediaMobile?.src)
   const hasGallery = (slice.gallery?.length ?? 0) > 0
+  const hasInteractive = layout === 'interactive' && isInteractiveId(slice.interactive?.id)
   if (layout === 'text-only') return hasText
+  if (layout === 'interactive') return hasInteractive || hasText
   if (GALLERY_LAYOUTS.includes(layout)) return hasGallery || hasText
   return hasText || hasSingleMedia
 }
@@ -737,6 +741,29 @@ function SectionLayoutSlice({
           <ContentHeading text={headingStr} />
           {hasBody ? <div className={styles.body}>{formatSectionBody(bodyStr)}</div> : <p className={styles.placeholder}>Add content in admin.</p>}
         </div>
+      </div>
+    )
+  }
+
+  if (layout === 'interactive') {
+    const interactiveId = slice.interactive?.id
+    const entry = isInteractiveId(interactiveId) ? INTERACTIVE_REGISTRY[interactiveId] : null
+    const Interactive = entry?.Component
+
+    return (
+      <div className={styles.mediaScrollX}>
+        <SectionTitle label={sectionLabel} visible={showTitleWithText} />
+        {hasText && (
+          <div className={styles.textBlock}>
+            <ContentHeading text={headingStr} />
+            {hasBody ? <div className={styles.body}>{formatSectionBody(bodyStr)}</div> : null}
+          </div>
+        )}
+        {Interactive ? (
+          <Interactive initialKw={slice.interactive?.initialKw} />
+        ) : (
+          <p className={styles.placeholder}>Choose an interactive component in admin.</p>
+        )}
       </div>
     )
   }

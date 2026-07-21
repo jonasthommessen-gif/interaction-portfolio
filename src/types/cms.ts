@@ -20,6 +20,8 @@ export const SECTION_LAYOUTS = [
   'media-carousel',
   'text-left-carousel-right',
   'carousel-left-text-right',
+  // Interactive React component from registry
+  'interactive',
 ] as const
 
 export type SectionLayoutKey = (typeof SECTION_LAYOUTS)[number]
@@ -30,6 +32,15 @@ export type SectionSubBlockLayoutKey = Exclude<SectionLayoutKey, 'project-overvi
 export const SECTION_SUBBLOCK_LAYOUTS = SECTION_LAYOUTS.filter(
   (l): l is SectionSubBlockLayoutKey => l !== 'project-overview',
 )
+
+/** Registered interactive widgets selectable for layout `interactive`. */
+export type InteractiveId = 'charging-speed-card'
+
+export type SectionInteractive = {
+  id: InteractiveId
+  /** Optional starting kW for charging-speed-card (default 120). */
+  initialKw?: number
+}
 
 /** Optional presentation flags stored in section `content` jsonb (no migration). */
 export type SectionDisplayOptions = {
@@ -110,6 +121,7 @@ export type SectionSubBlock = {
   media?: SectionMediaAsset
   mediaMobile?: SectionMediaAsset
   gallery?: { src: string; alt?: string; caption?: string }[]
+  interactive?: SectionInteractive
 }
 
 /** Content for a section; shape depends on layout (e.g. text + one image for text-left-media-right). */
@@ -120,6 +132,7 @@ export type SectionContent = {
   /** Optional portrait-friendly asset; shown below 819px when set, instead of `media`. */
   mediaMobile?: SectionMediaAsset
   gallery?: { src: string; alt?: string; caption?: string }[]
+  interactive?: SectionInteractive
   display?: SectionDisplayOptions
   sideInfo?: SectionSideInfo
   /** Optional stacked blocks below the root; ignored for `project-overview`. */

@@ -13,6 +13,7 @@ import {
 import { applyBoldMarkdownToSelection, isBoldShortcut } from '../lib/textareaBoldMarkdown'
 import { participantsForEdit } from '../lib/sectionParticipants'
 import type {
+  InteractiveId,
   ProjectRow,
   ProjectSectionRow,
   SectionDisplayOptions,
@@ -22,6 +23,7 @@ import type {
 } from '../types/cms'
 import type { SectionContent, SectionLayoutKey, SectionSubBlock, SectionSubBlockLayoutKey } from '../types/cms'
 import { SECTION_LAYOUTS, SECTION_SUBBLOCK_LAYOUTS } from '../types/cms'
+import { INTERACTIVE_IDS, INTERACTIVE_REGISTRY } from '../interactives/registry'
 import { SectionGalleryUpload } from '../components/SectionGalleryUpload'
 import { SectionMediaUpload } from '../components/SectionMediaUpload'
 import styles from './AdminProjectEditPage.module.css'
@@ -81,6 +83,7 @@ const SECTION_LAYOUT_LABELS: Record<SectionLayoutKey, string> = {
   'media-carousel': 'Carousel — full width',
   'text-left-carousel-right': 'Text left, carousel right',
   'carousel-left-text-right': 'Carousel left, text right',
+  interactive: 'Interactive component',
 }
 
 function hasTrimmedText(s: string | undefined) {
@@ -859,6 +862,62 @@ export function AdminProjectEditPage() {
                           uploadFolder={uploadFolder}
                         />
                       )}
+                      {s.layout === 'interactive' && (
+                        <div className={styles.field}>
+                          <label className={styles.label} htmlFor={`interactive-${s.id}`}>
+                            Interactive
+                          </label>
+                          <select
+                            id={`interactive-${s.id}`}
+                            className={styles.input}
+                            value={s.content?.interactive?.id ?? ''}
+                            onChange={(e) => {
+                              const id = e.target.value as InteractiveId
+                              if (!(INTERACTIVE_IDS as readonly string[]).includes(id)) {
+                                updateSectionContent(s.id, { interactive: undefined })
+                                return
+                              }
+                              updateSectionContent(s.id, {
+                                interactive: {
+                                  id,
+                                  initialKw: s.content?.interactive?.initialKw,
+                                },
+                              })
+                            }}
+                          >
+                            <option value="">Select…</option>
+                            {INTERACTIVE_IDS.map((id) => (
+                              <option key={id} value={id}>
+                                {INTERACTIVE_REGISTRY[id].label}
+                              </option>
+                            ))}
+                          </select>
+                          {s.content?.interactive?.id === 'charging-speed-card' && (
+                            <>
+                              <label className={styles.label} htmlFor={`interactive-kw-${s.id}`} style={{ marginTop: '0.75rem' }}>
+                                Starting kW (optional)
+                              </label>
+                              <input
+                                id={`interactive-kw-${s.id}`}
+                                type="number"
+                                className={styles.input}
+                                min={0}
+                                max={400}
+                                value={s.content.interactive.initialKw ?? 120}
+                                onChange={(e) => {
+                                  const n = Number(e.target.value)
+                                  updateSectionContent(s.id, {
+                                    interactive: {
+                                      id: 'charging-speed-card',
+                                      initialKw: Number.isFinite(n) ? n : 120,
+                                    },
+                                  })
+                                }}
+                              />
+                            </>
+                          )}
+                        </div>
+                      )}
                       <div className={styles.subsectionsBlock}>
                         <div className={styles.sideInfoListHeader}>
                           <span className={styles.label}>Additional blocks</span>
@@ -1047,6 +1106,72 @@ export function AdminProjectEditPage() {
                                 }}
                                 uploadFolder={uploadFolder}
                               />
+                            )}
+                            {rowLayout === 'interactive' && (
+                              <div className={styles.field}>
+                                <label className={styles.label} htmlFor={`interactive-sub-${s.id}-${i}`}>
+                                  Interactive
+                                </label>
+                                <select
+                                  id={`interactive-sub-${s.id}-${i}`}
+                                  className={styles.input}
+                                  value={sub.interactive?.id ?? ''}
+                                  onChange={(e) => {
+                                    const id = e.target.value as InteractiveId
+                                    const subsections: SectionSubBlock[] = [...(s.content?.subsections ?? [])]
+                                    if (!(INTERACTIVE_IDS as readonly string[]).includes(id)) {
+                                      subsections[i] = { ...subsections[i], interactive: undefined }
+                                    } else {
+                                      subsections[i] = {
+                                        ...subsections[i],
+                                        interactive: {
+                                          id,
+                                          initialKw: subsections[i]?.interactive?.initialKw,
+                                        },
+                                      }
+                                    }
+                                    updateSectionContent(s.id, { subsections })
+                                  }}
+                                >
+                                  <option value="">Select…</option>
+                                  {INTERACTIVE_IDS.map((id) => (
+                                    <option key={id} value={id}>
+                                      {INTERACTIVE_REGISTRY[id].label}
+                                    </option>
+                                  ))}
+                                </select>
+                                {sub.interactive?.id === 'charging-speed-card' && (
+                                  <>
+                                    <label
+                                      className={styles.label}
+                                      htmlFor={`interactive-kw-sub-${s.id}-${i}`}
+                                      style={{ marginTop: '0.75rem' }}
+                                    >
+                                      Starting kW (optional)
+                                    </label>
+                                    <input
+                                      id={`interactive-kw-sub-${s.id}-${i}`}
+                                      type="number"
+                                      className={styles.input}
+                                      min={0}
+                                      max={400}
+                                      value={sub.interactive.initialKw ?? 120}
+                                      onChange={(e) => {
+                                        const n = Number(e.target.value)
+                                        const subsections: SectionSubBlock[] = [...(s.content?.subsections ?? [])]
+                                        subsections[i] = {
+                                          ...subsections[i],
+                                          interactive: {
+                                            id: 'charging-speed-card',
+                                            initialKw: Number.isFinite(n) ? n : 120,
+                                          },
+                                        }
+                                        updateSectionContent(s.id, { subsections })
+                                      }}
+                                    />
+                                  </>
+                                )}
+                              </div>
                             )}
                           </div>
                           )
