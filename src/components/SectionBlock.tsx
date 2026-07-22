@@ -751,7 +751,7 @@ function SectionLayoutSlice({
     const Interactive = entry?.Component
 
     return (
-      <div className={styles.mediaScrollX}>
+      <div className={`${styles.mediaScrollX} ${styles.interactiveDemo}`}>
         <SectionTitle label={sectionLabel} visible={showTitleWithText} />
         {hasText && (
           <div className={styles.textBlock}>

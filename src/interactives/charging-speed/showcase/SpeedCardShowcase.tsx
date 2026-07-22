@@ -25,8 +25,8 @@ export type SpeedCardShowcaseProps = {
 }
 
 /**
- * Charging speed card with a kW slider underneath.
- * Portfolio-embedded (section-width), not a full-viewport takeover.
+ * Charging speed card with a portfolio-only demo kW control underneath.
+ * The slider is not part of the product card UI.
  */
 export function SpeedCardShowcase(props: SpeedCardShowcaseProps) {
   const { initialKw = 120, className } = props
@@ -50,6 +50,7 @@ export function SpeedCardShowcase(props: SpeedCardShowcaseProps) {
   const derived = useMemo(() => deriveChargingState(inputs), [inputs])
   const scaledW = SPEED_CARD_DESIGN_W * scale
   const scaledH = SPEED_CARD_DESIGN_H * scale
+  const controlW = scaledW * 0.92
   const sliderProgress = `${(kw / CHARGER_MAX_KW) * 100}%`
 
   return (
@@ -86,17 +87,17 @@ export function SpeedCardShowcase(props: SpeedCardShowcaseProps) {
       </div>
 
       <div className="speedCardShowcaseControls">
-        <div className="speedCardShowcaseSlider cpRow" style={{ width: scaledW }}>
-          <div className="cpRowLabel">
-            <span>Charging speed</span>
-            <span>{Math.round(kw)} kW</span>
+        <div className="speedCardDemoControl" style={{ width: controlW }}>
+          <div className="speedCardDemoControlHeader">
+            <span className="speedCardDemoControlLabel">Charging speed</span>
+            <span className="speedCardDemoControlValue">{Math.round(kw)} kW</span>
           </div>
           <input
             type="range"
             min={0}
             max={CHARGER_MAX_KW}
             value={kw}
-            aria-label="Charging speed in kilowatts"
+            aria-label="Demo: charging speed in kilowatts"
             style={{ ['--cs-slider-progress' as string]: sliderProgress }}
             onChange={(event) => setKw(Number(event.target.value))}
           />

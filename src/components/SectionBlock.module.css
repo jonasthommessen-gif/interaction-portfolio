@@ -544,6 +544,15 @@
   margin-top: clamp(1.5rem, 4vw, 2.5rem);
 }
 
+/* Interactive demo: more air after copy; showcase also adds its own top margin */
+.interactiveDemo .textBlock {
+  margin-bottom: clamp(0.75rem, 2vw, 1.25rem);
+}
+
+.interactiveDemo:not(:has(.textBlock)) {
+  padding-top: clamp(1.5rem, 4vw, 2.5rem);
+}
+
 /* Relative wrapper so the right-edge fade pseudo-element is positioned against it */
 .scrollXOuter {
   position: relative;

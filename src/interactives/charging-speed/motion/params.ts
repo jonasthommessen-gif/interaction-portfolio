@@ -21,7 +21,7 @@
    glow: 0.8,
    spread: 0.7,
    verticalConcentration: 0.55,
-   motionSpeed: 0.8,
+   motionSpeed: 1.1,
    upwardDrift: 0.45,
    jitter: 0.55,
    density: 0.8,

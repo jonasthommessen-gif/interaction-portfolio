@@ -366,7 +366,7 @@ function textureGrade(intensity: number, speed: number): TextureGrade {
     contrast: lerp(1.24, 1.62, t),
     saturation: lerp(0.84, 1.1, t),
     scrollSpeed:
-      Math.max(56, lerp(56, 340, hi)) * lerp(0.92, 1.65, speed),
+      Math.max(90, lerp(90, 500, hi)) * lerp(0.95, 1.75, speed),
     brightAlpha: lerp(0.38, 0.92, hi),
   }
 }
@@ -476,14 +476,14 @@ export function chargingFlowMode(): MotionMode<MotionParams, MotionDerivedState>
     update: (dt, params, derived) => {
       if (!fieldTextures && !loadStarted) startTextureLoad()
 
-      smoothIntensity = damp(smoothIntensity, derived.intensity, 8, dt)
-      smoothSpeed = damp(smoothSpeed, derived.speed, 9, dt)
-      smoothBrightness = damp(smoothBrightness, derived.brightness, 8, dt)
+      smoothIntensity = damp(smoothIntensity, derived.intensity, 15, dt)
+      smoothSpeed = damp(smoothSpeed, derived.speed, 16, dt)
+      smoothBrightness = damp(smoothBrightness, derived.brightness, 14, dt)
 
       if (smoothIntensity < VISUALLY_IDLE_INTENSITY) return
 
       const grade = textureGrade(smoothIntensity, smoothSpeed)
-      scrollY += grade.scrollSpeed * dt * (0.75 + params.motionSpeed * 0.35)
+      scrollY += grade.scrollSpeed * dt * (0.85 + params.motionSpeed * 0.45)
     },
 
     render: (ctx, dims, params, _derived, _modeCtx: ModeContext) => {
