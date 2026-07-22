@@ -50,7 +50,6 @@ export function SpeedCardShowcase(props: SpeedCardShowcaseProps) {
   const derived = useMemo(() => deriveChargingState(inputs), [inputs])
   const scaledW = SPEED_CARD_DESIGN_W * scale
   const scaledH = SPEED_CARD_DESIGN_H * scale
-  const controlW = scaledW * 0.92
   const sliderProgress = `${(kw / CHARGER_MAX_KW) * 100}%`
 
   return (
@@ -87,7 +86,7 @@ export function SpeedCardShowcase(props: SpeedCardShowcaseProps) {
       </div>
 
       <div className="speedCardShowcaseControls">
-        <div className="speedCardDemoControl" style={{ width: controlW }}>
+        <div className="speedCardDemoControl" style={{ width: scaledW }}>
           <div className="speedCardDemoControlHeader">
             <span className="speedCardDemoControlLabel">Charging speed</span>
             <span className="speedCardDemoControlValue">{Math.round(kw)} kW</span>
